@@ -1,0 +1,271 @@
+#include <stdio.h>
+
+#include "settings.h"
+#include "board.h"
+#include "minunit.h"
+
+
+static const board BOARD_HEIGHT_1 = BOARD_HEIGHT + 1;
+
+
+int tests_run = 0;
+
+
+char *test_has_piece_on_with_empty_board() {
+    for (int y = 0; y < BOARD_HEIGHT; y++) {
+        for (int x = 0; x < BOARD_WIDTH; x++) {
+            mu_assert("board is empty.", !has_piece_on(0, x, y));
+        }
+    }
+
+    return 0;
+}
+
+
+char *test_has_piece_on_with_full_board() {
+    int shift = BOARD_HEIGHT_1 * BOARD_WIDTH;
+    board b = ((board) 1 << shift) - 1;
+    
+    for (int y = 0; y < BOARD_HEIGHT; y++) {
+        for (int x = 0; x < BOARD_WIDTH; x++) {
+            mu_assert("board is full.", has_piece_on(b, x, y));
+        }
+    }
+
+    return 0;
+}
+
+
+char *test_has_piece_on_with_one_piece() {
+    board b = (board) 1 << (BOARD_HEIGHT_1 * (BOARD_WIDTH - 1));
+
+    for (int y = 0; y < BOARD_HEIGHT; y++) {
+        for (int x = 0; x < BOARD_WIDTH; x++) {
+            if (y == 0 && x == BOARD_WIDTH - 1) {
+                mu_assert("board has only piece here.", has_piece_on(b, x, y));
+            } else {
+                mu_assert("board has only piece elsewhere.", !has_piece_on(b, x, y));
+            }
+        }
+    }
+
+    return 0;
+}
+
+
+char *test_move_on_empty_board() {
+    for (int x = 0; x < BOARD_WIDTH; x++) {
+        board expected = (board) 1 << (BOARD_HEIGHT_1 * x);
+        mu_assert("placing piece on empty board.", move(0, 0, x) == expected);
+    }
+
+    return 0;
+}
+
+
+char *test_move_sequentially() {
+    board b0 = 0;
+    board b1 = 0;
+
+    int col = BOARD_WIDTH / 2;
+    board col_index = (board) 1 << (BOARD_HEIGHT_1 * col);
+
+    for (int y = 0; y + 1 < BOARD_HEIGHT; y += 2) {
+        board expected0 = b0 + (col_index << y);
+        board expected1 = b1 + (col_index << (y + 1));
+
+        b0 = move(b0, b1, col);
+        mu_assert("player 0 move", b0 == expected0);
+
+        b1 = move(b1, b0, col);
+        mu_assert("player 1 move", b1 == expected1);
+    }
+
+    return 0;
+}
+
+
+char *test_has_won_with_vertical() {
+    mu_assert("first column win", has_won(15));
+    mu_assert("higher first column win", has_won(30));
+    mu_assert("3 in a row on first column", !has_won(7));
+
+    return 0;
+}
+
+
+char *test_has_won_with_horizontal() {
+    mu_assert("first row win", has_won(1
+        | (1 << BOARD_HEIGHT_1)
+        | (1 << BOARD_HEIGHT_1 * 2)
+        | (1 << BOARD_HEIGHT_1 * 3)));
+    mu_assert("second row win", has_won(2
+        | (2 << BOARD_HEIGHT_1)
+        | (2 << BOARD_HEIGHT_1 * 2)
+        | (2 << BOARD_HEIGHT_1 * 3)));
+    mu_assert("3 in a row on first row", !has_won(1
+        | (1 << BOARD_HEIGHT_1)
+        | (1 << BOARD_HEIGHT_1  * 2)));
+    
+    return 0;
+}
+    
+
+char *test_has_won_with_positive_diagonal() {
+    // Test evaluation along / diagonal.
+    mu_assert("first / diagonal win", has_won(1
+        | (2 << BOARD_HEIGHT_1)
+        | (4 << (BOARD_HEIGHT_1 * 2))
+        | (8 << (BOARD_HEIGHT_1 * 3))));
+    mu_assert("second / diagonal win", has_won((4 << BOARD_HEIGHT_1)
+        | (8 << (BOARD_HEIGHT_1 * 2))
+        | (16 << (BOARD_HEIGHT_1 * 3))
+        | ((board) 32 << (BOARD_HEIGHT_1 * 4))));
+    mu_assert("3 in a row on / diagonal", !has_won(1
+        | (2 << (BOARD_HEIGHT_1))
+        | (4 << (BOARD_HEIGHT_1 * 2))));
+    
+    return 0;
+}
+    
+
+char *test_has_won_with_negative_diagonal() {
+    // Test evaluation along \ diagonal.
+    mu_assert("first \\ diagonal win", has_won(8
+        | ((board) 4 << BOARD_HEIGHT_1)
+        | ((board) 2 << (BOARD_HEIGHT_1 * 2))
+        | ((board) 1 << (BOARD_HEIGHT_1 * 3))));
+    mu_assert("second \\ diagonal win", has_won((board) 32 << (BOARD_HEIGHT_1 * 2)
+        | ((board) 16 << (BOARD_HEIGHT_1 * 3))
+        | ((board) 8 << (BOARD_HEIGHT_1 * 4))
+        | ((board) 4 << (BOARD_HEIGHT_1 * 5))));
+    mu_assert("3 in a row on \\ diagonal", !has_won((board) 32 << (BOARD_HEIGHT_1 * 2)
+        | ((board) 16 << (BOARD_HEIGHT_1 * 3))
+        | ((board) 8 << (BOARD_HEIGHT_1 * 4))));
+
+    return 0;
+}
+
+
+char *test_is_move_valid() {
+    board b = 0;
+    
+    for (int x = 0; x < BOARD_WIDTH; x++) {
+        for (int y = 0; y < BOARD_HEIGHT; y++) {
+            mu_assert("valid move for player 0.", is_move_valid(b, 0, x));
+            mu_assert("valid move for player 1.", is_move_valid(0, b, x));
+            b = move(b, 0, x);
+        }
+        
+        mu_assert("invalid move for player 0.", !is_move_valid(b, 0, x));
+        mu_assert("invalid move for player 1.", !is_move_valid(0, b, x));
+    }
+
+    return 0;
+}
+
+
+char *test_scenario() {
+    board b0 = 0;
+    board b1 = 0;
+    
+    mu_assert("ply 0, player 0 has not won.", !has_won(b0));
+    mu_assert("ply 0, player 1 has not won.", !has_won(b1));
+
+    b0 = move(b0, b1, 3);
+    mu_assert("ply 1, player 0 has not won.", !has_won(b0));
+    mu_assert("ply 1, player 1 has not won.", !has_won(b1));
+    mu_assert("ply 1, player 1 move.", has_piece_on(b0, 3, 0));
+
+    b1 = move(b1, b0, 3);
+    mu_assert("ply 2, player 0 has not won.", !has_won(b0));
+    mu_assert("ply 2, player 1 has not won.", !has_won(b1));
+    mu_assert("ply 2, player 2 move.", has_piece_on(b1, 3, 1));
+
+    b0 = move(b0, b1, 3);
+    mu_assert("ply 3, player 0 has not won.", !has_won(b0));
+    mu_assert("ply 3, player 1 has not won.", !has_won(b1));
+    mu_assert("ply 3, player 1 move.", has_piece_on(b0, 3, 2));
+
+    b1 = move(b1, b0, 3);
+    mu_assert("ply 4, player 0 has not won.", !has_won(b0));
+    mu_assert("ply 4, player 1 has not won.", !has_won(b1));
+    mu_assert("ply 4, player 2 move.", has_piece_on(b1, 3, 3));
+
+    b0 = move(b0, b1, 3);
+    mu_assert("ply 4, player 0 has not won.", !has_won(b0));
+    mu_assert("ply 4, player 1 has not won.", !has_won(b1));
+    mu_assert("ply 4, player 1 move.", has_piece_on(b0, 3, 4));
+
+    b1 = move(b1, b0, 4);
+    mu_assert("ply 5, player 0 has not won.", !has_won(b0));
+    mu_assert("ply 5, player 1 has not won.", !has_won(b1));
+    mu_assert("ply 5, player 2 move.", has_piece_on(b1, 4, 0));
+
+    b0 = move(b0, b1, 4);
+    mu_assert("ply 6, player 0 has not won.", !has_won(b0));
+    mu_assert("ply 6, player 1 has not won.", !has_won(b1));
+    mu_assert("ply 6, player 0 move.", has_piece_on(b0, 4, 1));
+
+    b1 = move(b1, b0, 4);
+    mu_assert("ply 7, player 0 has not won.", !has_won(b0));
+    mu_assert("ply 7, player 1 has not won.", !has_won(b1));
+    mu_assert("ply 7, player 2 move.", has_piece_on(b1, 4, 2));
+
+    b1 = move(b1, b0, 4);
+    mu_assert("ply 8, player 0 has not won.", !has_won(b0));
+    mu_assert("ply 8, player 1 has not won.", !has_won(b1));
+    mu_assert("ply 8, player 2 move.", has_piece_on(b1, 4, 3));
+
+    b1 = move(b1, b0, 4);
+    mu_assert("ply 9, player 0 has not won.", !has_won(b0));
+    mu_assert("ply 9, player 1 has not won.", !has_won(b1));
+    mu_assert("ply 9, player 2 move.", has_piece_on(b1, 4, 4));
+
+    b1 = move(b1, b0, 4);
+    mu_assert("ply 10, player 0 has not won.", !has_won(b0));
+    mu_assert("ply 10, player 1 has won.", has_won(b1));
+    mu_assert("ply 10, player 2 move.", has_piece_on(b1, 4, 5));
+
+    return 0;
+}
+
+
+char *all_tests() {
+    mu_assert("Board must be at least 7 wide.", BOARD_WIDTH >= 7);
+    mu_assert("Board must be at least 6 high.", BOARD_HEIGHT >= 6);
+
+    mu_run_test(test_has_piece_on_with_empty_board);
+    mu_run_test(test_has_piece_on_with_full_board);
+    mu_run_test(test_has_piece_on_with_one_piece);
+    
+    mu_run_test(test_move_on_empty_board);
+    mu_run_test(test_move_sequentially);
+
+    mu_run_test(test_has_won_with_vertical);
+    mu_run_test(test_has_won_with_horizontal);
+    mu_run_test(test_has_won_with_positive_diagonal);
+    mu_run_test(test_has_won_with_negative_diagonal);
+
+    mu_run_test(test_is_move_valid);
+
+    mu_run_test(test_scenario);
+
+    return 0;
+}
+
+
+int main() {
+    printf("Running tests on %d x %d board . . .\n", BOARD_WIDTH, BOARD_HEIGHT);
+    
+    char *result = all_tests();
+
+    if (result != 0) {
+        printf("Error: %s\n", result);
+    } else {
+        printf("All tests passed.\n");
+    }
+
+    printf("Tests run: %d\n", tests_run);
+    return result != 0;
+}
