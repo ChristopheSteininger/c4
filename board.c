@@ -15,10 +15,12 @@ static const board BOTTOM_ROW = (((board) 1 << (BOARD_HEIGHT_1 * BOARD_WIDTH)) -
     / ((1 << BOARD_HEIGHT_1) - 1);
 
 // 1 in each column header.
-static const board TOP_ROW = BOTTOM_ROW << BOARD_HEIGHT; 
+static const board TOP_ROW = BOTTOM_ROW << BOARD_HEIGHT;
 
 
 board move(board player, board opponent, int column) {
+    assert(is_board_valid(player));
+    assert(is_board_valid(opponent));
     assert(is_move_valid(player, opponent, column));
     
     board valid_moves = (player | opponent) + BOTTOM_ROW;
@@ -29,6 +31,8 @@ board move(board player, board opponent, int column) {
 
 
 int has_won(board b) {
+    assert(is_board_valid(b));
+    
     board vertical_win = b & (b << 1) & (b << 2) & (b << 3);
 
     board horizontal_win = b
@@ -50,7 +54,17 @@ int has_won(board b) {
 }
 
 
+int is_draw(board b0, board b1) {
+    board valid_moves = (b0 | b1) + BOTTOM_ROW;
+    
+    return valid_moves == TOP_ROW;
+}
+
+
 int is_move_valid(board b0, board b1, int column) {
+    assert(is_board_valid(b0));
+    assert(is_board_valid(b1));
+    
     board next_moves = (b0 | b1) + BOTTOM_ROW;
     board column_mask = COLUMN_MASK << (BOARD_HEIGHT_1 * column);
     
@@ -58,7 +72,14 @@ int is_move_valid(board b0, board b1, int column) {
 }
 
 
+int is_board_valid(board b) {
+    return (b & TOP_ROW) == 0;
+}
+
+
 int has_piece_on(board b, int x, int y) {
+    assert(is_board_valid(b));
+
     int shift_to_cell = y + x * BOARD_HEIGHT_1;
     return (b >> shift_to_cell) & 1;
 }
@@ -91,10 +112,4 @@ void printb(board b0, board b1) {
         printf("-");
     }
     printf("+\n");
-    
-    printf(" ");
-    for (int x = 0; x < BOARD_WIDTH; x++) {
-        printf("%d", x);
-    }
-    printf("\n");
 }

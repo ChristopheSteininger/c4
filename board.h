@@ -18,8 +18,16 @@ board move(board, board, int);
 int has_won(board);
 
 
+// Returns true only the players have drawn the game.
+int is_draw(board, board);
+
+
 // Returns true only if a player is allowed to play the given move.
 int is_move_valid(board, board, int);
+
+
+// Returns true only if the board has valid column headers.
+int is_board_valid(board);
 
 
 // Returns true only if the player has a piece on the cell.

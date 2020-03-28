@@ -23,12 +23,9 @@ char *test_has_piece_on_with_empty_board() {
 
 
 char *test_has_piece_on_with_full_board() {
-    int shift = BOARD_HEIGHT_1 * BOARD_WIDTH;
-    board b = ((board) 1 << shift) - 1;
-    
     for (int y = 0; y < BOARD_HEIGHT; y++) {
         for (int x = 0; x < BOARD_WIDTH; x++) {
-            mu_assert("board is full.", has_piece_on(b, x, y));
+            mu_assert("board is full.", has_piece_on((board) 1 << (y + x * BOARD_HEIGHT_1), x, y));
         }
     }
 
@@ -147,6 +144,36 @@ char *test_has_won_with_negative_diagonal() {
 }
 
 
+char *test_is_draw_on_unfinished_games() {
+    mu_assert("empty board is not a draw.", !is_draw(0, 0));
+    mu_assert("board with several moves is not a draw.", !is_draw(1, (board) 1 << BOARD_HEIGHT_1));
+
+    return 0;
+}
+
+
+char *test_is_draw_on_drawn_game() {
+    board b0 = 0;
+    board b1 = 0;
+
+    int counter = 0;
+    for (int y = 0; y < BOARD_HEIGHT; y++) {
+        for (int x = 0; x < BOARD_WIDTH; x++) {
+            if ((counter & 1) == 0) {
+                b0 = move(b0, b1, x);
+            } else {
+                b1 = move(b1, b0, x);
+            }
+        }
+    }
+
+    mu_assert("game is drawn, variant 1.", is_draw(b0, b1));
+    mu_assert("game is drawn, variant 2.", is_draw(b1, b0));
+
+    return 0;
+}
+
+
 char *test_is_move_valid() {
     board b = 0;
     
@@ -160,6 +187,25 @@ char *test_is_move_valid() {
         mu_assert("invalid move for player 0.", !is_move_valid(b, 0, x));
         mu_assert("invalid move for player 1.", !is_move_valid(0, b, x));
     }
+
+    return 0;
+}
+
+
+char *test_is_board_valid_on_boards_with_invalid_column_headers() {
+    for (int x = 0; x < BOARD_WIDTH - 1; x++) {
+        mu_assert("invalid column header.", !is_board_valid(
+            (board) 1 << (BOARD_HEIGHT + BOARD_HEIGHT_1 * x)));
+    }
+
+    return 0;
+}
+
+
+char *test_is_board_valid_on_boards_with_valid_board() {
+    mu_assert("empty board.", is_board_valid(0));
+    mu_assert("board with move in first row", is_board_valid((board) 1 << BOARD_HEIGHT_1));
+    mu_assert("board with move in last row", is_board_valid((board) 1 << (BOARD_HEIGHT - 1)));
 
     return 0;
 }
@@ -247,7 +293,13 @@ char *all_tests() {
     mu_run_test(test_has_won_with_positive_diagonal);
     mu_run_test(test_has_won_with_negative_diagonal);
 
+    mu_run_test(test_is_draw_on_unfinished_games);
+    mu_run_test(test_is_draw_on_drawn_game);
+
     mu_run_test(test_is_move_valid);
+
+    mu_run_test(test_is_board_valid_on_boards_with_invalid_column_headers);
+    mu_run_test(test_is_board_valid_on_boards_with_valid_board);
 
     mu_run_test(test_scenario);
 

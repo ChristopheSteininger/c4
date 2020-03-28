@@ -1,11 +1,9 @@
 #include <assert.h>
 #include <stdio.h>
 
+#include "settings.h"
 #include "board.h"
-
-
-const int BOARD_WIDTH = 7;
-const int BOARD_HEIGHT = 6;
+#include "solver.h"
 
 
 int main() {
@@ -14,8 +12,7 @@ int main() {
     board b0 = 0;
     board b1 = 0;
 
-    b0 = move(b0, b1, 4);
-    b1 = move(b1, b0, 4);
+    printf("Using a %d x %d board.\n", BOARD_WIDTH, BOARD_HEIGHT);
 
-    printb(b0, b1);
+    solve(b0, b1);
 }
