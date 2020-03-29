@@ -1,17 +1,15 @@
-#include "board.h"
-
 #include <assert.h>
 #include <stdio.h>
 
+#include "board.h"
 #include "settings.h"
 
 
-static const board BOARD_HEIGHT_1 = BOARD_HEIGHT + 1;
+const int BOARD_HEIGHT_1 = BOARD_HEIGHT + 1;
 
 static const board COLUMN_MASK = ((board) 1 << BOARD_HEIGHT_1) - 1;
 
-// 1 at the bottom of each column.
-static const board BOTTOM_ROW = (((board) 1 << (BOARD_HEIGHT_1 * BOARD_WIDTH)) - 1)
+const board BOTTOM_ROW = (((board) 1 << (BOARD_HEIGHT_1 * BOARD_WIDTH)) - 1)
     / ((1 << BOARD_HEIGHT_1) - 1);
 
 // 1 in each column header.

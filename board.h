@@ -10,6 +10,12 @@
 typedef __uint128_t board;
 
 
+extern const int BOARD_HEIGHT_1;
+
+// 1 at the bottom of each column.
+extern const board BOTTOM_ROW;
+
+
 // Returns the first board after a move on top of the given column.
 board move(board, board, int);
 

@@ -2,10 +2,8 @@
 
 #include "settings.h"
 #include "board.h"
+#include "table.h"
 #include "minunit.h"
-
-
-static const board BOARD_HEIGHT_1 = BOARD_HEIGHT + 1;
 
 
 int tests_run = 0;
@@ -277,10 +275,57 @@ char *test_scenario() {
 }
 
 
+char *test_table_lookup_returns_stored_results() {
+    board b0 = 0;
+    board b1 = 0;
+    int counter = 0;
+    for (int y = 0; y < BOARD_HEIGHT; y++) {
+        for (int x = 0; x < BOARD_WIDTH; x++) {
+            if (counter & 1) {
+                b0 = move(b0, b1, x);
+            } else {
+                b1 = move(b1, b0, x);
+            }
+            
+            table_store(b0, b1, (int) (counter % 3) + 1, (counter % 21) - 10);
+            counter++;
+        }
+    }
+    
+    b0 = 0;
+    b1 = 0;
+    counter = 0;
+    for (int y = 0; y < BOARD_HEIGHT; y++) {
+        for (int x = 0; x < BOARD_WIDTH; x++) {
+            if (counter & 1) {
+                b0 = move(b0, b1, x);
+            } else {
+                b1 = move(b1, b0, x);
+            }
+            
+            int type, value;
+            int success = table_lookup(b0, b1, &type, &value);
+
+            mu_assert("table lookup in mock game.", success);
+            mu_assert("type lookup in mock game.", type == (counter % 3) + 1);
+            mu_assert("value lookup in mock game.", value == (counter % 21) - 10);
+            
+            counter++;
+        }
+    }
+
+    return 0;
+}
+
+
 char *all_tests() {
+    int table_allocation_success = allocate_table();
+    mu_assert("table allocation.", table_allocation_success);
+    
     mu_assert("Board must be at least 7 wide.", BOARD_WIDTH >= 7);
     mu_assert("Board must be at least 6 high.", BOARD_HEIGHT >= 6);
 
+    // Board tests.
     mu_run_test(test_has_piece_on_with_empty_board);
     mu_run_test(test_has_piece_on_with_full_board);
     mu_run_test(test_has_piece_on_with_one_piece);
@@ -303,6 +348,9 @@ char *all_tests() {
 
     mu_run_test(test_scenario);
 
+    // Table tests.
+    mu_run_test(test_table_lookup_returns_stored_results);
+
     return 0;
 }
 
@@ -311,6 +359,9 @@ int main() {
     printf("Running tests on %d x %d board . . .\n", BOARD_WIDTH, BOARD_HEIGHT);
     
     char *result = all_tests();
+
+    free_table();
+    printf("Freed table.\n");
 
     if (result != 0) {
         printf("Error: %s\n", result);

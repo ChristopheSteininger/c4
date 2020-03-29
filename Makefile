@@ -1,7 +1,9 @@
 CC = gcc
 CFLAGS = -I -Wall -O3
-DEPS = board.h solver.h settings.h minunit.h
-OBJS = board.o solver.o
+DEPS = board.h solver.h table.h hashing.h settings.h minunit.h
+OBJS = board.o solver.o table.o hashing.o
+
+
 
 %.o: %.c $(DEPS)
 	$(CC) -c -o $@ $< $(CFLAGS)
