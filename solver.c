@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <time.h>
 
 #include "solver.h"
 #include "settings.h"
@@ -6,10 +7,7 @@
 #include "table.h"
 
 
-// Scores greater than this are never seen in evaluation.
-const int INFINITY = 10;
-
-long nodes_seen = 0;
+unsigned long stat_num_nodes = 0;
 
 
 int max(int a, int b) {
@@ -20,6 +18,7 @@ int max(int a, int b) {
     return b;
 }
 
+
 int min(int a, int b) {
     if (a < b) {
         return a;
@@ -27,6 +26,7 @@ int min(int a, int b) {
 
     return b;
 }
+
 
 int get_node_type(int value, int alpha, int beta) {
     if (value <= alpha) {
@@ -40,8 +40,9 @@ int get_node_type(int value, int alpha, int beta) {
     return TYPE_EXACT;
 }
 
+
 int negamax(board player, board opponent, int alpha, int beta) {
-    nodes_seen++;
+    stat_num_nodes++;
     
     // Return immediately if this is a terminal state.
     if (has_won(opponent)) {
@@ -55,8 +56,7 @@ int negamax(board player, board opponent, int alpha, int beta) {
     int original_alpha = alpha;
 
     // Check if this state has already been seen.
-    int lookup_type;
-    int lookup_value;
+    int lookup_type, lookup_value;
     int lookup_success = table_lookup(player, opponent, &lookup_type, &lookup_value);
 
     if (lookup_success) {
@@ -78,7 +78,7 @@ int negamax(board player, board opponent, int alpha, int beta) {
     }
 
     // Evaluate all child states.
-    int value = -INFINITY;
+    int value = -1;
     
     for (int col = 0; col < BOARD_WIDTH && alpha < beta; col++) {
         if (is_move_valid(player, opponent, col)) {
@@ -96,6 +96,7 @@ int negamax(board player, board opponent, int alpha, int beta) {
     return value;
 }
 
+
 int solve(board b0, board b1) {
     int allocate_successful = allocate_table();
     if (!allocate_successful) {
@@ -106,11 +107,22 @@ int solve(board b0, board b1) {
     printf("Solving:\n");
     printb(b0, b1);
 
-    int score = negamax(b0, b1, -INFINITY, INFINITY);
+    unsigned long start_time = clock();
+    int score = negamax(b0, b1, -1, 1);
+    double run_time_ms = (clock() - start_time) * 1000 / (double) CLOCKS_PER_SEC;
 
     printf("\n");
-    printf("Score = %d\n", score);
-    printf("States seen = %ld\n", nodes_seen);
+    printf("Score is %d\n", score);
+
+    printf("\n");
+    printf("Nodes seen           = %'lu\n", stat_num_nodes);
+    printf("Nodes per ms         = %'.0f\n", stat_num_nodes / run_time_ms);
+    printf("Table entries        = %'lu\n", get_table_entries());
+    printf("Table size           = %.2f GB\n", get_table_size_in_gigabytes() * 100);
+    printf("Table hit rate       = %6.2f%%\n", get_table_hit_rate() * 100);
+    printf("Table collision rate = %6.2f%%\n", get_table_collision_rate() * 100);
+    printf("Table density        = %6.2f%%\n", get_table_density() * 100);
+    printf("Table overwrite rate = %6.2f%%\n", get_table_overwrite_rate() * 100);
 
     free_table();
 

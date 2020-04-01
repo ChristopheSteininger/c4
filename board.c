@@ -6,6 +6,7 @@
 
 
 const int BOARD_HEIGHT_1 = BOARD_HEIGHT + 1;
+static const int BOARD_HEIGHT_2 = BOARD_HEIGHT + 2;
 
 static const board COLUMN_MASK = ((board) 1 << BOARD_HEIGHT_1) - 1;
 
@@ -31,24 +32,23 @@ board move(board player, board opponent, int column) {
 int has_won(board b) {
     assert(is_board_valid(b));
     
-    board vertical_win = b & (b << 1) & (b << 2) & (b << 3);
+    board vertical_2_in_row = b & (b << 2);
+    if ((vertical_2_in_row & (vertical_2_in_row << 1)) != 0) {
+        return 1;
+    }
 
-    board horizontal_win = b
-        & (b << BOARD_HEIGHT_1)
-        & (b << BOARD_HEIGHT_1 * 2)
-        & (b << BOARD_HEIGHT_1 * 3);
+    board horiztonal_2_in_row = b & (b << BOARD_HEIGHT_1 * 2);
+    if ((horiztonal_2_in_row & (horiztonal_2_in_row << BOARD_HEIGHT_1)) != 0) {
+        return 1;
+    }
     
-    board positive_diagonal_win = b
-        & (b << (BOARD_HEIGHT_1 + 1))
-        & (b << (BOARD_HEIGHT_1 * 2 + 2))
-        & (b << (BOARD_HEIGHT_1 * 3 + 3));
+    board positive_diagonal_2_in_row = b & (b << (BOARD_HEIGHT_2 * 2));
+    if ((positive_diagonal_2_in_row & (positive_diagonal_2_in_row << BOARD_HEIGHT_2)) != 0) {
+        return 1;
+    }
     
-    board negative_diagonal_win = b
-        & (b << (BOARD_HEIGHT_1 - 1))
-        & (b << (BOARD_HEIGHT_1 * 2 - 2))
-        & (b << (BOARD_HEIGHT_1 * 3 - 3));
-
-    return (vertical_win | horizontal_win | positive_diagonal_win | negative_diagonal_win) != 0;
+    board negative_dialonal_2_in_row = b & (b << (BOARD_HEIGHT * 2));
+    return (negative_dialonal_2_in_row & (negative_dialonal_2_in_row << BOARD_HEIGHT)) != 0;
 }
 
 

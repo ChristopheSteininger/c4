@@ -287,7 +287,7 @@ char *test_table_lookup_returns_stored_results() {
                 b1 = move(b1, b0, x);
             }
             
-            table_store(b0, b1, (int) (counter % 3) + 1, (counter % 21) - 10);
+            table_store(b0, b1, (int) (counter % 3) + 1, (counter % 3) - 1);
             counter++;
         }
     }
@@ -308,7 +308,7 @@ char *test_table_lookup_returns_stored_results() {
 
             mu_assert("table lookup in mock game.", success);
             mu_assert("type lookup in mock game.", type == (counter % 3) + 1);
-            mu_assert("value lookup in mock game.", value == (counter % 21) - 10);
+            mu_assert("value lookup in mock game.", value == (counter % 3) - 1);
             
             counter++;
         }
