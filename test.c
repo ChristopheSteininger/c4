@@ -3,6 +3,7 @@
 #include "settings.h"
 #include "board.h"
 #include "table.h"
+#include "hashing.h"
 #include "minunit.h"
 
 
@@ -318,6 +319,69 @@ char *test_table_lookup_returns_stored_results() {
 }
 
 
+char *test_hash_state_returns_equal_hash_for_equal_states() {
+    board b00 = 0;
+    board b01 = 0;
+    b00 = move(b00, b01, 0);
+    b01 = move(b01, b00, 1);
+    b00 = move(b00, b01, 2);
+    b01 = move(b01, b00, 3);
+
+    board expected = hash_state(b00, b01);
+
+    board b10 = 0;
+    board b11 = 0;
+    b10 = move(b10, b11, 2);
+    b11 = move(b11, b10, 3);
+    b10 = move(b10, b11, 0);
+    b11 = move(b11, b10, 1);
+
+    board actual = hash_state(b10, b11);
+
+    mu_assert("Equal states must have equal hashes", expected == actual);
+
+    return 0;
+}
+
+
+char *test_hash_state_returns_equal_hash_for_mirrored_state() {
+    board b00 = 0;
+    board b01 = 0;
+    b00 = move(b00, b01, 0);
+    b01 = move(b01, b00, 1);
+    b00 = move(b00, b01, 2);
+    b01 = move(b01, b00, 3);
+    b00 = move(b00, b01, 2);
+    b01 = move(b01, b00, 3);
+    b00 = move(b00, b01, 4);
+    b01 = move(b01, b00, 4);
+    b00 = move(b00, b01, 5);
+    b01 = move(b01, b00, 5);
+
+    board expected = hash_state(b00, b01);
+
+    // Play the same game, but mirrored.
+    board b10 = 0;
+    board b11 = 0;
+    b10 = move(b10, b11, BOARD_WIDTH - 1);
+    b11 = move(b11, b10, BOARD_WIDTH - 2);
+    b10 = move(b10, b11, BOARD_WIDTH - 3);
+    b11 = move(b11, b10, BOARD_WIDTH - 4);
+    b10 = move(b10, b11, BOARD_WIDTH - 3);
+    b11 = move(b11, b10, BOARD_WIDTH - 4);
+    b10 = move(b10, b11, BOARD_WIDTH - 5);
+    b11 = move(b11, b10, BOARD_WIDTH - 5);
+    b10 = move(b10, b11, BOARD_WIDTH - 6);
+    b11 = move(b11, b10, BOARD_WIDTH - 6);
+
+    board actual = hash_state(b10, b11);
+
+    mu_assert("Mirrored states must have equal hashes", expected == actual);
+
+    return 0;
+}
+
+
 char *all_tests() {
     int table_allocation_success = allocate_table();
     mu_assert("table allocation.", table_allocation_success);
@@ -350,6 +414,10 @@ char *all_tests() {
 
     // Table tests.
     mu_run_test(test_table_lookup_returns_stored_results);
+
+    // Hash tests.
+    mu_run_test(test_hash_state_returns_equal_hash_for_equal_states);
+    mu_run_test(test_hash_state_returns_equal_hash_for_mirrored_state);
 
     return 0;
 }
