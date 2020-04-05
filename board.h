@@ -10,7 +10,11 @@
 typedef __uint128_t board;
 
 
+// The height of the board + 1.
 extern const int BOARD_HEIGHT_1;
+
+// 1 on each playable position of the first column.
+extern const board COLUMN_MASK;
 
 // 1 at the bottom of each column.
 extern const board BOTTOM_ROW;

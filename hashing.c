@@ -3,9 +3,6 @@
 #include "hashing.h"
 
 
-static const board COLUMN_MASK = ((board) 2 << BOARD_HEIGHT) - 1;
-
-
 board hash_state(board b0, board b1) {
     board column_headers = (b0 | b1) + BOTTOM_ROW;
 

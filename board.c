@@ -8,7 +8,7 @@
 const int BOARD_HEIGHT_1 = BOARD_HEIGHT + 1;
 static const int BOARD_HEIGHT_2 = BOARD_HEIGHT + 2;
 
-static const board COLUMN_MASK = ((board) 1 << BOARD_HEIGHT_1) - 1;
+const board COLUMN_MASK = ((board) 1 << BOARD_HEIGHT_1) - 1;
 
 const board BOTTOM_ROW = (((board) 1 << (BOARD_HEIGHT_1 * BOARD_WIDTH)) - 1)
     / ((1 << BOARD_HEIGHT_1) - 1);
@@ -66,6 +66,7 @@ int is_draw(board b0, board b1) {
 board find_threats(board b0, board b1) {
     assert(!has_won(b0));
     assert(!has_won(b1));
+    assert(!is_draw(b0, b1));
 
     // Find any vertical threats.
     board v_doubles = b0 & (b0 << 1);

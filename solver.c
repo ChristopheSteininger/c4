@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <assert.h>
 #include <time.h>
 
 #include "solver.h"
@@ -18,7 +19,6 @@ int max(int a, int b) {
     return b;
 }
 
-
 int min(int a, int b) {
     if (a < b) {
         return a;
@@ -26,7 +26,6 @@ int min(int a, int b) {
 
     return b;
 }
-
 
 int get_node_type(int value, int alpha, int beta) {
     if (value <= alpha) {
@@ -40,17 +39,30 @@ int get_node_type(int value, int alpha, int beta) {
     return TYPE_EXACT;
 }
 
-
 int negamax(board player, board opponent, int alpha, int beta) {
     stat_num_nodes++;
-    
-    // Return immediately if this is a terminal state.
-    if (has_won(opponent)) {
-        return -1;
-    }
 
     if (is_draw(player, opponent)) {
         return 0;
+    }
+
+    // The player can win on this move if the current player has any active threats.
+    if (find_threats(player, opponent) != 0) {
+        return 1;
+    }
+
+    // If the opponent has any active threats, then the player must block one.
+    board threats = find_threats(opponent, player);
+    if (threats != 0) {
+        for (int col = 0; col < BOARD_WIDTH; col++) {
+            if (threats & (COLUMN_MASK << col * BOARD_HEIGHT_1)) {
+                board child_state = move(player, opponent, col);
+                return -negamax(opponent, child_state, -beta, -alpha);
+            }
+        }
+
+        // If there is a threat, then it must be found in the loop above.
+        assert(0);
     }
 
     int original_alpha = alpha;
@@ -95,7 +107,6 @@ int negamax(board player, board opponent, int alpha, int beta) {
 
     return value;
 }
-
 
 int solve(board b0, board b1) {
     int allocate_successful = allocate_table();
