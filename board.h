@@ -28,6 +28,10 @@ int has_won(board);
 int is_draw(board, board);
 
 
+// Returns a 1 in any cell in which the first player threatens a win.
+board find_threats(board, board);
+
+
 // Returns true only if a player is allowed to play the given move.
 int is_move_valid(board, board, int);
 

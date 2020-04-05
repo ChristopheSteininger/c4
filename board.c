@@ -32,23 +32,27 @@ board move(board player, board opponent, int column) {
 int has_won(board b) {
     assert(is_board_valid(b));
     
-    board vertical_2_in_row = b & (b << 2);
-    if ((vertical_2_in_row & (vertical_2_in_row << 1)) != 0) {
+    // Find any vertical wins.
+    board v_doubles = b & (b << 2);
+    if ((v_doubles & (v_doubles << 1)) != 0) {
         return 1;
     }
 
-    board horiztonal_2_in_row = b & (b << BOARD_HEIGHT_1 * 2);
-    if ((horiztonal_2_in_row & (horiztonal_2_in_row << BOARD_HEIGHT_1)) != 0) {
+    // Find any horizontal wins.
+    board h_doubles = b & (b << 2 * BOARD_HEIGHT_1);
+    if ((h_doubles & (h_doubles << BOARD_HEIGHT_1)) != 0) {
         return 1;
     }
     
-    board positive_diagonal_2_in_row = b & (b << (BOARD_HEIGHT_2 * 2));
-    if ((positive_diagonal_2_in_row & (positive_diagonal_2_in_row << BOARD_HEIGHT_2)) != 0) {
+    // Find any wins along the positive diagonal.
+    board pd_doubles = b & (b << 2 * BOARD_HEIGHT_2);
+    if ((pd_doubles & (pd_doubles << BOARD_HEIGHT_2)) != 0) {
         return 1;
     }
     
-    board negative_dialonal_2_in_row = b & (b << (BOARD_HEIGHT * 2));
-    return (negative_dialonal_2_in_row & (negative_dialonal_2_in_row << BOARD_HEIGHT)) != 0;
+    // Find any wins along the negative diagonal.
+    board nd_doubles = b & (b << 2 * BOARD_HEIGHT);
+    return (nd_doubles & (nd_doubles << BOARD_HEIGHT)) != 0;
 }
 
 
@@ -56,6 +60,51 @@ int is_draw(board b0, board b1) {
     board valid_moves = (b0 | b1) + BOTTOM_ROW;
     
     return valid_moves == TOP_ROW;
+}
+
+
+board find_threats(board b0, board b1) {
+    assert(!has_won(b0));
+    assert(!has_won(b1));
+
+    // Find any vertical threats.
+    board v_doubles = b0 & (b0 << 1);
+    board v_triples = v_doubles & (v_doubles << 1);
+    board v_threats = v_triples << 1;
+
+    // Find any horizontal threats.
+    board h_doubles = b0 & (b0 << BOARD_HEIGHT_1);
+    board h_triples = h_doubles & (h_doubles << BOARD_HEIGHT_1);
+    board h_threats
+        = ((b0 >> BOARD_HEIGHT_1) & (h_doubles << BOARD_HEIGHT_1))
+        | ((b0 << BOARD_HEIGHT_1) & (h_doubles >> 2 * BOARD_HEIGHT_1))
+        | (h_triples << BOARD_HEIGHT_1)
+        | (h_triples >> 3 * BOARD_HEIGHT_1);
+
+    // Find any positive diagonal threats.
+    board pd_doubles = b0 & (b0 << BOARD_HEIGHT_2);
+    board pd_triples = pd_doubles & (pd_doubles << BOARD_HEIGHT_2);
+    board pd_threats
+        = ((b0 >> BOARD_HEIGHT_2) & (pd_doubles << BOARD_HEIGHT_2))
+        | ((b0 << BOARD_HEIGHT_2) & (pd_doubles >> 2 * BOARD_HEIGHT_2))
+        | (pd_triples << BOARD_HEIGHT_2)
+        | (pd_triples >> 3 * BOARD_HEIGHT_2);
+    
+    // Find any negative diagonal threats.
+    board nd_doubles = b0 & (b0 << BOARD_HEIGHT);
+    board nd_triples = nd_doubles & (nd_doubles << BOARD_HEIGHT);
+    board nd_threats
+        = ((b0 >> BOARD_HEIGHT) & (nd_doubles << BOARD_HEIGHT))
+        | ((b0 << BOARD_HEIGHT) & (nd_doubles >> 2 * BOARD_HEIGHT))
+        | (nd_triples << BOARD_HEIGHT)
+        | (nd_triples >> 3 * BOARD_HEIGHT);
+
+    // Include any threats.
+    board all_threats = v_threats | h_threats | pd_threats | nd_threats;
+
+    // Exclude any threats which cannot be played immediately.
+    board next_valid_moves = ((b0 | b1) + BOTTOM_ROW) & ~TOP_ROW;
+    return all_threats & next_valid_moves;
 }
 
 

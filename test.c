@@ -110,16 +110,16 @@ char *test_has_won_with_horizontal() {
 char *test_has_won_with_positive_diagonal() {
     // Test evaluation along / diagonal.
     mu_assert("first / diagonal win", has_won(1
-        | (2 << BOARD_HEIGHT_1)
-        | (4 << (BOARD_HEIGHT_1 * 2))
-        | (8 << (BOARD_HEIGHT_1 * 3))));
+        | ((board) 2 << BOARD_HEIGHT_1)
+        | ((board) 4 << (BOARD_HEIGHT_1 * 2))
+        | ((board) 8 << (BOARD_HEIGHT_1 * 3))));
     mu_assert("second / diagonal win", has_won((4 << BOARD_HEIGHT_1)
-        | (8 << (BOARD_HEIGHT_1 * 2))
-        | (16 << (BOARD_HEIGHT_1 * 3))
+        | ((board) 8 << (BOARD_HEIGHT_1 * 2))
+        | ((board) 16 << (BOARD_HEIGHT_1 * 3))
         | ((board) 32 << (BOARD_HEIGHT_1 * 4))));
     mu_assert("3 in a row on / diagonal", !has_won(1
-        | (2 << (BOARD_HEIGHT_1))
-        | (4 << (BOARD_HEIGHT_1 * 2))));
+        | ((board) 2 << (BOARD_HEIGHT_1))
+        | ((board) 4 << (BOARD_HEIGHT_1 * 2))));
     
     return 0;
 }
@@ -168,6 +168,282 @@ char *test_is_draw_on_drawn_game() {
 
     mu_assert("game is drawn, variant 1.", is_draw(b0, b1));
     mu_assert("game is drawn, variant 2.", is_draw(b1, b0));
+
+    return 0;
+}
+
+
+char *test_find_threats_on_games_with_vertical_threat() {
+    board b0, b1;
+
+    // Test a vertical win in the first column.
+    b0 = move(0, 0, 0);
+    b1 = move(0, b0, 1);
+    b0 = move(b0, b1, 0);
+    b1 = move(b1, b0, 1);
+    b0 = move(b0, b1, 0);
+
+    mu_assert("Player 1 has a vertical threat in the first column",
+        find_threats(b0, b1) == 8);
+    mu_assert("Player 2 has no vertical threat.", find_threats(b1, b0) == 0);
+
+    // Test a vertical win in the last column.
+    b0 = move(0, 0, BOARD_WIDTH - 1);
+    b1 = move(0, b0, BOARD_WIDTH - 2);
+    b0 = move(b0, b1, BOARD_WIDTH - 1);
+    b1 = move(b1, b0, BOARD_WIDTH - 2);
+    b0 = move(b0, b1, BOARD_WIDTH - 1);
+
+    mu_assert("Player 1 has a vertical threat in the last column",
+        find_threats(b0, b1) == (board) 8 << (BOARD_WIDTH - 1) * BOARD_HEIGHT_1);
+    mu_assert("Player 2 has no vertical threat.", find_threats(b1, b0) == 0);
+
+    // Test a vertical triple blocked by the top of the board.
+    b0 = 0;
+    b1 = 0;
+    for (int y = 0; y < BOARD_HEIGHT - 4; y++) {
+        if (y & 1) {
+            b0 = move(b0, b1, 0);
+        } else {
+            b1 = move(b1, b0, 0);
+        }
+    }
+    b1 = move(b1, b0, 0);
+    b0 = move(b0, b1, 0);
+    b0 = move(b0, b1, 0);
+    b0 = move(b0, b1, 0);
+
+    mu_assert("Player 1 has no vertical threat.", find_threats(b0, b1) == 0);
+    mu_assert("Player 2 has no vertical threat.", find_threats(b1, b0) == 0);
+
+    return 0;
+}
+
+
+char *test_find_threats_on_games_with_horizontal_threat() {
+    board b0, b1;
+
+    // Test a single horiztonal threat.
+    b0 = move(0, 0, 0);
+    b1 = move(0, b0, 0);
+    b0 = move(b0, b1, 1);
+    b1 = move(b1, b0, 1);
+    b0 = move(b0, b1, 2);
+    b1 = move(b1, b0, 2);
+
+    mu_assert("Player 1 has a horizontal threat to the right.",
+        find_threats(b0, b1) == (board) 1 << 3 * BOARD_HEIGHT_1);
+    mu_assert("Player 2 has no horizontal threat.", find_threats(b1, b0) == 0);
+
+    // Test a double horizontal threat.
+    b0 = move(0, 0, 1);
+    b1 = move(0, b0, 1);
+    b0 = move(b0, b1, 2);
+    b1 = move(b1, b0, 2);
+    b0 = move(b0, b1, 3);
+    b1 = move(b1, b0, 3);
+
+    mu_assert("Player 1 has a double horizontal threat.",
+        find_threats(b0, b1) == (1 | ((board) 1 << 4 * BOARD_HEIGHT_1)));
+    mu_assert("Player 2 has no horizontal threat.", find_threats(b1, b0) == 0);
+
+    // Test a horiztonal threat blocked by the right edge of the board.
+    b0 = move(0, 0, BOARD_WIDTH - 3);
+    b1 = move(0, b0, BOARD_WIDTH - 3);
+    b0 = move(b0, b1, BOARD_WIDTH - 2);
+    b1 = move(b1, b0, BOARD_WIDTH - 2);
+    b0 = move(b0, b1, BOARD_WIDTH - 1);
+    b1 = move(b1, b0, BOARD_WIDTH - 1);
+
+    mu_assert("Player 1 has a horizontal threat to the left.",
+        find_threats(b0, b1) == (board) 1 << (BOARD_WIDTH - 4) * BOARD_HEIGHT_1);
+    mu_assert("Player 2 has no horizontal threat.", find_threats(b1, b0) == 0);
+
+    // Test a horiztonal threat on the left middle.
+    b0 = move(0, 0, 0);
+    b1 = move(0, b0, 0);
+    b0 = move(b0, b1, 2);
+    b1 = move(b1, b0, 2);
+    b0 = move(b0, b1, 3);
+    b1 = move(b1, b0, 3);
+
+    mu_assert("Player 1 has a horizontal threat to the left middle.",
+        find_threats(b0, b1) == (board) 1 << BOARD_HEIGHT_1);
+    mu_assert("Player 2 has no horizontal threat.", find_threats(b1, b0) == 0);
+
+    // Test a horiztonal threat on the right middle.
+    b0 = move(0, 0, 0);
+    b1 = move(0, b0, 0);
+    b0 = move(b0, b1, 1);
+    b1 = move(b1, b0, 1);
+    b0 = move(b0, b1, 3);
+    b1 = move(b1, b0, 3);
+
+    mu_assert("Player 1 has a horizontal threat to the left middle.",
+        find_threats(b0, b1) == (board) 1 << 2 * BOARD_HEIGHT_1);
+    mu_assert("Player 2 has no horizontal threat.", find_threats(b1, b0) == 0);
+
+    return 0;
+}
+
+
+char *test_find_threats_on_games_with_positive_diagonal_threat() {
+    board b0, b1;
+
+    // Test a threat with the highest stone missing.
+    b0 = move(0, 0, 0);
+    b1 = move(0, b0, 1);
+    b0 = move(b0, b1, 1);
+    b0 = move(b0, b1, 2);
+    b1 = move(b1, b0, 2);
+    b0 = move(b0, b1, 2);
+    b1 = move(b1, b0, 3);
+    b0 = move(b0, b1, 3);
+    b1 = move(b1, b0, 3);
+
+    mu_assert("Player 1 has a positive diagonal threat for the highest stone.",
+        find_threats(b0, b1) == (board) 8 << 3 * BOARD_HEIGHT_1);
+    mu_assert("Player 2 has no positive diagonal threat.", find_threats(b1, b0) == 0);
+
+    // Test a threat with the lowest stone missing.
+    b1 = move(0, 0, 1);
+    b0 = move(0, b1, 1);
+    b0 = move(b0, b1, 2);
+    b1 = move(b1, b0, 2);
+    b0 = move(b0, b1, 2);
+    b1 = move(b1, b0, 3);
+    b0 = move(b0, b1, 3);
+    b1 = move(b1, b0, 3);
+    b0 = move(b0, b1, 3);
+
+    mu_assert("Player 1 has a positive diagonal threat for the lowest stone.",
+        find_threats(b0, b1) == 1);
+    mu_assert("Player 2 has no positive diagonal threat.", find_threats(b1, b0) == 0);
+
+    // Test a threat with the second lowest stone missing.
+    b0 = move(0, 0, 0);
+    b1 = move(0, b0, 1);
+    b0 = move(b0, b1, 2);
+    b1 = move(b1, b0, 2);
+    b0 = move(b0, b1, 2);
+    b1 = move(b1, b0, 3);
+    b0 = move(b0, b1, 3);
+    b1 = move(b1, b0, 3);
+    b0 = move(b0, b1, 3);
+
+    mu_assert("Player 1 has a positive diagonal threat for the second lowest stone.",
+        find_threats(b0, b1) == (board) 2 << BOARD_HEIGHT_1);
+    mu_assert("Player 2 has no positive diagonal threat.", find_threats(b1, b0) == 0);
+
+    // Test a threat with the second highest stone missing.
+    b0 = move(0, 0, 0);
+    b1 = move(0, b0, 1);
+    b0 = move(b0, b1, 1);
+    b0 = move(b0, b1, 2);
+    b1 = move(b1, b0, 2);
+    b1 = move(b1, b0, 3);
+    b0 = move(b0, b1, 3);
+    b1 = move(b1, b0, 3);
+    b0 = move(b0, b1, 3);
+
+    mu_assert("Player 1 has a positive diagonal threat for the second highest stone.",
+        find_threats(b0, b1) == (board) 4 << 2 * BOARD_HEIGHT_1);
+    mu_assert("Player 2 has no positive diagonal threat.", find_threats(b1, b0) == 0);
+
+    // Test a threat blocked by the left edge of the board
+    b1 = move(0, 0, 0);
+    b0 = move(0, b1, 0);
+    b0 = move(b0, b1, 1);
+    b1 = move(b1, b0, 1);
+    b0 = move(b0, b1, 1);
+    b1 = move(b1, b0, 2);
+    b0 = move(b0, b1, 2);
+    b1 = move(b1, b0, 2);
+    b0 = move(b0, b1, 2);
+
+    mu_assert("Player 1 has no positive diagonal threat.", find_threats(b0, b1) == 0);
+    mu_assert("Player 2 has no positive diagonal threat.", find_threats(b1, b0) == 0);
+
+    return 0;
+}
+
+
+char *test_find_threats_on_games_with_negative_diagonal_threat() {
+    board b0, b1;
+
+    // Test a threat with the highest stone missing.
+    b1 = move(0, 0, 0);
+    b0 = move(0, b1, 0);
+    b1 = move(b1, b0, 0);
+    b0 = move(b0, b1, 1);
+    b1 = move(b1, b0, 1);
+    b0 = move(b0, b1, 1);
+    b1 = move(b1, b0, 2);
+    b0 = move(b0, b1, 2);
+    b0 = move(b0, b1, 3);
+    
+    mu_assert("Player 1 has a negative diagonal threat for the highest stone.",
+        find_threats(b0, b1) == 8);
+    mu_assert("Player 2 has no negative diagonal threat.", find_threats(b1, b0) == 0);
+
+    // Test a threat with the lowest stone missing.
+    b1 = move(0, 0, 0);
+    b0 = move(0, b1, 0);
+    b1 = move(b1, b0, 0);
+    b0 = move(b0, b1, 0);
+    b0 = move(b0, b1, 1);
+    b1 = move(b1, b0, 1);
+    b0 = move(b0, b1, 1);
+    b1 = move(b1, b0, 2);
+    b0 = move(b0, b1, 2);
+
+    mu_assert("Player 1 has a negative diagonal threat for the lowest stone.",
+        find_threats(b0, b1) == (board) 1 << 3 * BOARD_HEIGHT_1);
+    mu_assert("Player 2 has no negative diagonal threat.", find_threats(b1, b0) == 0);
+
+    // Test a threat with the second lowest stone missing.
+    b1 = move(0, 0, 0);
+    b0 = move(0, b1, 0);
+    b1 = move(b1, b0, 0);
+    b0 = move(b0, b1, 0);
+    b0 = move(b0, b1, 1);
+    b1 = move(b1, b0, 1);
+    b0 = move(b0, b1, 1);
+    b1 = move(b1, b0, 2);
+    b0 = move(b0, b1, 3);
+
+    mu_assert("Player 1 has a negative diagonal threat for the second lowest stone.",
+        find_threats(b0, b1) == (board) 2 << 2 * BOARD_HEIGHT_1);
+    mu_assert("Player 2 has no negative diagonal threat.", find_threats(b1, b0) == 0);
+
+    // Test a threat with the second highest stone missing.
+    b1 = move(0, 0, 0);
+    b0 = move(0, b1, 0);
+    b1 = move(b1, b0, 0);
+    b0 = move(b0, b1, 0);
+    b0 = move(b0, b1, 1);
+    b1 = move(b1, b0, 1);
+    b1 = move(b1, b0, 2);
+    b0 = move(b0, b1, 2);
+    b0 = move(b0, b1, 3);
+
+    mu_assert("Player 1 has a negative diagonal threat for the second highest stone.",
+        find_threats(b0, b1) == (board) 4 << BOARD_HEIGHT_1);
+    mu_assert("Player 2 has no negative diagonal threat.", find_threats(b1, b0) == 0);
+
+    // Test a threat blocked by the right edge of the board
+    b1 = move(0, 0, BOARD_WIDTH - 3);
+    b0 = move(0, b1, BOARD_WIDTH - 3);
+    b1 = move(b1, b0, BOARD_WIDTH - 3);
+    b0 = move(b0, b1, BOARD_WIDTH - 3);
+    b0 = move(b0, b1, BOARD_WIDTH - 2);
+    b1 = move(b1, b0, BOARD_WIDTH - 2);
+    b0 = move(b0, b1, BOARD_WIDTH - 2);
+    b1 = move(b1, b0, BOARD_WIDTH - 1);
+    b0 = move(b0, b1, BOARD_WIDTH - 1);
+
+    mu_assert("Player 1 has no negative diagonal threat.", find_threats(b0, b1) == 0);
+    mu_assert("Player 2 has no negative diagonal threat.", find_threats(b1, b0) == 0);
 
     return 0;
 }
@@ -404,6 +680,11 @@ char *all_tests() {
 
     mu_run_test(test_is_draw_on_unfinished_games);
     mu_run_test(test_is_draw_on_drawn_game);
+
+    mu_run_test(test_find_threats_on_games_with_vertical_threat);
+    mu_run_test(test_find_threats_on_games_with_horizontal_threat);
+    mu_run_test(test_find_threats_on_games_with_positive_diagonal_threat);
+    mu_run_test(test_find_threats_on_games_with_negative_diagonal_threat);
 
     mu_run_test(test_is_move_valid);
 
