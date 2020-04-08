@@ -16,6 +16,50 @@ const board BOTTOM_ROW = (((board) 1 << (BOARD_HEIGHT_1 * BOARD_WIDTH)) - 1)
 // 1 in each column header.
 static const board TOP_ROW = BOTTOM_ROW << BOARD_HEIGHT;
 
+// 1 in each valid cell.
+static const board VALID_CELLS = TOP_ROW - BOTTOM_ROW;
+
+
+// Helper methods.
+
+board find_threats_in_direction(board b, int dir) {
+    board doubles = b & (b << dir);
+    board triples = doubles & (doubles << dir);
+    
+    return ((b >> dir) & (doubles << dir))
+        | ((b << dir) & (doubles >> 2 * dir))
+        | (triples << dir)
+        | (triples >> 3 * dir);
+}
+
+board find_all_threats(board b) {
+    return find_threats_in_direction(b, 1)
+        | find_threats_in_direction(b, BOARD_HEIGHT)
+        | find_threats_in_direction(b, BOARD_HEIGHT_1)
+        | find_threats_in_direction(b, BOARD_HEIGHT_2);
+}
+
+
+board find_winning_stones_in_direction(board b, int dir) {
+    board doubles = b & (b << 2 * dir);
+    board quads = doubles & (doubles << dir);
+    
+    board winning_doubles = quads | (quads >> dir);
+    board winning_quads = winning_doubles | (winning_doubles >> 2 * dir);
+    
+    return winning_quads;
+}
+
+
+board find_winning_stones(board b) {
+    return find_winning_stones_in_direction(b, 1)
+        | find_winning_stones_in_direction(b, BOARD_HEIGHT)
+        | find_winning_stones_in_direction(b, BOARD_HEIGHT_1)
+        | find_winning_stones_in_direction(b, BOARD_HEIGHT_2);
+}
+
+
+// Library methods.
 
 board move(board player, board opponent, int column) {
     assert(is_board_valid(player));
@@ -29,82 +73,33 @@ board move(board player, board opponent, int column) {
 }
 
 
-int has_won(board b) {
+board has_won(board b) {
     assert(is_board_valid(b));
     
-    // Find any vertical wins.
-    board v_doubles = b & (b << 2);
-    if ((v_doubles & (v_doubles << 1)) != 0) {
-        return 1;
-    }
-
-    // Find any horizontal wins.
-    board h_doubles = b & (b << 2 * BOARD_HEIGHT_1);
-    if ((h_doubles & (h_doubles << BOARD_HEIGHT_1)) != 0) {
-        return 1;
-    }
-    
-    // Find any wins along the positive diagonal.
-    board pd_doubles = b & (b << 2 * BOARD_HEIGHT_2);
-    if ((pd_doubles & (pd_doubles << BOARD_HEIGHT_2)) != 0) {
-        return 1;
-    }
-    
-    // Find any wins along the negative diagonal.
-    board nd_doubles = b & (b << 2 * BOARD_HEIGHT);
-    return (nd_doubles & (nd_doubles << BOARD_HEIGHT)) != 0;
+    return find_winning_stones(b);
 }
 
 
 int is_draw(board b0, board b1) {
+    assert(!has_won(b0));
+    assert(!has_won(b1));
+    
     board valid_moves = (b0 | b1) + BOTTOM_ROW;
     
     return valid_moves == TOP_ROW;
 }
 
 
-board find_threats(board b0, board b1) {
-    assert(!has_won(b0));
-    assert(!has_won(b1));
-    assert(!is_draw(b0, b1));
+board find_threats(board player, board opponent) {
+    assert(!has_won(player));
+    assert(!has_won(opponent));
+    assert(!is_draw(player, opponent));
 
-    // Find any vertical threats.
-    board v_doubles = b0 & (b0 << 1);
-    board v_triples = v_doubles & (v_doubles << 1);
-    board v_threats = v_triples << 1;
-
-    // Find any horizontal threats.
-    board h_doubles = b0 & (b0 << BOARD_HEIGHT_1);
-    board h_triples = h_doubles & (h_doubles << BOARD_HEIGHT_1);
-    board h_threats
-        = ((b0 >> BOARD_HEIGHT_1) & (h_doubles << BOARD_HEIGHT_1))
-        | ((b0 << BOARD_HEIGHT_1) & (h_doubles >> 2 * BOARD_HEIGHT_1))
-        | (h_triples << BOARD_HEIGHT_1)
-        | (h_triples >> 3 * BOARD_HEIGHT_1);
-
-    // Find any positive diagonal threats.
-    board pd_doubles = b0 & (b0 << BOARD_HEIGHT_2);
-    board pd_triples = pd_doubles & (pd_doubles << BOARD_HEIGHT_2);
-    board pd_threats
-        = ((b0 >> BOARD_HEIGHT_2) & (pd_doubles << BOARD_HEIGHT_2))
-        | ((b0 << BOARD_HEIGHT_2) & (pd_doubles >> 2 * BOARD_HEIGHT_2))
-        | (pd_triples << BOARD_HEIGHT_2)
-        | (pd_triples >> 3 * BOARD_HEIGHT_2);
-    
-    // Find any negative diagonal threats.
-    board nd_doubles = b0 & (b0 << BOARD_HEIGHT);
-    board nd_triples = nd_doubles & (nd_doubles << BOARD_HEIGHT);
-    board nd_threats
-        = ((b0 >> BOARD_HEIGHT) & (nd_doubles << BOARD_HEIGHT))
-        | ((b0 << BOARD_HEIGHT) & (nd_doubles >> 2 * BOARD_HEIGHT))
-        | (nd_triples << BOARD_HEIGHT)
-        | (nd_triples >> 3 * BOARD_HEIGHT);
-
-    // Include any threats.
-    board all_threats = v_threats | h_threats | pd_threats | nd_threats;
+    // Find any threat, including ones blocked by the opponent.
+    board all_threats = find_all_threats(player);
 
     // Exclude any threats which cannot be played immediately.
-    board next_valid_moves = ((b0 | b1) + BOTTOM_ROW) & ~TOP_ROW;
+    board next_valid_moves = ((player | opponent) + BOTTOM_ROW) & ~TOP_ROW;
     return all_threats & next_valid_moves;
 }
 
@@ -122,6 +117,21 @@ int is_move_valid(board b0, board b1, int column) {
 
 int is_board_valid(board b) {
     return (b & TOP_ROW) == 0;
+}
+
+
+board find_dead_stones(board b0, board b1) {
+    board empty_positions = VALID_CELLS & ~(b0 | b1);
+
+    board b0_dead_stones = b0
+        & ~find_winning_stones(b0 | empty_positions)
+        & ~find_all_threats(b1 | empty_positions);
+    
+    board b1_dead_stones = b1
+        & ~find_winning_stones(b1 | empty_positions)
+        & ~find_all_threats(b0 | empty_positions);
+
+    return b0_dead_stones | b1_dead_stones;
 }
 
 

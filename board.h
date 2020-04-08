@@ -25,7 +25,7 @@ board move(board, board, int);
 
 
 // Returns true only if the player has won the game.
-int has_won(board);
+board has_won(board);
 
 
 // Returns true only the players have drawn the game.
@@ -42,6 +42,10 @@ int is_move_valid(board, board, int);
 
 // Returns true only if the board has valid column headers.
 int is_board_valid(board);
+
+
+// Returns a 1 in any cell which has no impact on the game.
+board find_dead_stones(board, board);
 
 
 // Returns true only if the player has a piece on the cell.

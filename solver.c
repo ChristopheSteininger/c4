@@ -55,6 +55,7 @@ int negamax(board player, board opponent, int alpha, int beta) {
     board threats = find_threats(opponent, player);
     if (threats != 0) {
         for (int col = 0; col < BOARD_WIDTH; col++) {
+            // If this column contains a threat, play that column.
             if (threats & (COLUMN_MASK << col * BOARD_HEIGHT_1)) {
                 board child_state = move(player, opponent, col);
                 return -negamax(opponent, child_state, -beta, -alpha);
@@ -98,7 +99,7 @@ int negamax(board player, board opponent, int alpha, int beta) {
             int child_score = -negamax(opponent, child_state, -beta, -alpha);
             
             value = max(value, child_score);
-            alpha = max(alpha, value);
+            alpha = max(value, alpha);
         }
     }
 
@@ -128,8 +129,7 @@ int solve(board b0, board b1) {
     printf("\n");
     printf("Nodes seen           = %'lu\n", stat_num_nodes);
     printf("Nodes per ms         = %'.0f\n", stat_num_nodes / run_time_ms);
-    printf("Table entries        = %'lu\n", get_table_entries());
-    printf("Table size           = %.2f GB\n", get_table_size_in_gigabytes() * 100);
+    printf("Table size           = %.2f GB\n", get_table_size_in_gigabytes());
     printf("Table hit rate       = %6.2f%%\n", get_table_hit_rate() * 100);
     printf("Table collision rate = %6.2f%%\n", get_table_collision_rate() * 100);
     printf("Table density        = %6.2f%%\n", get_table_density() * 100);

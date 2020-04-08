@@ -105,7 +105,7 @@ char *test_has_won_with_horizontal() {
     
     return 0;
 }
-    
+
 
 char *test_has_won_with_positive_diagonal() {
     // Test evaluation along / diagonal.
@@ -113,7 +113,7 @@ char *test_has_won_with_positive_diagonal() {
         | ((board) 2 << BOARD_HEIGHT_1)
         | ((board) 4 << (BOARD_HEIGHT_1 * 2))
         | ((board) 8 << (BOARD_HEIGHT_1 * 3))));
-    mu_assert("second / diagonal win", has_won((4 << BOARD_HEIGHT_1)
+    mu_assert("second / diagonal win", has_won(((board) 4 << BOARD_HEIGHT_1)
         | ((board) 8 << (BOARD_HEIGHT_1 * 2))
         | ((board) 16 << (BOARD_HEIGHT_1 * 3))
         | ((board) 32 << (BOARD_HEIGHT_1 * 4))));
@@ -123,7 +123,7 @@ char *test_has_won_with_positive_diagonal() {
     
     return 0;
 }
-    
+
 
 char *test_has_won_with_negative_diagonal() {
     // Test evaluation along \ diagonal.
@@ -155,10 +155,9 @@ char *test_is_draw_on_drawn_game() {
     board b0 = 0;
     board b1 = 0;
 
-    int counter = 0;
     for (int y = 0; y < BOARD_HEIGHT; y++) {
         for (int x = 0; x < BOARD_WIDTH; x++) {
-            if ((counter & 1) == 0) {
+            if (((y + 2 * x) >> 1) & 1) {
                 b0 = move(b0, b1, x);
             } else {
                 b1 = move(b1, b0, x);
@@ -486,6 +485,83 @@ char *test_is_board_valid_on_boards_with_valid_board() {
 }
 
 
+char *test_find_dead_stones_with_single_cell() {
+    board b0, b1;
+
+    b0 = move(0, 0, 1);  mu_assert("Ply 0, no dead cells", find_dead_stones(b0, b1) == 0);
+    b1 = move(0, b0, 1);  mu_assert("Ply 1, no dead cells", find_dead_stones(b0, b1) == 0);
+    b1 = move(b1, b0, 1);  mu_assert("Ply 2, no dead cells", find_dead_stones(b0, b1) == 0);
+    b1 = move(b1, b0, 2);  mu_assert("Ply 3, no dead cells", find_dead_stones(b0, b1) == 0);
+    b0 = move(b0, b1, 2);  mu_assert("Ply 4, no dead cells", find_dead_stones(b0, b1) == 0);
+    b0 = move(b0, b1, 3);  mu_assert("Ply 5, no dead cells", find_dead_stones(b0, b1) == 0);
+    b1 = move(b1, b0, 3);  mu_assert("Ply 6, no dead cells", find_dead_stones(b0, b1) == 0);
+    b0 = move(b0, b1, 3);  mu_assert("Ply 7, no dead cells", find_dead_stones(b0, b1) == 0);
+    b1 = move(b1, b0, 4);  mu_assert("Ply 8, no dead cells", find_dead_stones(b0, b1) == 0);
+    b0 = move(b0, b1, 4);  mu_assert("Ply 9, no dead cells", find_dead_stones(b0, b1) == 0);
+    b0 = move(b0, b1, 5);  mu_assert("Ply 10, no dead cells", find_dead_stones(b0, b1) == 0);
+    b1 = move(b1, b0, 5);  mu_assert("Ply 11, no dead cells", find_dead_stones(b0, b1) == 0);
+    
+    b1 = move(b1, b0, 5);
+    mu_assert("Ply 12, single dead cell.", find_dead_stones(b0, b1) == (board) 1 << 3 * BOARD_HEIGHT_1);
+
+    return 0;
+}
+
+
+char *test_find_dead_stones_recognises_stones_blocked_by_left_edge() {
+    board b0 = 0;
+    board b1 = 0;
+
+    b0 = move(b0, b1, 0);  mu_assert("Ply 0, no dead cells", find_dead_stones(b0, b1) == 0);
+    b0 = move(b0, b1, 0);  mu_assert("Ply 1, no dead cells", find_dead_stones(b0, b1) == 0);
+    b1 = move(b1, b0, 0);  mu_assert("Ply 2, no dead cells", find_dead_stones(b0, b1) == 0);
+    b0 = move(b0, b1, 1);  mu_assert("Ply 3, no dead cells", find_dead_stones(b0, b1) == 0);
+    b0 = move(b0, b1, 1);  mu_assert("Ply 4, no dead cells", find_dead_stones(b0, b1) == 0);
+    b1 = move(b1, b0, 1);  mu_assert("Ply 5, no dead cells", find_dead_stones(b0, b1) == 0);
+    b0 = move(b0, b1, 2);  mu_assert("Ply 6, no dead cells", find_dead_stones(b0, b1) == 0);
+    b1 = move(b1, b0, 2);  mu_assert("Ply 7, no dead cells", find_dead_stones(b0, b1) == 0);
+    b1 = move(b1, b0, 2);  mu_assert("Ply 8, no dead cells", find_dead_stones(b0, b1) == 0);
+    b1 = move(b1, b0, 3); mu_assert("Ply 9, no dead cells", find_dead_stones(b0, b1) == 1);
+    b1 = move(b1, b0, 3);  mu_assert("Ply 10, no dead cells", find_dead_stones(b0, b1) == 1);
+    
+    b0 = move(b0, b1, 3);
+    mu_assert("Ply 11, no dead cells", find_dead_stones(b0, b1) == (1 | (board) 1 << BOARD_HEIGHT_1));
+    
+    return 0;
+}
+
+
+char *test_find_dead_stones_recognises_stones_blocked_by_right_edge() {
+    board b0 = 0;
+    board b1 = 0;
+
+    b0 = move(b0, b1, BOARD_WIDTH - 1);  mu_assert("Ply 0, no dead cells", find_dead_stones(b0, b1) == 0);
+    b0 = move(b0, b1, BOARD_WIDTH - 1);  mu_assert("Ply 1, no dead cells", find_dead_stones(b0, b1) == 0);
+    b1 = move(b1, b0, BOARD_WIDTH - 1);  mu_assert("Ply 2, no dead cells", find_dead_stones(b0, b1) == 0);
+    b0 = move(b0, b1, BOARD_WIDTH - 2);  mu_assert("Ply 3, no dead cells", find_dead_stones(b0, b1) == 0);
+    b0 = move(b0, b1, BOARD_WIDTH - 2);  mu_assert("Ply 4, no dead cells", find_dead_stones(b0, b1) == 0);
+    b1 = move(b1, b0, BOARD_WIDTH - 2);  mu_assert("Ply 5, no dead cells", find_dead_stones(b0, b1) == 0);
+    b0 = move(b0, b1, BOARD_WIDTH - 3);  mu_assert("Ply 6, no dead cells", find_dead_stones(b0, b1) == 0);
+    b1 = move(b1, b0, BOARD_WIDTH - 3);  mu_assert("Ply 7, no dead cells", find_dead_stones(b0, b1) == 0);
+    b1 = move(b1, b0, BOARD_WIDTH - 3);  mu_assert("Ply 8, no dead cells", find_dead_stones(b0, b1) == 0);
+    
+    b1 = move(b1, b0, BOARD_WIDTH - 4);
+    mu_assert("Ply 9, 1 dead cell", find_dead_stones(b0, b1)
+        == (board) 1 << ((BOARD_WIDTH - 1) * BOARD_HEIGHT_1));
+    
+    b1 = move(b1, b0, BOARD_WIDTH - 4);
+    mu_assert("Ply 10, 1 dead cell", find_dead_stones(b0, b1)
+        == (board) 1 << ((BOARD_WIDTH - 1) * BOARD_HEIGHT_1));
+    
+    b0 = move(b0, b1, 3);
+    mu_assert("Ply 11, 2 dead cells", find_dead_stones(b0, b1)
+        == ((board) 1 << ((BOARD_WIDTH - 1) * BOARD_HEIGHT_1)
+            | ((board) 1 << ((BOARD_WIDTH - 2) * BOARD_HEIGHT_1))));
+    
+    return 0;
+}
+
+
 char *test_scenario() {
     board b0 = 0;
     board b1 = 0;
@@ -691,6 +767,10 @@ char *all_tests() {
     mu_run_test(test_is_board_valid_on_boards_with_invalid_column_headers);
     mu_run_test(test_is_board_valid_on_boards_with_valid_board);
 
+    mu_run_test(test_find_dead_stones_with_single_cell);
+    mu_run_test(test_find_dead_stones_recognises_stones_blocked_by_left_edge);
+    mu_run_test(test_find_dead_stones_recognises_stones_blocked_by_right_edge);
+
     mu_run_test(test_scenario);
 
     // Table tests.
@@ -710,7 +790,6 @@ int main() {
     char *result = all_tests();
 
     free_table();
-    printf("Freed table.\n");
 
     if (result != 0) {
         printf("Error: %s\n", result);

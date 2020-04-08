@@ -4,8 +4,13 @@
 
 
 board hash_state(board b0, board b1) {
-    board column_headers = (b0 | b1) + BOTTOM_ROW;
+    // Clear any stones which cannot impact the rest of the game to prevent
+    // these influencing the hash.
+    board dead_stones = find_dead_stones(b0, b1);
+    b0 = b0 | dead_stones;
+    b1 = b1 & ~dead_stones;
 
+    board column_headers = (b0 | b1) + BOTTOM_ROW;
     board hash = b0 | column_headers;
 
     board mirrored_hash = 0;

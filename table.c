@@ -68,7 +68,7 @@ int table_lookup(board player, board opponent, int *type, int *value) {
 
     // Otherwise reconstruct the type and value of the entry.
     *type = result.type_and_value >> 6;
-    *value = (result.type_and_value & 63) - 10;
+    *value = (result.type_and_value & 63) - 1;
 
     stat_num_successful_lookups++;
     return 1;
@@ -89,16 +89,11 @@ void table_store(board player, board opponent, int type, int value) {
     }
 
     struct entry new_entry = {
-        .type_and_value = (type << 6) | (value + 10),
+        .type_and_value = (type << 6) | (value + 1),
         .hash = hash
     };
 
     table[index] = new_entry;
-}
-
-
-unsigned long get_table_entries() {
-    return TABLE_SIZE;
 }
 
 
