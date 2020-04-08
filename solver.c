@@ -93,7 +93,8 @@ int negamax(board player, board opponent, int alpha, int beta) {
     // Evaluate all child states.
     int value = -1;
     
-    for (int col = 0; col < BOARD_WIDTH && alpha < beta; col++) {
+    for (int x = 0; x < BOARD_WIDTH && alpha < beta; x++) {
+        int col = BOARD_WIDTH/2 + x/2 - x * (x & 1);
         if (is_move_valid(player, opponent, col)) {
             board child_state = move(player, opponent, col);
             int child_score = -negamax(opponent, child_state, -beta, -alpha);

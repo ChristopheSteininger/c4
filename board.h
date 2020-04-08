@@ -1,17 +1,22 @@
 #ifndef BOARD_H_
 #define BOARD_H_
 
+#include <stdlib.h>
+
 /**
  * Functions to manipulate the board.
  **/
 
 
-// A number wide enough to store one bit for each cell on the board and the column headers.
-typedef __uint128_t board;
-
-
 // The height of the board + 1.
 extern const int BOARD_HEIGHT_1;
+
+// A number wide enough to store one bit for each cell on the board and the column headers.
+#if (BOARD_HEIGHT_1 * BOARD_WIDTH > 64)
+typedef __uint128_t board;
+#else
+typedef uint64_t board;
+#endif
 
 // 1 on each playable position of the first column.
 extern const board COLUMN_MASK;
