@@ -8,7 +8,7 @@
 
 
 int main() {
-    assert(BOARD_WIDTH * (BOARD_HEIGHT + 1) < 8 * sizeof(board));
+    assert(BOARD_WIDTH * BOARD_HEIGHT_1 < 8 * sizeof(board));
     
     // Allow thousands separator.
     setlocale(LC_NUMERIC, "");
@@ -18,5 +18,5 @@ int main() {
 
     printf("Using a %d x %d board.\n", BOARD_WIDTH, BOARD_HEIGHT);
 
-    solve(b0, b1);
+    solve_verbose(b0, b1);
 }

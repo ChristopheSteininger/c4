@@ -1,10 +1,12 @@
 #include <stdio.h>
+#include <locale.h>
 
-#include "settings.h"
-#include "board.h"
-#include "table.h"
-#include "hashing.h"
 #include "minunit.h"
+#include "known_states.h"
+#include "../settings.h"
+#include "../board.h"
+#include "../table.h"
+#include "../hashing.h"
 
 
 int tests_run = 0;
@@ -741,6 +743,8 @@ char *all_tests() {
     mu_assert("Board must be at least 7 wide.", BOARD_WIDTH >= 7);
     mu_assert("Board must be at least 6 high.", BOARD_HEIGHT >= 6);
 
+    printf("Running unit tests . . .\n");
+
     // Board tests.
     mu_run_test(test_has_piece_on_with_empty_board);
     mu_run_test(test_has_piece_on_with_full_board);
@@ -780,23 +784,30 @@ char *all_tests() {
     mu_run_test(test_hash_state_returns_equal_hash_for_equal_states);
     mu_run_test(test_hash_state_returns_equal_hash_for_mirrored_state);
 
+    // Test against states with known scores.
+    mu_run_test(all_known_states_tests);
+
     return 0;
 }
 
 
 int main() {
-    printf("Running tests on %d x %d board . . .\n", BOARD_WIDTH, BOARD_HEIGHT);
+    // Allow thousands separator.
+    setlocale(LC_NUMERIC, "");
+    
+    printf("Using a %d x %d board and %.2f GB table.\n",
+        BOARD_WIDTH, BOARD_HEIGHT, get_table_size_in_gigabytes());
     
     char *result = all_tests();
 
     free_table();
 
+    printf("Tests run: %d\n", tests_run);
     if (result != 0) {
         printf("Error: %s\n", result);
     } else {
         printf("All tests passed.\n");
     }
 
-    printf("Tests run: %d\n", tests_run);
     return result != 0;
 }

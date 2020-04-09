@@ -110,7 +110,15 @@ int negamax(board player, board opponent, int alpha, int beta) {
     return value;
 }
 
+
 int solve(board b0, board b1) {
+    stat_num_nodes = 0;
+    
+    return negamax(b0, b1, -1, 1);
+}
+
+
+int solve_verbose(board b0, board b1) {
     int allocate_successful = allocate_table();
     if (!allocate_successful) {
         printf("Failed to allocate memory for transposition table");
@@ -121,7 +129,7 @@ int solve(board b0, board b1) {
     printb(b0, b1);
 
     unsigned long start_time = clock();
-    int score = negamax(b0, b1, -1, 1);
+    int score = solve(b0, b1);
     double run_time_ms = (clock() - start_time) * 1000 / (double) CLOCKS_PER_SEC;
 
     printf("\n");
@@ -139,4 +147,9 @@ int solve(board b0, board b1) {
     free_table();
 
     return score;
+}
+
+
+unsigned long get_num_nodes() {
+    return stat_num_nodes;
 }

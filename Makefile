@@ -1,7 +1,7 @@
 CC = gcc
 CFLAGS = -I -Wall -O3
-DEPS = board.h solver.h table.h hashing.h settings.h minunit.h
-SRCS = board.c solver.c table.c hashing.c
+DEPS = board.h solver.h table.h hashing.h test/known_states.h settings.h test/minunit.h
+SRCS = board.c solver.c table.c hashing.c test/known_states.c
 OBJS = $(subst .c,.o,$(SRCS))
 
 default: main
@@ -14,24 +14,24 @@ default: main
 main: main.o $(OBJS)
 	$(CC) -o $@ $^ $(CFLAGS)
 
-test: test.o $(OBJS)
-	$(CC) -o $@ $^ $(CFLAGS)
+test: test/test.o $(OBJS)
+	$(CC) -o test/$@ $^ $(CFLAGS)
 
 .PHONY:
 .PHONY: all run_main run_test clean clobber
 all: Makefile.deps run_test run_main
 
-run_main: main
+runmain: main
 	./main
 
-run_test: test
-	./test
+runtest: test
+	test/test
 
 clean:
-	-rm *.o Makefile.deps
+	-rm *.o test/*.o Makefile.deps
 
 clobber: clean
-	-rm -f main test
+	-rm -f main test/test
 
 Makefile.deps:
 	$(CC) -MM $(SRCS) > $@
