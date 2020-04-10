@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <string.h>
 #include <assert.h>
 
 #include "table.h"
@@ -31,6 +32,8 @@ static struct entry *table = NULL;
 
 
 int allocate_table() {
+    assert(table == NULL);
+    
     table = calloc(TABLE_SIZE, sizeof(struct entry));
     
     return table != NULL;
@@ -42,6 +45,13 @@ void free_table() {
     
     free(table);
     table = NULL;
+}
+
+
+void clear_table() {
+    assert(table != NULL);
+    
+    memset(table, 0, sizeof(struct entry));
 }
 
 

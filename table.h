@@ -13,6 +13,8 @@ int allocate_table();
 
 void free_table();
 
+void clear_table();
+
 int table_lookup(board, board, int *, int *);
 
 void table_store(board, board, int, int);

@@ -7,6 +7,7 @@
 #include "../settings.h"
 #include "../board.h"
 #include "../solver.h"
+#include "../table.h"
 
 
 struct test_data {
@@ -67,8 +68,10 @@ char *test_with_file(char *filename) {
     char line[100];
     int line_number;
     for (line_number = 0; fgets(line, sizeof(line), data_file) != NULL; line_number++) {
-        // Read the test data, and execute.
+        // Read the test data.
         struct test_data test_data = read_line(line);
+
+        clear_table();
 
         unsigned long start_time = clock();
         int actual = solve(test_data.b0, test_data.b1);
