@@ -17,7 +17,6 @@ int main() {
     board b0 = 0;
     board b1 = 0;
 
-
     if (!allocate_table()) {
         printf("Failed to allocate memory for transposition table");
         return -1;

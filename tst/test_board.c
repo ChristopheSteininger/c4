@@ -687,6 +687,72 @@ char *test_find_dead_stones_returns_superset_of_dead_stones_on_random_games() {
 }
 
 
+char *test_scenario() {
+    board b0 = 0;
+    board b1 = 0;
+    
+    mu_assert("ply 0, player 0 has not won.", !find_winning_stones(b0));
+    mu_assert("ply 0, player 1 has not won.", !find_winning_stones(b1));
+
+    b0 = move(b0, b1, 3);
+    mu_assert("ply 1, player 0 has not won.", !find_winning_stones(b0));
+    mu_assert("ply 1, player 1 has not won.", !find_winning_stones(b1));
+    mu_assert("ply 1, player 1 move.", has_piece_on(b0, 3, 0));
+
+    b1 = move(b1, b0, 3);
+    mu_assert("ply 2, player 0 has not won.", !find_winning_stones(b0));
+    mu_assert("ply 2, player 1 has not won.", !find_winning_stones(b1));
+    mu_assert("ply 2, player 2 move.", has_piece_on(b1, 3, 1));
+
+    b0 = move(b0, b1, 3);
+    mu_assert("ply 3, player 0 has not won.", !find_winning_stones(b0));
+    mu_assert("ply 3, player 1 has not won.", !find_winning_stones(b1));
+    mu_assert("ply 3, player 1 move.", has_piece_on(b0, 3, 2));
+
+    b1 = move(b1, b0, 3);
+    mu_assert("ply 4, player 0 has not won.", !find_winning_stones(b0));
+    mu_assert("ply 4, player 1 has not won.", !find_winning_stones(b1));
+    mu_assert("ply 4, player 2 move.", has_piece_on(b1, 3, 3));
+
+    b0 = move(b0, b1, 3);
+    mu_assert("ply 4, player 0 has not won.", !find_winning_stones(b0));
+    mu_assert("ply 4, player 1 has not won.", !find_winning_stones(b1));
+    mu_assert("ply 4, player 1 move.", has_piece_on(b0, 3, 4));
+
+    b1 = move(b1, b0, 4);
+    mu_assert("ply 5, player 0 has not won.", !find_winning_stones(b0));
+    mu_assert("ply 5, player 1 has not won.", !find_winning_stones(b1));
+    mu_assert("ply 5, player 2 move.", has_piece_on(b1, 4, 0));
+
+    b0 = move(b0, b1, 4);
+    mu_assert("ply 6, player 0 has not won.", !find_winning_stones(b0));
+    mu_assert("ply 6, player 1 has not won.", !find_winning_stones(b1));
+    mu_assert("ply 6, player 0 move.", has_piece_on(b0, 4, 1));
+
+    b1 = move(b1, b0, 4);
+    mu_assert("ply 7, player 0 has not won.", !find_winning_stones(b0));
+    mu_assert("ply 7, player 1 has not won.", !find_winning_stones(b1));
+    mu_assert("ply 7, player 2 move.", has_piece_on(b1, 4, 2));
+
+    b1 = move(b1, b0, 4);
+    mu_assert("ply 8, player 0 has not won.", !find_winning_stones(b0));
+    mu_assert("ply 8, player 1 has not won.", !find_winning_stones(b1));
+    mu_assert("ply 8, player 2 move.", has_piece_on(b1, 4, 3));
+
+    b1 = move(b1, b0, 4);
+    mu_assert("ply 9, player 0 has not won.", !find_winning_stones(b0));
+    mu_assert("ply 9, player 1 has not won.", !find_winning_stones(b1));
+    mu_assert("ply 9, player 2 move.", has_piece_on(b1, 4, 4));
+
+    b1 = move(b1, b0, 4);
+    mu_assert("ply 10, player 0 has not won.", !find_winning_stones(b0));
+    mu_assert("ply 10, player 1 has won.", find_winning_stones(b1));
+    mu_assert("ply 10, player 2 move.", has_piece_on(b1, 4, 5));
+
+    return 0;
+}
+
+
 char *all_board_tests() {
     mu_run_test(test_has_piece_on_with_empty_board);
     mu_run_test(test_has_piece_on_with_full_board);
@@ -719,6 +785,8 @@ char *all_board_tests() {
     mu_run_test(test_find_dead_stones_on_drawn_board);
     mu_run_test(test_find_dead_stones_returns_subset_of_dead_stones_on_random_games);
     // mu_run_test(test_find_dead_stones_returns_superset_of_dead_stones_on_random_games);
+    
+    mu_run_test(test_scenario);
 
     return 0;
 }

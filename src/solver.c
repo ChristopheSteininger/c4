@@ -74,11 +74,10 @@ int negamax(board player, board opponent, int alpha, int beta) {
     // If the opponent has multiple threats, then the game is lost. If the opponent has only
     // one threat, then the player must block the threat.
     board threats = find_threats(opponent, player);
+    if (threats & (threats - 1)) {
+        return -1;
+    }
     if (threats) {
-        if (threats & (threats - 1)) {
-            return -1;
-        }
-        
         return -negamax(opponent, player | threats, -beta, -alpha);
     }
 

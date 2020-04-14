@@ -32,11 +32,28 @@ board find_threats_in_direction(board b, int dir) {
         | (triples >> 3 * dir);
 }
 
-board find_all_threats(board b) {
-    return find_threats_in_direction(b, 1)
-        | find_threats_in_direction(b, BOARD_HEIGHT)
-        | find_threats_in_direction(b, BOARD_HEIGHT_1)
-        | find_threats_in_direction(b, BOARD_HEIGHT_2);
+
+board covered_stones_in_direction(board b0, board b1, int dir) {
+    board played_positions = b0 | b1;
+    board empty_positions = VALID_CELLS & ~played_positions;
+
+    board stones_1_below_empty = (empty_positions >> dir) & played_positions;
+    board stones_2_below_empty = stones_1_below_empty >> dir;
+
+    board stones_1_above_empty = (empty_positions << dir) & played_positions;
+    board stones_2_above_empty = stones_1_above_empty << dir;
+
+    board pairs = ((b0 >> dir) & b0) | ((b1 >> dir) & b1);
+    board below_pair = (empty_positions >> 3 * dir) & (pairs >> dir);
+    board above_pair = (empty_positions << 3 * dir) & (pairs << 2 * dir);
+    
+    return played_positions
+        & ~stones_1_above_empty
+        & ~stones_1_below_empty
+        & ~stones_2_above_empty
+        & ~stones_2_below_empty
+        & ~above_pair
+        & ~below_pair;
 }
 
 
@@ -91,7 +108,10 @@ board find_threats(board player, board opponent) {
     assert(!is_draw(player, opponent));
 
     // Find any threat, including ones blocked by the opponent.
-    board all_threats = find_all_threats(player);
+    board all_threats = find_threats_in_direction(player, 1)
+        | find_threats_in_direction(player, BOARD_HEIGHT)
+        | find_threats_in_direction(player, BOARD_HEIGHT_1)
+        | find_threats_in_direction(player, BOARD_HEIGHT_2);
 
     // Exclude any threats which cannot be played immediately.
     board next_valid_moves = ((player | opponent) + BOTTOM_ROW) & ~TOP_ROW;
@@ -115,34 +135,7 @@ int is_board_valid(board b) {
 }
 
 
-board covered_stones_in_direction(board b0, board b1, int dir) {
-    board played_positions = b0 | b1;
-    board empty_positions = VALID_CELLS & ~played_positions;
-
-    board stones_1_below_empty = (empty_positions >> dir) & played_positions;
-    board stones_2_below_empty = stones_1_below_empty >> dir;
-
-    board stones_1_above_empty = (empty_positions << dir) & played_positions;
-    board stones_2_above_empty = stones_1_above_empty << dir;
-
-    board pairs = ((b0 >> dir) & b0) | ((b1 >> dir) & b1);
-    board below_pair = (empty_positions >> 3 * dir) & (pairs >> dir);
-    board above_pair = (empty_positions << 3 * dir) & (pairs << 2 * dir);
-    
-    return played_positions
-        & ~stones_1_above_empty
-        & ~stones_1_below_empty
-        & ~stones_2_above_empty
-        & ~stones_2_below_empty
-        & ~above_pair
-        & ~below_pair;
-}
-
-
 board find_dead_stones(board b0, board b1) {
-    board full_cells = b0 | b1;
-    board empty_positions = VALID_CELLS & ~full_cells;
-
     return covered_stones_in_direction(b0, b1, 1)
         & covered_stones_in_direction(b0, b1, BOARD_HEIGHT)
         & covered_stones_in_direction(b0, b1, BOARD_HEIGHT_1)

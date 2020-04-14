@@ -65,7 +65,7 @@ char *test_with_file(char *filename) {
     double total_run_time_ms = 0;
 
     char line[100];
-    for (int line_number = 0; fgets(line, sizeof(line), data_file) != NULL;) {
+    for (int num_tests = 0; fgets(line, sizeof(line), data_file) != NULL;) {
         // Read the test data.
         struct test_data test_data = read_line(line);
 
@@ -87,14 +87,14 @@ char *test_with_file(char *filename) {
         }
 
         // Increment before we print the update.
-        line_number++;
+        num_tests++;
 
         printf("\r\t%-30s %'15.0f %'15.0f %'15.0f %'15d",
             filename,
-            (double) total_nodes / line_number,
+            (double) total_nodes / num_tests,
             total_nodes / total_run_time_ms,
             total_run_time_ms / 1000,
-            line_number);
+            num_tests);
         fflush(stdout);
     }
 
