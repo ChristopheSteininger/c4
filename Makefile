@@ -1,7 +1,7 @@
 CC = gcc
 CFLAGS = -I -Wall -O3
 DEPS = board.h solver.h table.h hashing.h test/known_states.h settings.h test/minunit.h
-SRCS = board.c solver.c table.c hashing.c test/known_states.c
+SRCS = board.c solver.c table.c hashing.c
 OBJS = $(subst .c,.o,$(SRCS))
 
 default: main
@@ -14,7 +14,7 @@ default: main
 main: main.o $(OBJS)
 	$(CC) -o $@ $^ $(CFLAGS)
 
-test: test/test.o $(OBJS)
+test: test/test.o $(OBJS) test/known_states.c
 	$(CC) -o test/$@ $^ $(CFLAGS)
 
 .PHONY:

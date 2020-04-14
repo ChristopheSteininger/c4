@@ -24,13 +24,16 @@ extern const board COLUMN_MASK;
 // 1 at the bottom of each column.
 extern const board BOTTOM_ROW;
 
+// 1 on each playable posiition;
+extern const board VALID_CELLS;
+
 
 // Returns the first board after a move on top of the given column.
 board move(board, board, int);
 
 
 // Returns true only if the player has won the game.
-board has_won(board);
+board find_winning_stones(board);
 
 
 // Returns true only the players have drawn the game.

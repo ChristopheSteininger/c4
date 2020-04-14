@@ -17,7 +17,7 @@ const board BOTTOM_ROW = (((board) 1 << (BOARD_HEIGHT_1 * BOARD_WIDTH)) - 1)
 static const board TOP_ROW = BOTTOM_ROW << BOARD_HEIGHT;
 
 // 1 in each valid cell.
-static const board VALID_CELLS = TOP_ROW - BOTTOM_ROW;
+const board VALID_CELLS = TOP_ROW - BOTTOM_ROW;
 
 
 // Helper methods.
@@ -51,14 +51,6 @@ board find_winning_stones_in_direction(board b, int dir) {
 }
 
 
-board find_winning_stones(board b) {
-    return find_winning_stones_in_direction(b, 1)
-        | find_winning_stones_in_direction(b, BOARD_HEIGHT)
-        | find_winning_stones_in_direction(b, BOARD_HEIGHT_1)
-        | find_winning_stones_in_direction(b, BOARD_HEIGHT_2);
-}
-
-
 // Library methods.
 
 board move(board player, board opponent, int column) {
@@ -73,16 +65,19 @@ board move(board player, board opponent, int column) {
 }
 
 
-board has_won(board b) {
+board find_winning_stones(board b) {
     assert(is_board_valid(b));
     
-    return find_winning_stones(b);
+    return find_winning_stones_in_direction(b, 1)
+        | find_winning_stones_in_direction(b, BOARD_HEIGHT)
+        | find_winning_stones_in_direction(b, BOARD_HEIGHT_1)
+        | find_winning_stones_in_direction(b, BOARD_HEIGHT_2);
 }
 
 
 int is_draw(board b0, board b1) {
-    assert(!has_won(b0));
-    assert(!has_won(b1));
+    assert(!find_winning_stones(b0));
+    assert(!find_winning_stones(b1));
     
     board valid_moves = (b0 | b1) + BOTTOM_ROW;
     
@@ -91,8 +86,8 @@ int is_draw(board b0, board b1) {
 
 
 board find_threats(board player, board opponent) {
-    assert(!has_won(player));
-    assert(!has_won(opponent));
+    assert(!find_winning_stones(player));
+    assert(!find_winning_stones(opponent));
     assert(!is_draw(player, opponent));
 
     // Find any threat, including ones blocked by the opponent.
@@ -120,18 +115,38 @@ int is_board_valid(board b) {
 }
 
 
-board find_dead_stones(board b0, board b1) {
-    board empty_positions = VALID_CELLS & ~(b0 | b1);
+board covered_stones_in_direction(board b0, board b1, int dir) {
+    board played_positions = b0 | b1;
+    board empty_positions = VALID_CELLS & ~played_positions;
 
-    board b0_dead_stones = b0
-        & ~find_winning_stones(b0 | empty_positions)
-        & ~find_all_threats(b1 | empty_positions);
+    board stones_1_below_empty = (empty_positions >> dir) & played_positions;
+    board stones_2_below_empty = stones_1_below_empty >> dir;
+
+    board stones_1_above_empty = (empty_positions << dir) & played_positions;
+    board stones_2_above_empty = stones_1_above_empty << dir;
+
+    board pairs = ((b0 >> dir) & b0) | ((b1 >> dir) & b1);
+    board below_pair = (empty_positions >> 3 * dir) & (pairs >> dir);
+    board above_pair = (empty_positions << 3 * dir) & (pairs << 2 * dir);
     
-    board b1_dead_stones = b1
-        & ~find_winning_stones(b1 | empty_positions)
-        & ~find_all_threats(b0 | empty_positions);
+    return played_positions
+        & ~stones_1_above_empty
+        & ~stones_1_below_empty
+        & ~stones_2_above_empty
+        & ~stones_2_below_empty
+        & ~above_pair
+        & ~below_pair;
+}
 
-    return b0_dead_stones | b1_dead_stones;
+
+board find_dead_stones(board b0, board b1) {
+    board full_cells = b0 | b1;
+    board empty_positions = VALID_CELLS & ~full_cells;
+
+    return covered_stones_in_direction(b0, b1, 1)
+        & covered_stones_in_direction(b0, b1, BOARD_HEIGHT)
+        & covered_stones_in_direction(b0, b1, BOARD_HEIGHT_1)
+        & covered_stones_in_direction(b0, b1, BOARD_HEIGHT_2);
 }
 
 
@@ -158,7 +173,7 @@ void printb(board b0, board b1) {
             } else if (has_piece_on(b1, x, y)) {
                 printf("X");
             } else {
-                printf(" ");
+                printf(".");
             }
         }
 

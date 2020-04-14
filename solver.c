@@ -42,28 +42,29 @@ int get_node_type(int value, int alpha, int beta) {
 int negamax(board player, board opponent, int alpha, int beta) {
     stat_num_nodes++;
 
-    if (is_draw(player, opponent)) {
+    // The position is a draw if there is no space on the board for either player to
+    // connect 4 stones.
+    board empty_positions = VALID_CELLS & ~(player | opponent);
+    if (!find_winning_stones(opponent | empty_positions)
+            && !find_winning_stones(player | empty_positions)) {
         return 0;
     }
 
     // The player can win on this move if the current player has any active threats.
-    if (find_threats(player, opponent) != 0) {
+    if (find_threats(player, opponent)) {
         return 1;
     }
 
     // If the opponent has any active threats, then the player must block one.
     board threats = find_threats(opponent, player);
-    if (threats != 0) {
-        for (int col = 0; col < BOARD_WIDTH; col++) {
-            // If this column contains a threat, play that column.
-            if (threats & (COLUMN_MASK << col * BOARD_HEIGHT_1)) {
-                board child_state = move(player, opponent, col);
-                return -negamax(opponent, child_state, -beta, -alpha);
-            }
+    if (threats) {
+        // The game is lost if the opponent has multiple threats.
+        if (threats & (threats - 1)) {
+            return -1;
         }
-
-        // If there is a threat, then it must be found in the loop above.
-        assert(0);
+        
+        // Otherwise, block the threat.
+        return -negamax(opponent, player | threats, -beta, -alpha);
     }
 
     int original_alpha = alpha;

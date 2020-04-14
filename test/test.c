@@ -84,24 +84,24 @@ char *test_move_sequentially() {
 
 
 char *test_has_won_with_vertical() {
-    mu_assert("first column win", has_won(15));
-    mu_assert("higher first column win", has_won(30));
-    mu_assert("3 in a row on first column", !has_won(7));
+    mu_assert("first column win", find_winning_stones(15));
+    mu_assert("higher first column win", find_winning_stones(30));
+    mu_assert("3 in a row on first column", !find_winning_stones(7));
 
     return 0;
 }
 
 
 char *test_has_won_with_horizontal() {
-    mu_assert("first row win", has_won(1
+    mu_assert("first row win", find_winning_stones(1
         | (1 << BOARD_HEIGHT_1)
         | (1 << BOARD_HEIGHT_1 * 2)
         | (1 << BOARD_HEIGHT_1 * 3)));
-    mu_assert("second row win", has_won(2
+    mu_assert("second row win", find_winning_stones(2
         | (2 << BOARD_HEIGHT_1)
         | (2 << BOARD_HEIGHT_1 * 2)
         | (2 << BOARD_HEIGHT_1 * 3)));
-    mu_assert("3 in a row on first row", !has_won(1
+    mu_assert("3 in a row on first row", !find_winning_stones(1
         | (1 << BOARD_HEIGHT_1)
         | (1 << BOARD_HEIGHT_1  * 2)));
     
@@ -111,15 +111,15 @@ char *test_has_won_with_horizontal() {
 
 char *test_has_won_with_positive_diagonal() {
     // Test evaluation along / diagonal.
-    mu_assert("first / diagonal win", has_won(1
+    mu_assert("first / diagonal win", find_winning_stones(1
         | ((board) 2 << BOARD_HEIGHT_1)
         | ((board) 4 << (BOARD_HEIGHT_1 * 2))
         | ((board) 8 << (BOARD_HEIGHT_1 * 3))));
-    mu_assert("second / diagonal win", has_won(((board) 4 << BOARD_HEIGHT_1)
+    mu_assert("second / diagonal win", find_winning_stones(((board) 4 << BOARD_HEIGHT_1)
         | ((board) 8 << (BOARD_HEIGHT_1 * 2))
         | ((board) 16 << (BOARD_HEIGHT_1 * 3))
         | ((board) 32 << (BOARD_HEIGHT_1 * 4))));
-    mu_assert("3 in a row on / diagonal", !has_won(1
+    mu_assert("3 in a row on / diagonal", !find_winning_stones(1
         | ((board) 2 << (BOARD_HEIGHT_1))
         | ((board) 4 << (BOARD_HEIGHT_1 * 2))));
     
@@ -129,15 +129,15 @@ char *test_has_won_with_positive_diagonal() {
 
 char *test_has_won_with_negative_diagonal() {
     // Test evaluation along \ diagonal.
-    mu_assert("first \\ diagonal win", has_won(8
+    mu_assert("first \\ diagonal win", find_winning_stones(8
         | ((board) 4 << BOARD_HEIGHT_1)
         | ((board) 2 << (BOARD_HEIGHT_1 * 2))
         | ((board) 1 << (BOARD_HEIGHT_1 * 3))));
-    mu_assert("second \\ diagonal win", has_won((board) 32 << (BOARD_HEIGHT_1 * 2)
+    mu_assert("second \\ diagonal win", find_winning_stones((board) 32 << (BOARD_HEIGHT_1 * 2)
         | ((board) 16 << (BOARD_HEIGHT_1 * 3))
         | ((board) 8 << (BOARD_HEIGHT_1 * 4))
         | ((board) 4 << (BOARD_HEIGHT_1 * 5))));
-    mu_assert("3 in a row on \\ diagonal", !has_won((board) 32 << (BOARD_HEIGHT_1 * 2)
+    mu_assert("3 in a row on \\ diagonal", !find_winning_stones((board) 32 << (BOARD_HEIGHT_1 * 2)
         | ((board) 16 << (BOARD_HEIGHT_1 * 3))
         | ((board) 8 << (BOARD_HEIGHT_1 * 4))));
 
@@ -564,66 +564,196 @@ char *test_find_dead_stones_recognises_stones_blocked_by_right_edge() {
 }
 
 
+char *test_find_dead_stones_on_drawn_board() {
+    board b0 = 0;
+    board b1 = 0;
+
+    for (int x = 0; x < BOARD_WIDTH; x++) {
+        for (int y = 0; y < BOARD_HEIGHT; y++) {
+            if ((x + y / 2) & 1) {
+                b0 = move(b0, b1, x);
+            } else {
+                b1 = move(b1, b0, x);
+            }
+        }
+    }
+
+    mu_assert("Drawn board contains only dead cells", find_dead_stones(b0, b1) == (b0 | b1));
+
+    return 0;
+}
+
+
+char *test_find_dead_stones_returns_subset_of_dead_stones_on_random_games() {
+    // Reset the random number sequence.
+    srand(0);
+
+    for (int trial = 0; trial < 1000000; trial++) {
+        board b0 = 0;
+        board b1 = 0;
+        
+        // Play random moves until the game is draw, or the last player won the game.
+        while (!find_winning_stones(b1) && !is_draw(b0, b1)) {
+            // Pick and play a random valid move.
+            int col;
+            do {
+                col = rand() % BOARD_WIDTH;
+            } while (!is_move_valid(b0, b1, col));
+
+            b0 = move(b0, b1, col);
+
+            // Assert that all dead stones returned have no impact on the future of the game.
+            board dead_stones = find_dead_stones(b0, b1);
+            board empty_positions = VALID_CELLS & ~(b0 | b1);
+
+            board future_b0_wins = find_winning_stones(b0 | empty_positions) & empty_positions;
+            board future_b1_wins = find_winning_stones(b1 | empty_positions) & empty_positions;
+            board future_b0_wins_with_dead_stones
+                = find_winning_stones(b0 | dead_stones | empty_positions) & empty_positions;
+            board future_b1_wins_with_dead_stones
+                = find_winning_stones(b1 | dead_stones | empty_positions) & empty_positions;
+            
+            if (future_b0_wins != future_b0_wins_with_dead_stones
+                    || future_b1_wins != future_b1_wins_with_dead_stones) {
+                printf("Trial #%d. Found dead stones which may impact the rest of the game.\n", trial + 1);
+                printb(b0, b1);
+                printb(dead_stones, 0);
+
+                mu_assert("Dead stone check on random board failed.", 0);
+            }
+            
+            // Swap to the next player.
+            board tmp = b0;
+            b0 = b1;
+            b1 = tmp;
+        }
+    }
+
+    return 0;
+}
+
+
+char *test_find_dead_stones_returns_superset_of_dead_stones_on_random_games() {
+    // Reset the random number sequence.
+    srand(0);
+
+    for (int trial = 0; trial < 1000000; trial++) {
+        board b0 = 0;
+        board b1 = 0;
+        
+        // Play random moves until the game is draw, or the last player won the game.
+        while (!find_winning_stones(b1) && !is_draw(b0, b1)) {
+            // Pick and play a random valid move.
+            int col;
+            do {
+                col = rand() % BOARD_WIDTH;
+            } while (!is_move_valid(b0, b1, col));
+
+            b0 = move(b0, b1, col);
+
+            // Assert that no dead stones can be added without impacting the future of the game.
+            board dead_stones = find_dead_stones(b0, b1);
+            board alive_stones = (b0 | b1) & ~dead_stones;
+            board empty_positions = VALID_CELLS & ~(b0 | b1);
+
+            board future_b0_wins = find_winning_stones(b0 | empty_positions);
+            board future_b1_wins = find_winning_stones(b1 | empty_positions);
+
+            for (int x = 0; x < BOARD_WIDTH; x++) {
+                for (int y = 0; y < BOARD_HEIGHT; y++) {
+                    board current_stone = (board) 1 << (y + x * BOARD_HEIGHT_1);
+                    board extra_dead_stones = dead_stones | current_stone;
+                    
+                    board future_b0_wins_with_dead_stones = find_winning_stones(
+                        b0 | extra_dead_stones | empty_positions);
+                    board future_b1_wins_with_dead_stones = find_winning_stones(
+                        b1 | extra_dead_stones | empty_positions);
+                    
+                    if (has_piece_on(alive_stones, x, y)
+                            && future_b0_wins == future_b0_wins_with_dead_stones
+                            && future_b1_wins == future_b1_wins_with_dead_stones) {
+                        printf("Trial #%d. Found additional dead stones.\n",
+                            trial + 1);
+                        printb(b0, b1);
+                        printb(dead_stones, current_stone);
+                        printb(future_b0_wins, 0);
+
+                        mu_assert("Dead stone check on random board failed.", 0);
+                    }
+                }
+            }
+            
+            // Swap to the next player.
+            board tmp = b0;
+            b0 = b1;
+            b1 = tmp;
+        }
+    }
+
+    return 0;
+}
+
+
 char *test_scenario() {
     board b0 = 0;
     board b1 = 0;
     
-    mu_assert("ply 0, player 0 has not won.", !has_won(b0));
-    mu_assert("ply 0, player 1 has not won.", !has_won(b1));
+    mu_assert("ply 0, player 0 has not won.", !find_winning_stones(b0));
+    mu_assert("ply 0, player 1 has not won.", !find_winning_stones(b1));
 
     b0 = move(b0, b1, 3);
-    mu_assert("ply 1, player 0 has not won.", !has_won(b0));
-    mu_assert("ply 1, player 1 has not won.", !has_won(b1));
+    mu_assert("ply 1, player 0 has not won.", !find_winning_stones(b0));
+    mu_assert("ply 1, player 1 has not won.", !find_winning_stones(b1));
     mu_assert("ply 1, player 1 move.", has_piece_on(b0, 3, 0));
 
     b1 = move(b1, b0, 3);
-    mu_assert("ply 2, player 0 has not won.", !has_won(b0));
-    mu_assert("ply 2, player 1 has not won.", !has_won(b1));
+    mu_assert("ply 2, player 0 has not won.", !find_winning_stones(b0));
+    mu_assert("ply 2, player 1 has not won.", !find_winning_stones(b1));
     mu_assert("ply 2, player 2 move.", has_piece_on(b1, 3, 1));
 
     b0 = move(b0, b1, 3);
-    mu_assert("ply 3, player 0 has not won.", !has_won(b0));
-    mu_assert("ply 3, player 1 has not won.", !has_won(b1));
+    mu_assert("ply 3, player 0 has not won.", !find_winning_stones(b0));
+    mu_assert("ply 3, player 1 has not won.", !find_winning_stones(b1));
     mu_assert("ply 3, player 1 move.", has_piece_on(b0, 3, 2));
 
     b1 = move(b1, b0, 3);
-    mu_assert("ply 4, player 0 has not won.", !has_won(b0));
-    mu_assert("ply 4, player 1 has not won.", !has_won(b1));
+    mu_assert("ply 4, player 0 has not won.", !find_winning_stones(b0));
+    mu_assert("ply 4, player 1 has not won.", !find_winning_stones(b1));
     mu_assert("ply 4, player 2 move.", has_piece_on(b1, 3, 3));
 
     b0 = move(b0, b1, 3);
-    mu_assert("ply 4, player 0 has not won.", !has_won(b0));
-    mu_assert("ply 4, player 1 has not won.", !has_won(b1));
+    mu_assert("ply 4, player 0 has not won.", !find_winning_stones(b0));
+    mu_assert("ply 4, player 1 has not won.", !find_winning_stones(b1));
     mu_assert("ply 4, player 1 move.", has_piece_on(b0, 3, 4));
 
     b1 = move(b1, b0, 4);
-    mu_assert("ply 5, player 0 has not won.", !has_won(b0));
-    mu_assert("ply 5, player 1 has not won.", !has_won(b1));
+    mu_assert("ply 5, player 0 has not won.", !find_winning_stones(b0));
+    mu_assert("ply 5, player 1 has not won.", !find_winning_stones(b1));
     mu_assert("ply 5, player 2 move.", has_piece_on(b1, 4, 0));
 
     b0 = move(b0, b1, 4);
-    mu_assert("ply 6, player 0 has not won.", !has_won(b0));
-    mu_assert("ply 6, player 1 has not won.", !has_won(b1));
+    mu_assert("ply 6, player 0 has not won.", !find_winning_stones(b0));
+    mu_assert("ply 6, player 1 has not won.", !find_winning_stones(b1));
     mu_assert("ply 6, player 0 move.", has_piece_on(b0, 4, 1));
 
     b1 = move(b1, b0, 4);
-    mu_assert("ply 7, player 0 has not won.", !has_won(b0));
-    mu_assert("ply 7, player 1 has not won.", !has_won(b1));
+    mu_assert("ply 7, player 0 has not won.", !find_winning_stones(b0));
+    mu_assert("ply 7, player 1 has not won.", !find_winning_stones(b1));
     mu_assert("ply 7, player 2 move.", has_piece_on(b1, 4, 2));
 
     b1 = move(b1, b0, 4);
-    mu_assert("ply 8, player 0 has not won.", !has_won(b0));
-    mu_assert("ply 8, player 1 has not won.", !has_won(b1));
+    mu_assert("ply 8, player 0 has not won.", !find_winning_stones(b0));
+    mu_assert("ply 8, player 1 has not won.", !find_winning_stones(b1));
     mu_assert("ply 8, player 2 move.", has_piece_on(b1, 4, 3));
 
     b1 = move(b1, b0, 4);
-    mu_assert("ply 9, player 0 has not won.", !has_won(b0));
-    mu_assert("ply 9, player 1 has not won.", !has_won(b1));
+    mu_assert("ply 9, player 0 has not won.", !find_winning_stones(b0));
+    mu_assert("ply 9, player 1 has not won.", !find_winning_stones(b1));
     mu_assert("ply 9, player 2 move.", has_piece_on(b1, 4, 4));
 
     b1 = move(b1, b0, 4);
-    mu_assert("ply 10, player 0 has not won.", !has_won(b0));
-    mu_assert("ply 10, player 1 has won.", has_won(b1));
+    mu_assert("ply 10, player 0 has not won.", !find_winning_stones(b0));
+    mu_assert("ply 10, player 1 has won.", find_winning_stones(b1));
     mu_assert("ply 10, player 2 move.", has_piece_on(b1, 4, 5));
 
     return 0;
@@ -774,6 +904,9 @@ char *all_tests() {
     mu_run_test(test_find_dead_stones_with_single_cell);
     mu_run_test(test_find_dead_stones_recognises_stones_blocked_by_left_edge);
     mu_run_test(test_find_dead_stones_recognises_stones_blocked_by_right_edge);
+    mu_run_test(test_find_dead_stones_on_drawn_board);
+    mu_run_test(test_find_dead_stones_returns_subset_of_dead_stones_on_random_games);
+    // mu_run_test(test_find_dead_stones_returns_superset_of_dead_stones_on_random_games);
 
     mu_run_test(test_scenario);
 

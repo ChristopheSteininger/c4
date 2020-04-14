@@ -118,6 +118,16 @@ char *test_easy_start() {
 }
 
 
+char *test_medium_start() {
+    return test_with_file("test/data/medium_start.txt");
+}
+
+
+char *test_hard_start() {
+    return test_with_file("test/data/hard_start.txt");
+}
+
+
 char *all_known_states_tests() {
     mu_assert("Board must be 7 wide.", BOARD_WIDTH == 7);
     mu_assert("Board must be 6 high.", BOARD_HEIGHT == 6);
@@ -130,7 +140,9 @@ char *all_known_states_tests() {
     mu_run_test(test_easy_middle);
     mu_run_test(test_medium_middle);
     
-    // mu_run_test(test_easy_start);
+    mu_run_test(test_easy_start);
+    mu_run_test(test_medium_start);
+    mu_run_test(test_hard_start);
 
     return 0;
 }
