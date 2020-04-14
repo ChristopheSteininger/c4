@@ -57,7 +57,6 @@ struct test_data read_line(char *line) {
 
 
 char *test_with_file(char *filename) {
-    printf("\t%-30s", filename);
     
     FILE *data_file = fopen(filename, "r");
     mu_assert("Could not open the file.", data_file != NULL);
@@ -66,8 +65,7 @@ char *test_with_file(char *filename) {
     double total_run_time_ms = 0;
 
     char line[100];
-    int line_number;
-    for (line_number = 0; fgets(line, sizeof(line), data_file) != NULL; line_number++) {
+    for (int line_number = 0; fgets(line, sizeof(line), data_file) != NULL;) {
         // Read the test data.
         struct test_data test_data = read_line(line);
 
@@ -87,44 +85,54 @@ char *test_with_file(char *filename) {
             fclose(data_file);
             mu_assert("Known state evaluation failed.", 0);
         }
+
+        // Increment before we print the update.
+        line_number++;
+
+        printf("\r\t%-30s %'15.0f %'15.0f %'15.0f %'15d",
+            filename,
+            (double) total_nodes / line_number,
+            total_nodes / total_run_time_ms,
+            total_run_time_ms / 1000,
+            line_number);
+        fflush(stdout);
     }
 
-    fclose(data_file);
+    printf("\n");
 
-    printf(" %'15.2f %'15.0f %'15.0f\n", (double) total_run_time_ms / line_number,
-        (double) total_nodes / line_number, total_nodes / total_run_time_ms);
+    fclose(data_file);
     
     return 0;
 }
 
 
-char *test_easy_end() {
-    return test_with_file("test/data/easy_end.txt");
+char *test_endgame_L1() {
+    return test_with_file("test/data/endgame_L1.txt");
 }
 
 
-char *test_easy_middle() {
-    return test_with_file("test/data/easy_middle.txt");
+char *test_midgame_L1() {
+    return test_with_file("test/data/midgame_L1.txt");
 }
 
 
-char *test_medium_middle() {
-    return test_with_file("test/data/medium_middle.txt");
+char *test_midgame_L2() {
+    return test_with_file("test/data/midgame_L2.txt");
 }
 
 
-char *test_easy_start() {
-    return test_with_file("test/data/easy_start.txt");
+char *test_opening_L1() {
+    return test_with_file("test/data/opening_L1.txt");
 }
 
 
-char *test_medium_start() {
-    return test_with_file("test/data/medium_start.txt");
+char *test_opening_L2() {
+    return test_with_file("test/data/opening_L2.txt");
 }
 
 
-char *test_hard_start() {
-    return test_with_file("test/data/hard_start.txt");
+char *test_opening_L3() {
+    return test_with_file("test/data/opening_L3.txt");
 }
 
 
@@ -133,16 +141,17 @@ char *all_known_states_tests() {
     mu_assert("Board must be 6 high.", BOARD_HEIGHT == 6);
 
     printf("Running known state tests . . .\n");
-    printf("\t%-30s %15s %15s %15s\n", "Test", "Mean time (ms)", "Mean nodes", "Nodes per ms");
+    printf("\t%-30s %15s %15s %15s %15s\n", "Test", "Mean nodes", "Nodes per ms", "Time (s)",
+        "Trials passed");
 
-    mu_run_test(test_easy_end);
+    mu_run_test(test_endgame_L1);
     
-    mu_run_test(test_easy_middle);
-    mu_run_test(test_medium_middle);
+    mu_run_test(test_midgame_L1);
+    mu_run_test(test_midgame_L2);
     
-    mu_run_test(test_easy_start);
-    mu_run_test(test_medium_start);
-    mu_run_test(test_hard_start);
+    mu_run_test(test_opening_L1);
+    mu_run_test(test_opening_L2);
+    mu_run_test(test_opening_L3);
 
     return 0;
 }
