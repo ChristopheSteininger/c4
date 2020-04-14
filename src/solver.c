@@ -19,6 +19,7 @@ int max(int a, int b) {
     return b;
 }
 
+
 int min(int a, int b) {
     if (a < b) {
         return a;
@@ -26,6 +27,7 @@ int min(int a, int b) {
 
     return b;
 }
+
 
 int get_node_type(int value, int alpha, int beta) {
     if (value <= alpha) {
@@ -39,35 +41,46 @@ int get_node_type(int value, int alpha, int beta) {
     return TYPE_EXACT;
 }
 
+
 int negamax(board player, board opponent, int alpha, int beta) {
+    assert(alpha < beta);
+    
     stat_num_nodes++;
 
-    // The position is a draw if there is no space on the board for either player to
-    // connect 4 stones.
+    int original_alpha = alpha;
+
     board empty_positions = VALID_CELLS & ~(player | opponent);
-    if (!find_winning_stones(opponent | empty_positions)
-            && !find_winning_stones(player | empty_positions)) {
+    board possible_opponent_wins = find_winning_stones(opponent | empty_positions);
+    board possible_player_wins = find_winning_stones(player | empty_positions);
+
+    // If there are too few empty spaces left on the board for either player to win, then
+    // adjust the bounds of the search. If neither player can win then the game is guaranteed
+    // to end in a draw.
+    if (!possible_opponent_wins) {
+        alpha = max(alpha, 0);
+    }
+    if (!possible_player_wins) {
+        beta = min(beta, 0);
+    }
+    if (alpha >= beta) {
         return 0;
     }
 
-    // The player can win on this move if the current player has any active threats.
+    // The player can win on this move if the player has any active threats.
     if (find_threats(player, opponent)) {
         return 1;
     }
 
-    // If the opponent has any active threats, then the player must block one.
+    // If the opponent has multiple threats, then the game is lost. If the opponent has only
+    // one threat, then the player must block the threat.
     board threats = find_threats(opponent, player);
     if (threats) {
-        // The game is lost if the opponent has multiple threats.
         if (threats & (threats - 1)) {
             return -1;
         }
         
-        // Otherwise, block the threat.
         return -negamax(opponent, player | threats, -beta, -alpha);
     }
-
-    int original_alpha = alpha;
 
     // Check if this state has already been seen.
     int lookup_type, lookup_value;

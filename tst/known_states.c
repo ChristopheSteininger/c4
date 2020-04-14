@@ -79,7 +79,7 @@ char *test_with_file(char *filename) {
 
         // Fail if the solver returned the wrong result.
         if (test_data.expected != actual) {
-            printf("The position below has score %d, but got %d.\n", test_data.expected, actual);
+            printf("\nThe position below has score %d, but got %d.\n", test_data.expected, actual);
             printb(test_data.b0, test_data.b1);
             
             fclose(data_file);
