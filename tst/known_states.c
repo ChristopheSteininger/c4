@@ -4,10 +4,10 @@
 
 #include "known_states.h"
 #include "minunit.h"
-#include "../settings.h"
-#include "../board.h"
-#include "../solver.h"
-#include "../table.h"
+#include "../src/settings.h"
+#include "../src/board.h"
+#include "../src/solver.h"
+#include "../src/table.h"
 
 
 struct test_data {
@@ -107,32 +107,32 @@ char *test_with_file(char *filename) {
 
 
 char *test_endgame_L1() {
-    return test_with_file("test/data/endgame_L1.txt");
+    return test_with_file("tst/data/endgame_L1.txt");
 }
 
 
 char *test_midgame_L1() {
-    return test_with_file("test/data/midgame_L1.txt");
+    return test_with_file("tst/data/midgame_L1.txt");
 }
 
 
 char *test_midgame_L2() {
-    return test_with_file("test/data/midgame_L2.txt");
+    return test_with_file("tst/data/midgame_L2.txt");
 }
 
 
 char *test_opening_L1() {
-    return test_with_file("test/data/opening_L1.txt");
+    return test_with_file("tst/data/opening_L1.txt");
 }
 
 
 char *test_opening_L2() {
-    return test_with_file("test/data/opening_L2.txt");
+    return test_with_file("tst/data/opening_L2.txt");
 }
 
 
 char *test_opening_L3() {
-    return test_with_file("test/data/opening_L3.txt");
+    return test_with_file("tst/data/opening_L3.txt");
 }
 
 

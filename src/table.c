@@ -27,7 +27,7 @@ const int TYPE_LOWER_BOUND = 2;
 const int TYPE_EXACT = 3;
 
 // Affects performance. Use a prime number for fewer collisions.
-static const unsigned long TABLE_SIZE = 100000007;
+static const unsigned long TABLE_SIZE = 1000007;
 static struct entry *table = NULL;
 
 

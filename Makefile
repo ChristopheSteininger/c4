@@ -1,37 +1,47 @@
 CC = gcc
 CFLAGS = -I -Wall -O3
-DEPS = board.h solver.h table.h hashing.h test/known_states.h settings.h test/minunit.h
-SRCS = board.c solver.c table.c hashing.c
-OBJS = $(subst .c,.o,$(SRCS))
 
-default: main
+SDIR = src
+TDIR = tst
+ODIR = obj
+
+SRCS = $(wildcard $(SDIR)/*.c)
+SOBJ = $(patsubst %.c,$(ODIR)/%.o,$(SRCS))
+
+TSTS = $(wildcard $(TDIR)/*.c)
+TOBJ = $(patsubst %.c,$(ODIR)/%.o,$(TSTS))
+
+default: c4
 
 .SUFFIX:
 .SUFFIX: .o .c
-%.o: %.c $(DEPS) Makefile.deps
+
+$(ODIR)/%.o: %.c $(ODIR)/Makefile.deps
+	@mkdir -p $(@D)
 	$(CC) -c -o $@ $< $(CFLAGS)
 
-main: main.o $(OBJS)
+c4: $(SOBJ)
 	$(CC) -o $@ $^ $(CFLAGS)
 
-test: test/test.o $(OBJS) test/known_states.c
-	$(CC) -o test/$@ $^ $(CFLAGS)
+test: $(patsubst $(ODIR)/$(SDIR)/c4.o,,$(SOBJ)) $(TOBJ)
+	$(CC) -o $@ $^ $(CFLAGS)
 
 .PHONY:
 .PHONY: all run_main run_test clean clobber
 all: Makefile.deps run_test run_main
 
-runmain: main
-	./main
+runc4: c4
+	./c4
 
 runtest: test
-	test/test
+	./test
 
 clean:
-	-rm *.o test/*.o Makefile.deps
+	-rm -rf $(ODIR)
 
 clobber: clean
-	-rm -f main test/test
+	-rm -f c4 test
 
-Makefile.deps:
-	$(CC) -MM $(SRCS) > $@
+$(ODIR)/Makefile.deps:
+	@mkdir -p $(@D)
+	$(CC) -MM $(SRCS) $(TSTS) > $@
