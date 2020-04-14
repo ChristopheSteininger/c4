@@ -133,12 +133,6 @@ int solve(board b0, board b1) {
 
 
 int solve_verbose(board b0, board b1) {
-    int allocate_successful = allocate_table();
-    if (!allocate_successful) {
-        printf("Failed to allocate memory for transposition table");
-        return -1;
-    }
-    
     printf("Solving:\n");
     printb(b0, b1);
 
@@ -152,13 +146,10 @@ int solve_verbose(board b0, board b1) {
     printf("\n");
     printf("Nodes seen           = %'lu\n", stat_num_nodes);
     printf("Nodes per ms         = %'.0f\n", stat_num_nodes / run_time_ms);
-    printf("Table size           = %.2f GB\n", get_table_size_in_gigabytes());
     printf("Table hit rate       = %6.2f%%\n", get_table_hit_rate() * 100);
     printf("Table collision rate = %6.2f%%\n", get_table_collision_rate() * 100);
     printf("Table density        = %6.2f%%\n", get_table_density() * 100);
     printf("Table overwrite rate = %6.2f%%\n", get_table_overwrite_rate() * 100);
-
-    free_table();
 
     return score;
 }
