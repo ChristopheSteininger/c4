@@ -49,17 +49,14 @@ int negamax(board player, board opponent, int alpha, int beta) {
 
     int original_alpha = alpha;
 
-    board empty_positions = VALID_CELLS & ~(player | opponent);
-    board possible_opponent_wins = find_winning_stones(opponent | empty_positions);
-    board possible_player_wins = find_winning_stones(player | empty_positions);
-
     // If there are too few empty spaces left on the board for either player to win, then
     // adjust the bounds of the search. If neither player can win then the game is guaranteed
     // to end in a draw.
-    if (!possible_opponent_wins) {
+    board empty_positions = VALID_CELLS & ~(player | opponent);
+    if (!find_winning_stones(opponent | empty_positions)) {
         alpha = max(alpha, 0);
     }
-    if (!possible_player_wins) {
+    if (!find_winning_stones(player | empty_positions)) {
         beta = min(beta, 0);
     }
     if (alpha >= beta) {

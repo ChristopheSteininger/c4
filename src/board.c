@@ -59,12 +59,8 @@ board covered_stones_in_direction(board b0, board b1, int dir) {
 
 board find_winning_stones_in_direction(board b, int dir) {
     board doubles = b & (b << 2 * dir);
-    board quads = doubles & (doubles << dir);
     
-    board winning_doubles = quads | (quads >> dir);
-    board winning_quads = winning_doubles | (winning_doubles >> 2 * dir);
-    
-    return winning_quads;
+    return doubles & (doubles << dir);
 }
 
 
