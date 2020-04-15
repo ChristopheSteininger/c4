@@ -1,29 +1,29 @@
 CC = gcc
 CFLAGS = -I -Wall -O3
 
-SDIR = src
-TDIR = tst
-ODIR = obj
+SRC_DIR = src
+TST_DIR = tst
+OBJ_DIR = obj
 
-SRCS = $(wildcard $(SDIR)/*.c)
-SOBJ = $(patsubst %.c,$(ODIR)/%.o,$(SRCS))
+SRCS = $(wildcard $(SRC_DIR)/*.c)
+SRC_OBJ = $(patsubst %.c,$(OBJ_DIR)/%.o,$(SRCS))
 
-TSTS = $(wildcard $(TDIR)/*.c)
-TOBJ = $(patsubst %.c,$(ODIR)/%.o,$(TSTS))
+TSTS = $(wildcard $(TST_DIR)/*.c)
+TST_OBJ = $(patsubst %.c,$(OBJ_DIR)/%.o,$(TSTS))
 
 default: c4
 
 .SUFFIX:
 .SUFFIX: .o .c
 
-$(ODIR)/%.o: %.c $(ODIR)/Makefile.deps
+$(OBJ_DIR)/%.o: %.c $(OBJ_DIR)/Makefile.deps
 	@mkdir -p $(@D)
 	$(CC) -c -o $@ $< $(CFLAGS)
 
-c4: $(SOBJ)
+c4: $(SRC_OBJ)
 	$(CC) -o $@ $^ $(CFLAGS)
 
-test: $(patsubst $(ODIR)/$(SDIR)/c4.o,,$(SOBJ)) $(TOBJ)
+test: $(patsubst $(OBJ_DIR)/$(SRC_DIR)/c4.o,,$(SRC_OBJ)) $(TST_OBJ)
 	$(CC) -o $@ $^ $(CFLAGS)
 
 .PHONY:
@@ -37,11 +37,11 @@ runtest: test
 	./test
 
 clean:
-	-rm -rf $(ODIR)
+	-rm -rf $(OBJ_DIR)
 
 clobber: clean
 	-rm -f c4 test
 
-$(ODIR)/Makefile.deps:
+$(OBJ_DIR)/Makefile.deps:
 	@mkdir -p $(@D)
 	$(CC) -MM $(SRCS) $(TSTS) > $@
