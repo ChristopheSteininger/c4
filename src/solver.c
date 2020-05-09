@@ -8,10 +8,13 @@
 #include "table.h"
 
 
-unsigned long stat_num_nodes = 0;
+unsigned long stat_num_nodes;
+unsigned long stat_num_child_nodes;
+unsigned long stat_num_moves_checked;
+unsigned long stat_num_best_moves_guessed;
 
 
-int max(int a, int b) {
+static int max(int a, int b) {
     if (a > b) {
         return a;
     }
@@ -20,7 +23,7 @@ int max(int a, int b) {
 }
 
 
-int min(int a, int b) {
+static int min(int a, int b) {
     if (a < b) {
         return a;
     }
@@ -29,7 +32,7 @@ int min(int a, int b) {
 }
 
 
-int get_node_type(int value, int alpha, int beta) {
+static int get_node_type(int value, int alpha, int beta) {
     if (value <= alpha) {
         return TYPE_UPPER_BOUND;
     }
@@ -42,7 +45,7 @@ int get_node_type(int value, int alpha, int beta) {
 }
 
 
-int negamax(board player, board opponent, int alpha, int beta) {
+static int negamax(const board player, const board opponent, int alpha, int beta) {
     assert(alpha < beta);
     
     stat_num_nodes++;
@@ -100,18 +103,35 @@ int negamax(board player, board opponent, int alpha, int beta) {
         }
     }
 
-    // Evaluate all child states.
+    // If none of the above checks pass, then this is an internal node and we must
+    // evaluate the child nodes to determine the score of this node.
     int value = -1;
+    int num_moves_checked = 0;
+    int move_with_best_score;
     
-    for (int x = 0; x < BOARD_WIDTH && alpha < beta; x++) {
+    int num_child_nodes = get_num_valid_moves(player, opponent);
+    for (int x = 0; num_moves_checked < num_child_nodes && alpha < beta; x++) {
         int col = BOARD_WIDTH/2 + x/2 - x * (x & 1);
         if (is_move_valid(player, opponent, col)) {
             board child_state = move(player, opponent, col);
             int child_score = -negamax(opponent, child_state, -beta, -alpha);
+
+            if (child_score > value) {
+                value = child_score;
+                move_with_best_score = num_moves_checked;
+            }
             
-            value = max(value, child_score);
             alpha = max(value, alpha);
+
+            num_moves_checked++;
         }
+    }
+
+    // Update stat counters to measure move heuristic performance.
+    stat_num_child_nodes += num_child_nodes;
+    stat_num_moves_checked += num_moves_checked;
+    if (move_with_best_score == 0) {
+        stat_num_best_moves_guessed += num_child_nodes;
     }
 
     // Store the result in the transposition table.
@@ -123,6 +143,9 @@ int negamax(board player, board opponent, int alpha, int beta) {
 
 int solve(board b0, board b1) {
     stat_num_nodes = 0;
+    stat_num_child_nodes = 0;
+    stat_num_moves_checked = 0;
+    stat_num_best_moves_guessed = 0;
     
     return negamax(b0, b1, -1, 1);
 }
@@ -142,15 +165,28 @@ int solve_verbose(board b0, board b1) {
     printf("\n");
     printf("Nodes seen           = %'lu\n", stat_num_nodes);
     printf("Nodes per ms         = %'.0f\n", stat_num_nodes / run_time_ms);
+    printf("Time to solve        = %'.0f s\n", run_time_ms / 1000);
     printf("Table hit rate       = %6.2f%%\n", get_table_hit_rate() * 100);
     printf("Table collision rate = %6.2f%%\n", get_table_collision_rate() * 100);
     printf("Table density        = %6.2f%%\n", get_table_density() * 100);
     printf("Table overwrite rate = %6.2f%%\n", get_table_overwrite_rate() * 100);
-
+    printf("Best moves guessed   = %6.2f%%\n", get_best_moves_guessed_rate() * 100);
+    printf("Moves checked        = %6.2f%%\n", get_moves_checked_rate() * 100);
+    
     return score;
 }
 
 
 unsigned long get_num_nodes() {
     return stat_num_nodes;
+}
+
+
+double get_best_moves_guessed_rate() {
+    return (double) stat_num_best_moves_guessed / stat_num_child_nodes;
+}
+
+
+double get_moves_checked_rate() {
+    return (double) stat_num_moves_checked / stat_num_child_nodes;
 }

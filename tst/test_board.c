@@ -5,6 +5,24 @@
 #include "../src/board.h"
 
 
+void swap(board *b0, board *b1) {
+    board tmp = *b0;
+    *b0 = *b1;
+    *b1 = tmp;
+}
+
+
+void play_random_move(board *b0, board *b1) {
+    // Pick and play a random valid move.
+    int col;
+    do {
+        col = rand() % BOARD_WIDTH;
+    } while (!is_move_valid(*b0, *b1, col));
+
+    *b0 = move(*b0, *b1, col);
+}
+
+
 char *test_has_piece_on_with_empty_board() {
     for (int y = 0; y < BOARD_HEIGHT; y++) {
         for (int x = 0; x < BOARD_WIDTH; x++) {
@@ -461,6 +479,56 @@ char *test_is_move_valid() {
 }
 
 
+char *test_get_num_valid_moves_on_known_state() {
+    mu_assert("empty board, all moves valid", get_num_valid_moves(0, 0) == BOARD_WIDTH);
+
+    mu_assert("first column full, one invalid move", get_num_valid_moves(FIRST_COLUMN, 0) == BOARD_WIDTH - 1);
+
+    return 0;
+}
+
+
+char *test_get_num_valid_moves_on_random_games() {
+    // Reset the random number sequence.
+    srand(0);
+
+    for (int trial = 0; trial < 1000000; trial++) {
+        board b0 = 0;
+        board b1 = 0;
+
+        // Play random moves until the game is draw, or the last player won the game.
+        while (1) {
+            int actual = get_num_valid_moves(b0, b1);
+
+            // Count the number of valid moves.
+            int expected = 0;
+            for (int col = 0; col < BOARD_WIDTH; col++) {
+                if (is_move_valid(b0, b1, col)) {
+                    expected++;
+                }
+            }
+
+            // End the loop if the game is over.
+            if (!find_winning_stones(b1) && !is_draw(b0, b1)) {
+                break;
+            }
+
+            if (expected != actual) {
+                printf("Expected %d valid moves, got %d.\n", expected, actual);
+                printb(b0, b1);
+
+                mu_fail("get_num_valid_moves did not return expected result in random game.");
+            }
+            
+            play_random_move(&b0, &b1);
+            swap(&b0, &b1);
+        }
+    }
+    
+    return 0;
+}
+
+
 char *test_is_board_valid_on_boards_with_invalid_column_headers() {
     for (int x = 0; x < BOARD_WIDTH - 1; x++) {
         mu_assert("invalid column header.", !is_board_valid(
@@ -475,6 +543,43 @@ char *test_is_board_valid_on_boards_with_valid_board() {
     mu_assert("empty board.", is_board_valid(0));
     mu_assert("board with move in first row", is_board_valid((board) 1 << BOARD_HEIGHT_1));
     mu_assert("board with move in last row", is_board_valid((board) 1 << (BOARD_HEIGHT - 1)));
+
+    return 0;
+}
+
+
+char *test_mirror_on_random_games() {
+    // Reset the random number sequence.
+    srand(0);
+
+    for (int trial = 0; trial < 1000000; trial++) {
+        board b0 = 0;
+        board b1 = 0;
+
+        board mirror_b0 = 0;
+        board mirror_b1 = 0;
+        
+        // Play random moves until the game is draw, or the last player won the game.
+        while (!find_winning_stones(b1) && !is_draw(b0, b1)) {
+            // Pick and play a random valid move on both boards.
+            int col;
+            do {
+                col = rand() % BOARD_WIDTH;
+            } while (!is_move_valid(b0, b1, col));
+
+            b0 = move(b0, b1, col);
+            mirror_b0 = move(mirror_b0, mirror_b1, BOARD_WIDTH - col - 1);
+
+            mu_assert("mirrored b0 not correct", mirror_b0 == mirror(b0));
+            mu_assert("mirrored b1 not correct", mirror_b1 == mirror(b1));
+            mu_assert("double mirrored b0 not correct", mirror(mirror_b0) == b0);
+            mu_assert("double mirrored b1 not correct", mirror(mirror_b1) == b1);
+
+            // Swap players.
+            swap(&b0, &b1);
+            swap(&mirror_b0, &mirror_b1);
+        }
+    }
 
     return 0;
 }
@@ -611,18 +716,8 @@ char *test_find_dead_stones_returns_subset_of_dead_stones_on_random_games() {
                 mu_assert("Dead stone check on random board failed.", 0);
             }
             
-            // Pick and play a random valid move.
-            int col;
-            do {
-                col = rand() % BOARD_WIDTH;
-            } while (!is_move_valid(b0, b1, col));
-
-            b0 = move(b0, b1, col);
-            
-            // Swap to the next player.
-            board tmp = b0;
-            b0 = b1;
-            b1 = tmp;
+            play_random_move(&b0, &b1);
+            swap(&b0, &b1);
         }
     }
 
@@ -688,10 +783,7 @@ char *test_find_dead_stones_returns_superset_of_dead_stones_on_random_games() {
                 }
             }
             
-            // Swap to the next player.
-            board tmp = b0;
-            b0 = b1;
-            b1 = tmp;
+            swap(&b0, &b1);
         }
     }
 
@@ -788,8 +880,13 @@ char *all_board_tests() {
 
     mu_run_test(test_is_move_valid);
 
+    mu_run_test(test_get_num_valid_moves_on_known_state);
+    mu_run_test(test_get_num_valid_moves_on_random_games);
+
     mu_run_test(test_is_board_valid_on_boards_with_invalid_column_headers);
     mu_run_test(test_is_board_valid_on_boards_with_valid_board);
+
+    mu_run_test(test_mirror_on_random_games);
 
     mu_run_test(test_find_dead_stones_with_single_cell);
     mu_run_test(test_find_dead_stones_recognises_stones_blocked_by_left_edge);

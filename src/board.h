@@ -18,8 +18,11 @@ typedef __uint128_t board;
 typedef uint64_t board;
 #endif
 
-// 1 on each playable position of the first column.
-extern const board COLUMN_MASK;
+// 1 at each playable position of the first column.
+extern const board FIRST_COLUMN;
+
+// 1 at the playable position of the first column, plus the first column header.
+extern const board FIRST_COLUMN_1;
 
 // 1 at the bottom of each column.
 extern const board BOTTOM_ROW;
@@ -48,8 +51,16 @@ board find_threats(board, board);
 int is_move_valid(board, board, int);
 
 
+// Returns the number of child states.
+int get_num_valid_moves(board, board);
+
+
 // Returns true only if the board has valid column headers.
 int is_board_valid(board);
+
+
+// Returns the input board reflected along the middle column.
+board mirror(board);
 
 
 // Returns a 1 in any cell which has no impact on the game.

@@ -3,30 +3,25 @@
 #include "hashing.h"
 
 
+static board min(board a, board b) {
+    if (a < b) {
+        return a;
+    }
+
+    return b;
+}
+
+
 board hash_state(board b0, board b1) {
-    // Clear any stones which cannot impact the rest of the game to prevent
-    // these influencing the hash.
+    // Find any stones which cannot impact the rest of the game and assume
+    // player 0 played these stones.
     board dead_stones = find_dead_stones(b0, b1);
-    b0 = b0 | dead_stones;
-    b1 = b1 & ~dead_stones;
 
-    board column_headers = (b0 | b1) + BOTTOM_ROW;
+    // The hash is a 1 on all positions played by player 0, and a 1 on top
+    // of each column. This hash uniquely identifies the state.
+    board column_headers = (b0 | b1 | dead_stones) + BOTTOM_ROW;
     board hash = b0 | column_headers;
-
-    board mirrored_hash = 0;
-    for (int col = 0; col <= (BOARD_WIDTH - 1) / 2; col++) {
-        int shift = (BOARD_WIDTH - 2 * col - 1) * BOARD_HEIGHT_1;
-        
-        board left_mask = COLUMN_MASK << (col * BOARD_HEIGHT_1);
-        board right_mask = COLUMN_MASK << ((BOARD_WIDTH - col - 1) * BOARD_HEIGHT_1);
-        
-        mirrored_hash |= (hash & left_mask) << shift;
-        mirrored_hash |= (hash & right_mask) >> shift;
-    }
-
-    if (mirrored_hash < hash) {
-        return mirrored_hash;
-    }
     
-    return hash;
+    // Return the same hash for mirrored states.
+    return min(hash, mirror(hash));
 }
