@@ -119,6 +119,42 @@ char *test_hash_state_returns_equal_hash_for_mirrored_state() {
 }
 
 
+char *test_hash_state_returns_equal_hash_for_states_with_dead_stones() {
+    board b00 = 0;
+    board b01 = 0;
+    b00 = move(b00, b01, 0);
+    b00 = move(b00, b01, 0);
+    b01 = move(b01, b00, 0);
+    b00 = move(b00, b01, 1);
+    b00 = move(b00, b01, 1);
+    b01 = move(b01, b00, 1);
+    b01 = move(b01, b00, 2);
+    b01 = move(b01, b00, 2);
+    b01 = move(b01, b00, 2);
+
+    board expected = hash_state(b00, b01);
+
+    // Play the same game, but change the dead stone.
+    board b10 = 0;
+    board b11 = 0;
+    b11 = move(b11, b10, 0);
+    b10 = move(b10, b11, 0);
+    b11 = move(b11, b10, 0);
+    b10 = move(b10, b11, 1);
+    b10 = move(b10, b11, 1);
+    b11 = move(b11, b10, 1);
+    b11 = move(b11, b10, 2);
+    b11 = move(b11, b10, 2);
+    b11 = move(b11, b10, 2);
+
+    board actual = hash_state(b10, b11);
+
+    mu_assert("Equal states after accouting for dead cells must have equal hashes", expected == actual);
+
+    return 0;
+}
+
+
 char *all_tests() {
     int table_allocation_success = allocate_table();
     mu_assert("table allocation.", table_allocation_success);
@@ -136,6 +172,7 @@ char *all_tests() {
     // Hash tests.
     mu_run_test(test_hash_state_returns_equal_hash_for_equal_states);
     mu_run_test(test_hash_state_returns_equal_hash_for_mirrored_state);
+    mu_run_test(test_hash_state_returns_equal_hash_for_states_with_dead_stones);
 
     // Test against states with known scores.
     mu_run_test(all_known_states_tests);
