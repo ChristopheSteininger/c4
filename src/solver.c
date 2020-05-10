@@ -107,7 +107,7 @@ static int negamax(const board player, const board opponent, int alpha, int beta
     // evaluate the child nodes to determine the score of this node.
     int value = -1;
     int num_moves_checked = 0;
-    int move_with_best_score;
+    int move_with_best_score = -1;
     
     int num_child_nodes = get_num_valid_moves(player, opponent);
     for (int x = 0; num_moves_checked < num_child_nodes && alpha < beta; x++) {

@@ -24,7 +24,7 @@ const board VALID_CELLS = COLUMN_HEADERS - BOTTOM_ROW;
 
 // Helper methods.
 
-board find_threats_in_direction(board b, int dir) {
+static board find_threats_in_direction(board b, int dir) {
     board doubles = b & (b << dir);
     board triples = doubles & (doubles << dir);
     
@@ -35,7 +35,7 @@ board find_threats_in_direction(board b, int dir) {
 }
 
 
-board covered_stones_in_direction(board b0, board b1, int dir) {
+static board covered_stones_in_direction(board b0, board b1, int dir) {
     board played_positions = b0 | b1;
     board empty_positions = VALID_CELLS & ~played_positions;
 
@@ -59,7 +59,7 @@ board covered_stones_in_direction(board b0, board b1, int dir) {
 }
 
 
-board find_winning_stones_in_direction(board b, int dir) {
+static board find_winning_stones_in_direction(board b, int dir) {
     board doubles = b & (b << 2 * dir);
     
     return doubles & (doubles << dir);
