@@ -691,19 +691,19 @@ char *test_find_dead_stones_returns_subset_of_dead_stones_on_random_games() {
         board b1 = 0;
         
         // Play random moves until the game is draw, or the last player won the game.
-        while (!find_winning_stones(b1) && !is_draw(b0, b1)) {
+        while (!has_won(b1) && !is_draw(b0, b1)) {
             // Assert that all dead stones returned have no impact on the future of the game.
             board dead_stones = find_dead_stones(b0, b1);
             board empty_positions = VALID_CELLS & ~(b0 | b1);
 
-            board b0_wins = find_winning_stones(b0 | empty_positions);
-            board b1_wins = find_winning_stones(b1 | empty_positions);
+            board b0_wins = find_winning_stones(b0 | empty_positions) & empty_positions;
+            board b1_wins = find_winning_stones(b1 | empty_positions) & empty_positions;
             
-            board b0_wins_minus_dead_stones = find_winning_stones((b0 & ~dead_stones) | empty_positions);
-            board b1_wins_minus_dead_stones = find_winning_stones((b1 & ~dead_stones) | empty_positions);
+            board b0_wins_minus_dead_stones = find_winning_stones((b0 & ~dead_stones) | empty_positions) & empty_positions;
+            board b1_wins_minus_dead_stones = find_winning_stones((b1 & ~dead_stones) | empty_positions) & empty_positions;
                     
-            board b0_wins_plus_dead_stones = find_winning_stones(b0 | dead_stones | empty_positions);
-            board b1_wins_plus_dead_stones = find_winning_stones(b1 | dead_stones | empty_positions);
+            board b0_wins_plus_dead_stones = find_winning_stones(b0 | dead_stones | empty_positions) & empty_positions;
+            board b1_wins_plus_dead_stones = find_winning_stones(b1 | dead_stones | empty_positions) & empty_positions;
             
             if (b0_wins != b0_wins_minus_dead_stones
                     || b1_wins != b1_wins_minus_dead_stones
@@ -713,7 +713,7 @@ char *test_find_dead_stones_returns_subset_of_dead_stones_on_random_games() {
                 printb(b0, b1);
                 printb(dead_stones, 0);
 
-                mu_assert("Dead stone check on random board failed.", 0);
+                mu_fail("Dead stone check on random board failed.");
             }
             
             play_random_move(&b0, &b1);
@@ -729,19 +729,14 @@ char *test_find_dead_stones_returns_superset_of_dead_stones_on_random_games() {
     // Reset the random number sequence.
     srand(0);
 
-    for (int trial = 0; trial < 1000000; trial++) {
+    // Fewer trials than normal as each trial is expensive.
+    for (int trial = 0; trial < 100000; trial++) {
         board b0 = 0;
         board b1 = 0;
         
         // Play random moves until the game is draw, or the last player won the game.
-        while (!find_winning_stones(b1) && !is_draw(b0, b1)) {
-            // Pick and play a random valid move.
-            int col;
-            do {
-                col = rand() % BOARD_WIDTH;
-            } while (!is_move_valid(b0, b1, col));
-
-            b0 = move(b0, b1, col);
+        while (!has_won(b1) && !is_draw(b0, b1)) {
+            play_random_move(&b0, &b1);
 
             // Assert that no dead stones can be added without impacting the future of the game.
             board dead_stones = find_dead_stones(b0, b1);
@@ -771,14 +766,12 @@ char *test_find_dead_stones_returns_superset_of_dead_stones_on_random_games() {
                             && b0_wins == b0_wins_plus_dead_stones
                             && b1_wins == b1_wins_minus_dead_stones
                             && b1_wins == b1_wins_plus_dead_stones) {
-                        printf("Trial #%d. Found additional dead stones.\n",
-                            trial + 1);
+                        printf("Trial #%d. Found additional dead stones.\n", trial + 1);
                         printb(b0, b1);
                         printb(dead_stones, current_stone);
-                        printb(b0_wins, 0);
-                        printb(b0_wins_minus_dead_stones, 0);
+                        printb(b0 | empty_positions, 0);
 
-                        mu_assert("Dead stone check on random board failed.", 0);
+                        mu_fail("Dead stone check on random board failed.");
                     }
                 }
             }

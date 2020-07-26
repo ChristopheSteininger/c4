@@ -18,6 +18,8 @@ board hash_state(board b0, board b1) {
     // influencing the hash.
     board dead_stones = find_dead_stones(b0, b1);
 
+    // TODO: Equal hashes for states where a dead cell is empty.
+
     // The hash is a 1 on all positions played by player 0, and a 1 on top
     // of each column. This hash uniquely identifies the state.
     board column_headers = (b0 | b1) + BOTTOM_ROW;

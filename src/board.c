@@ -21,6 +21,9 @@ static const board COLUMN_HEADERS = BOTTOM_ROW << BOARD_HEIGHT;
 // 1 in each valid cell.
 const board VALID_CELLS = COLUMN_HEADERS - BOTTOM_ROW;
 
+// 1 in each invalid cell.
+static const board INVALID_CELLS = ~VALID_CELLS;
+
 
 // Helper methods.
 
@@ -35,27 +38,100 @@ static board find_threats_in_direction(board b, int dir) {
 }
 
 
-static board covered_stones_in_direction(board b0, board b1, int dir) {
+static board too_short(int dir) {
+    board pairs = (VALID_CELLS >> dir) & VALID_CELLS;
+    board triples = (pairs >> dir) & VALID_CELLS;
+    board quads = (triples >> dir) & VALID_CELLS;
+
+    board quads_shifted = quads | (quads << dir);
+    board possible_wins = quads_shifted | (quads_shifted << 2 * dir);
+    
+    return VALID_CELLS & ~possible_wins;
+}
+
+
+static board border_stones_in_direction(int dir) {
+    board stones_right_of_border = (VALID_CELLS << dir) & VALID_CELLS;
+    board stones_left_of_border = (VALID_CELLS >> dir) & VALID_CELLS;
+
+    board center_stones = stones_right_of_border & stones_left_of_border;
+
+    return ~center_stones;
+}
+
+
+static board dead_stones_in_direction(board b0, board b1, int dir) {   
     board played_positions = b0 | b1;
     board empty_positions = VALID_CELLS & ~played_positions;
 
-    board stones_1_below_empty = (empty_positions >> dir) & played_positions;
-    board stones_1_above_empty = (empty_positions << dir) & played_positions;
+    // . = empty
+    // | = edge of the board
+    // O = player 0
+    // X = player 1
+    // # = player 0/player 1
+    // _ = empty/player 0/player 1
+    // ^ = position of the 1s in the mask
     
-    board stones_2_below_empty = stones_1_below_empty >> dir;
-    board stones_2_above_empty = stones_1_above_empty << dir;
+    // Os and Xs can be swapped in all patterns.
 
-    board pairs = ((b0 >> dir) & b0) | ((b1 >> dir) & b1);
-    board below_pair = (empty_positions >> 3 * dir) & (pairs >> dir);
-    board above_pair = (empty_positions << 3 * dir) & (pairs << 2 * dir);
+    // Detect the patterns #. and .#
+    //                     ^       ^
+    board uncovered
+        = ((empty_positions >> dir) & played_positions)
+        | ((empty_positions << dir) & played_positions);
     
-    return played_positions
-        & ~stones_1_above_empty
-        & ~stones_1_below_empty
-        & ~stones_2_above_empty
-        & ~stones_2_below_empty
-        & ~above_pair
-        & ~below_pair;
+    // Detect the patterns ##. and .##
+    //                     ^         ^
+    board covered_by_1
+        = ((uncovered >> dir) & played_positions)
+        | ((uncovered << dir) & played_positions);
+
+    // Detect the patterns #XX. and .XX#
+    //                     ^           ^
+    board pairs = ((b0 >> dir) & b0) | ((b1 >> dir) & b1);
+    board covered_by_pair
+        = ((covered_by_1 >> dir) & (pairs >> dir))
+        | ((covered_by_1 << dir) & (pairs << 2 * dir));
+    
+    // Use the previous patterns to find all stones covered by
+    // enough other stones that we know these are dead stones.
+    board covered_stones = played_positions
+        & ~uncovered
+        & ~covered_by_1
+        & ~covered_by_pair;
+    
+    // Detect the patterns |___|, |__|, and |_|
+    //                      ^^^    ^^        ^
+    // These patterns occur at the corners of the board when
+    // checking the diagonals. All stones in these positions
+    // are dead.
+    board excluded_stones = too_short(dir) & played_positions;
+
+    // Detect the patterns |_ and _|
+    //                      ^     ^
+    board border_cells = border_stones_in_direction(dir);
+    
+    // Detect the patterns |# and #|
+    //                      ^     ^
+    board stone_next_to_edge = (border_cells & played_positions);
+    
+    // Detect the patterns |. and .|
+    //                      ^     ^
+    board empty_next_to_edge = (border_cells & empty_positions);
+    
+    // Detect the patterns O_X and X_O
+    //                      ^       ^
+    board y
+        = (((b0 >> 2 * dir) & b1) << dir)
+        | (((b1 >> 2 * dir) & b0) << dir);
+
+    // Detect the patterns |#X_O and O_X#|
+    //                      ^           ^
+    board e
+        = (stone_next_to_edge & (y >> 2 * dir) & (empty_positions >> 2 * dir))
+        | (stone_next_to_edge & (y << 2 * dir) & (empty_positions << 2 * dir));
+    
+    return covered_stones | excluded_stones | e;
 }
 
 
@@ -183,10 +259,10 @@ board mirror(board b) {
 
 
 board find_dead_stones(board b0, board b1) {
-    return covered_stones_in_direction(b0, b1, 1)
-        & covered_stones_in_direction(b0, b1, BOARD_HEIGHT)
-        & covered_stones_in_direction(b0, b1, BOARD_HEIGHT_1)
-        & covered_stones_in_direction(b0, b1, BOARD_HEIGHT_2);
+    return dead_stones_in_direction(b0, b1, 1)
+        & dead_stones_in_direction(b0, b1, BOARD_HEIGHT)
+        & dead_stones_in_direction(b0, b1, BOARD_HEIGHT_1)
+        & dead_stones_in_direction(b0, b1, BOARD_HEIGHT_2);
 }
 
 
