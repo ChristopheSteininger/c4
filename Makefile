@@ -27,8 +27,8 @@ test: $(patsubst $(OBJ_DIR)/$(SRC_DIR)/c4.o,,$(SRC_OBJ)) $(TST_OBJ)
 	$(CC) -o $@ $^ $(CFLAGS)
 
 .PHONY:
-.PHONY: all run_main run_test clean clobber
-all: Makefile.deps run_test run_main
+.PHONY: all runc4 runtest clean clobber
+all: c4 test
 
 runc4: c4
 	./c4
