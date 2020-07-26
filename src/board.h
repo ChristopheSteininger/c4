@@ -36,7 +36,7 @@ board move(board, board, int);
 
 
 // Returns true only if the player has won the game.
-board find_winning_stones(board);
+int has_won(board);
 
 
 // Returns true only the players have drawn the game.
@@ -65,6 +65,10 @@ board mirror(board);
 
 // Returns a 1 in any cell which has no impact on the game.
 board find_dead_stones(board, board);
+
+
+// Returns a 1 in any which is part of a 4 in a row.
+board find_winning_stones(board);
 
 
 // Returns true only if the player has a piece on the cell.

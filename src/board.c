@@ -60,9 +60,19 @@ static board covered_stones_in_direction(board b0, board b1, int dir) {
 
 
 static board find_winning_stones_in_direction(board b, int dir) {
-    board doubles = b & (b << 2 * dir);
+    board pairs = b & (b << 2 * dir);
+    board quads = pairs & (pairs << dir);
+
+    board winning_pairs = quads | (quads >> dir);
+
+    return winning_pairs | (winning_pairs >> 2 * dir);
+}
+
+
+static board has_won_in_direction(board b, int dir) {
+    board pairs = b & (b << 2 * dir);
     
-    return doubles & (doubles << dir);
+    return pairs & (pairs << dir);
 }
 
 
@@ -80,19 +90,22 @@ board move(board player, board opponent, int column) {
 }
 
 
-board find_winning_stones(board b) {
+int has_won(board b) {
     assert(is_board_valid(b));
+
+    board quads
+        = has_won_in_direction(b, 1)
+        | has_won_in_direction(b, BOARD_HEIGHT)
+        | has_won_in_direction(b, BOARD_HEIGHT_1)
+        | has_won_in_direction(b, BOARD_HEIGHT_2);
     
-    return find_winning_stones_in_direction(b, 1)
-        | find_winning_stones_in_direction(b, BOARD_HEIGHT)
-        | find_winning_stones_in_direction(b, BOARD_HEIGHT_1)
-        | find_winning_stones_in_direction(b, BOARD_HEIGHT_2);
+    return quads != 0;
 }
 
 
 int is_draw(board b0, board b1) {
-    assert(!find_winning_stones(b0));
-    assert(!find_winning_stones(b1));
+    assert(!has_won(b0));
+    assert(!has_won(b1));
     
     board played_positions = b0 | b1;
     
@@ -101,8 +114,8 @@ int is_draw(board b0, board b1) {
 
 
 board find_threats(board player, board opponent) {
-    assert(!find_winning_stones(player));
-    assert(!find_winning_stones(opponent));
+    assert(!has_won(player));
+    assert(!has_won(opponent));
     assert(!is_draw(player, opponent));
 
     // Find any threat, including ones blocked by the opponent.
@@ -174,6 +187,14 @@ board find_dead_stones(board b0, board b1) {
         & covered_stones_in_direction(b0, b1, BOARD_HEIGHT)
         & covered_stones_in_direction(b0, b1, BOARD_HEIGHT_1)
         & covered_stones_in_direction(b0, b1, BOARD_HEIGHT_2);
+}
+
+
+board find_winning_stones(board b) {
+    return find_winning_stones_in_direction(b, 1)
+        | find_winning_stones_in_direction(b, BOARD_HEIGHT)
+        | find_winning_stones_in_direction(b, BOARD_HEIGHT_1)
+        | find_winning_stones_in_direction(b, BOARD_HEIGHT_2);
 }
 
 

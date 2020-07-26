@@ -56,10 +56,10 @@ static int negamax(const board player, const board opponent, int alpha, int beta
     // adjust the bounds of the search. If neither player can win then the game is guaranteed
     // to end in a draw.
     board empty_positions = VALID_CELLS & ~(player | opponent);
-    if (!find_winning_stones(opponent | empty_positions)) {
+    if (!has_won(opponent | empty_positions)) {
         alpha = max(alpha, 0);
     }
-    if (!find_winning_stones(player | empty_positions)) {
+    if (!has_won(player | empty_positions)) {
         beta = min(beta, 0);
     }
     if (alpha >= beta) {

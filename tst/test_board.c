@@ -95,24 +95,24 @@ char *test_move_sequentially() {
 
 
 char *test_has_won_with_vertical() {
-    mu_assert("first column win", find_winning_stones(15));
-    mu_assert("higher first column win", find_winning_stones(30));
-    mu_assert("3 in a row on first column", !find_winning_stones(7));
+    mu_assert("first column win", has_won(15));
+    mu_assert("higher first column win", has_won(30));
+    mu_assert("3 in a row on first column", !has_won(7));
 
     return 0;
 }
 
 
 char *test_has_won_with_horizontal() {
-    mu_assert("first row win", find_winning_stones(1
+    mu_assert("first row win", has_won(1
         | (1 << BOARD_HEIGHT_1)
         | (1 << BOARD_HEIGHT_1 * 2)
         | (1 << BOARD_HEIGHT_1 * 3)));
-    mu_assert("second row win", find_winning_stones(2
+    mu_assert("second row win", has_won(2
         | (2 << BOARD_HEIGHT_1)
         | (2 << BOARD_HEIGHT_1 * 2)
         | (2 << BOARD_HEIGHT_1 * 3)));
-    mu_assert("3 in a row on first row", !find_winning_stones(1
+    mu_assert("3 in a row on first row", !has_won(1
         | (1 << BOARD_HEIGHT_1)
         | (1 << BOARD_HEIGHT_1  * 2)));
     
@@ -122,15 +122,15 @@ char *test_has_won_with_horizontal() {
 
 char *test_has_won_with_positive_diagonal() {
     // Test evaluation along / diagonal.
-    mu_assert("first / diagonal win", find_winning_stones(1
+    mu_assert("first / diagonal win", has_won(1
         | ((board) 2 << BOARD_HEIGHT_1)
         | ((board) 4 << (BOARD_HEIGHT_1 * 2))
         | ((board) 8 << (BOARD_HEIGHT_1 * 3))));
-    mu_assert("second / diagonal win", find_winning_stones(((board) 4 << BOARD_HEIGHT_1)
+    mu_assert("second / diagonal win", has_won(((board) 4 << BOARD_HEIGHT_1)
         | ((board) 8 << (BOARD_HEIGHT_1 * 2))
         | ((board) 16 << (BOARD_HEIGHT_1 * 3))
         | ((board) 32 << (BOARD_HEIGHT_1 * 4))));
-    mu_assert("3 in a row on / diagonal", !find_winning_stones(1
+    mu_assert("3 in a row on / diagonal", !has_won(1
         | ((board) 2 << (BOARD_HEIGHT_1))
         | ((board) 4 << (BOARD_HEIGHT_1 * 2))));
     
@@ -140,15 +140,15 @@ char *test_has_won_with_positive_diagonal() {
 
 char *test_has_won_with_negative_diagonal() {
     // Test evaluation along \ diagonal.
-    mu_assert("first \\ diagonal win", find_winning_stones(8
+    mu_assert("first \\ diagonal win", has_won(8
         | ((board) 4 << BOARD_HEIGHT_1)
         | ((board) 2 << (BOARD_HEIGHT_1 * 2))
         | ((board) 1 << (BOARD_HEIGHT_1 * 3))));
-    mu_assert("second \\ diagonal win", find_winning_stones((board) 32 << (BOARD_HEIGHT_1 * 2)
+    mu_assert("second \\ diagonal win", has_won((board) 32 << (BOARD_HEIGHT_1 * 2)
         | ((board) 16 << (BOARD_HEIGHT_1 * 3))
         | ((board) 8 << (BOARD_HEIGHT_1 * 4))
         | ((board) 4 << (BOARD_HEIGHT_1 * 5))));
-    mu_assert("3 in a row on \\ diagonal", !find_winning_stones((board) 32 << (BOARD_HEIGHT_1 * 2)
+    mu_assert("3 in a row on \\ diagonal", !has_won((board) 32 << (BOARD_HEIGHT_1 * 2)
         | ((board) 16 << (BOARD_HEIGHT_1 * 3))
         | ((board) 8 << (BOARD_HEIGHT_1 * 4))));
 
@@ -509,7 +509,7 @@ char *test_get_num_valid_moves_on_random_games() {
             }
 
             // End the loop if the game is over.
-            if (!find_winning_stones(b1) && !is_draw(b0, b1)) {
+            if (!has_won(b1) && !is_draw(b0, b1)) {
                 break;
             }
 
@@ -560,7 +560,7 @@ char *test_mirror_on_random_games() {
         board mirror_b1 = 0;
         
         // Play random moves until the game is draw, or the last player won the game.
-        while (!find_winning_stones(b1) && !is_draw(b0, b1)) {
+        while (!has_won(b1) && !is_draw(b0, b1)) {
             // Pick and play a random valid move on both boards.
             int col;
             do {
@@ -795,62 +795,62 @@ char *test_scenario() {
     board b0 = 0;
     board b1 = 0;
     
-    mu_assert("ply 0, player 0 has not won.", !find_winning_stones(b0));
-    mu_assert("ply 0, player 1 has not won.", !find_winning_stones(b1));
+    mu_assert("ply 0, player 0 has not won.", !has_won(b0));
+    mu_assert("ply 0, player 1 has not won.", !has_won(b1));
 
     b0 = move(b0, b1, 3);
-    mu_assert("ply 1, player 0 has not won.", !find_winning_stones(b0));
-    mu_assert("ply 1, player 1 has not won.", !find_winning_stones(b1));
+    mu_assert("ply 1, player 0 has not won.", !has_won(b0));
+    mu_assert("ply 1, player 1 has not won.", !has_won(b1));
     mu_assert("ply 1, player 1 move.", has_piece_on(b0, 3, 0));
 
     b1 = move(b1, b0, 3);
-    mu_assert("ply 2, player 0 has not won.", !find_winning_stones(b0));
-    mu_assert("ply 2, player 1 has not won.", !find_winning_stones(b1));
+    mu_assert("ply 2, player 0 has not won.", !has_won(b0));
+    mu_assert("ply 2, player 1 has not won.", !has_won(b1));
     mu_assert("ply 2, player 2 move.", has_piece_on(b1, 3, 1));
 
     b0 = move(b0, b1, 3);
-    mu_assert("ply 3, player 0 has not won.", !find_winning_stones(b0));
-    mu_assert("ply 3, player 1 has not won.", !find_winning_stones(b1));
+    mu_assert("ply 3, player 0 has not won.", !has_won(b0));
+    mu_assert("ply 3, player 1 has not won.", !has_won(b1));
     mu_assert("ply 3, player 1 move.", has_piece_on(b0, 3, 2));
 
     b1 = move(b1, b0, 3);
-    mu_assert("ply 4, player 0 has not won.", !find_winning_stones(b0));
-    mu_assert("ply 4, player 1 has not won.", !find_winning_stones(b1));
+    mu_assert("ply 4, player 0 has not won.", !has_won(b0));
+    mu_assert("ply 4, player 1 has not won.", !has_won(b1));
     mu_assert("ply 4, player 2 move.", has_piece_on(b1, 3, 3));
 
     b0 = move(b0, b1, 3);
-    mu_assert("ply 4, player 0 has not won.", !find_winning_stones(b0));
-    mu_assert("ply 4, player 1 has not won.", !find_winning_stones(b1));
+    mu_assert("ply 4, player 0 has not won.", !has_won(b0));
+    mu_assert("ply 4, player 1 has not won.", !has_won(b1));
     mu_assert("ply 4, player 1 move.", has_piece_on(b0, 3, 4));
 
     b1 = move(b1, b0, 4);
-    mu_assert("ply 5, player 0 has not won.", !find_winning_stones(b0));
-    mu_assert("ply 5, player 1 has not won.", !find_winning_stones(b1));
+    mu_assert("ply 5, player 0 has not won.", !has_won(b0));
+    mu_assert("ply 5, player 1 has not won.", !has_won(b1));
     mu_assert("ply 5, player 2 move.", has_piece_on(b1, 4, 0));
 
     b0 = move(b0, b1, 4);
-    mu_assert("ply 6, player 0 has not won.", !find_winning_stones(b0));
-    mu_assert("ply 6, player 1 has not won.", !find_winning_stones(b1));
+    mu_assert("ply 6, player 0 has not won.", !has_won(b0));
+    mu_assert("ply 6, player 1 has not won.", !has_won(b1));
     mu_assert("ply 6, player 0 move.", has_piece_on(b0, 4, 1));
 
     b1 = move(b1, b0, 4);
-    mu_assert("ply 7, player 0 has not won.", !find_winning_stones(b0));
-    mu_assert("ply 7, player 1 has not won.", !find_winning_stones(b1));
+    mu_assert("ply 7, player 0 has not won.", !has_won(b0));
+    mu_assert("ply 7, player 1 has not won.", !has_won(b1));
     mu_assert("ply 7, player 2 move.", has_piece_on(b1, 4, 2));
 
     b1 = move(b1, b0, 4);
-    mu_assert("ply 8, player 0 has not won.", !find_winning_stones(b0));
-    mu_assert("ply 8, player 1 has not won.", !find_winning_stones(b1));
+    mu_assert("ply 8, player 0 has not won.", !has_won(b0));
+    mu_assert("ply 8, player 1 has not won.", !has_won(b1));
     mu_assert("ply 8, player 2 move.", has_piece_on(b1, 4, 3));
 
     b1 = move(b1, b0, 4);
-    mu_assert("ply 9, player 0 has not won.", !find_winning_stones(b0));
-    mu_assert("ply 9, player 1 has not won.", !find_winning_stones(b1));
+    mu_assert("ply 9, player 0 has not won.", !has_won(b0));
+    mu_assert("ply 9, player 1 has not won.", !has_won(b1));
     mu_assert("ply 9, player 2 move.", has_piece_on(b1, 4, 4));
 
     b1 = move(b1, b0, 4);
-    mu_assert("ply 10, player 0 has not won.", !find_winning_stones(b0));
-    mu_assert("ply 10, player 1 has won.", find_winning_stones(b1));
+    mu_assert("ply 10, player 0 has not won.", !has_won(b0));
+    mu_assert("ply 10, player 1 has won.", has_won(b1));
     mu_assert("ply 10, player 2 move.", has_piece_on(b1, 4, 5));
 
     return 0;
