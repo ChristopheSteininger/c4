@@ -149,7 +149,7 @@ char *test_hash_state_returns_equal_hash_for_states_with_dead_stones() {
 
     board actual = hash_state(b10, b11);
 
-    mu_assert("Equal states after accouting for dead cells must have equal hashes", expected == actual);
+    mu_assert("Equal states after accounting for dead cells must have equal hashes", expected == actual);
 
     return 0;
 }

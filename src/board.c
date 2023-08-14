@@ -206,6 +206,22 @@ board find_threats(board player, board opponent) {
 }
 
 
+board find_opportunities(board player, board opponent) {
+    assert(!has_won(player));
+    assert(!has_won(opponent));
+    assert(!is_draw(player, opponent));
+
+    // Find any threat, including ones blocked by the opponent.
+    board all_threats = find_threats_in_direction(player, 1)
+        | find_threats_in_direction(player, BOARD_HEIGHT)
+        | find_threats_in_direction(player, BOARD_HEIGHT_1)
+        | find_threats_in_direction(player, BOARD_HEIGHT_2);
+
+    board future_threats = all_threats & ~opponent & VALID_CELLS;
+    return future_threats;
+}
+
+
 int is_move_valid(board b0, board b1, int column) {
     assert(is_board_valid(b0));
     assert(is_board_valid(b1));

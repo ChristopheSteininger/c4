@@ -47,6 +47,9 @@ int is_draw(board, board);
 board find_threats(board, board);
 
 
+board find_opportunities(board, board);
+
+
 // Returns true only if a player is allowed to play the given move.
 int is_move_valid(board, board, int);
 

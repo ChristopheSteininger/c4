@@ -6,6 +6,7 @@
 #include "settings.h"
 #include "board.h"
 #include "table.h"
+#include "order.h"
 
 
 unsigned long stat_num_nodes;
@@ -105,33 +106,30 @@ static int negamax(const board player, const board opponent, int alpha, int beta
 
     // If none of the above checks pass, then this is an internal node and we must
     // evaluate the child nodes to determine the score of this node.
-    int value = -1;
-    int num_moves_checked = 0;
+    int value = -10;
     int move_with_best_score = -1;
-    
-    int num_child_nodes = get_num_valid_moves(player, opponent);
-    for (int x = 0; num_moves_checked < num_child_nodes && alpha < beta; x++) {
-        int col = BOARD_WIDTH/2 + x/2 - x * (x & 1);
-        if (is_move_valid(player, opponent, col)) {
-            board child_state = move(player, opponent, col);
-            int child_score = -negamax(opponent, child_state, -beta, -alpha);
 
-            if (child_score > value) {
-                value = child_score;
-                move_with_best_score = num_moves_checked;
-            }
-            
-            alpha = max(value, alpha);
+    board next_moves[BOARD_WIDTH];
+    int num_moves = order_moves(player, opponent, next_moves);
 
-            num_moves_checked++;
+    int i;
+    for (i = 0; i < num_moves && alpha < beta; i++) {
+        int child_score = -negamax(opponent, next_moves[i], -beta, -alpha);
+
+        if (child_score > value) {
+            value = child_score;
+            move_with_best_score = i;
         }
+
+        alpha = max(value, alpha);
     }
 
+
     // Update stat counters to measure move heuristic performance.
-    stat_num_child_nodes += num_child_nodes;
-    stat_num_moves_checked += num_moves_checked;
+    stat_num_child_nodes += num_moves;
+    stat_num_moves_checked += i;
     if (move_with_best_score == 0) {
-        stat_num_best_moves_guessed += num_child_nodes;
+        stat_num_best_moves_guessed++;
     }
 
     // Store the result in the transposition table.
