@@ -14,27 +14,34 @@ unsigned long stat_num_hash_collisions = 0;
 unsigned long stat_num_entries = 0;
 unsigned long stat_num_overwrites = 0;
 
-
-struct entry {
-    u_int8_t type_and_value;  // 2 bits for the type, 6 bits for the value.
-    board hash;
-};
-
-
-static const int TYPE_NOT_PRESENT = 0;
 const int TYPE_UPPER_BOUND = 1;
 const int TYPE_LOWER_BOUND = 2;
 const int TYPE_EXACT = 3;
 
+// The number of bits stored against each hash.
+static const unsigned long VALUE_SIZE = 8;
+
 // Affects performance. Use a prime number for fewer collisions.
-static const unsigned long TABLE_SIZE = 100000007;
-static struct entry *table = NULL;
+static const unsigned long BUCKET_SIZE = 800011;
+static const unsigned long TABLE_SIZE = (1 << VALUE_SIZE) * BUCKET_SIZE;
+
+static const board VALUE_MASK = (1 << VALUE_SIZE) - 1;
+
+static board *table = NULL;
+
+
+static int get_index(board hash) {
+    int bucket = hash & VALUE_MASK;
+    int mod = hash % BUCKET_SIZE;
+
+    return (bucket * BUCKET_SIZE) + mod;
+}
 
 
 int allocate_table() {
     assert(table == NULL);
     
-    table = calloc(TABLE_SIZE, sizeof(struct entry));
+    table = calloc(TABLE_SIZE, sizeof(board));
     
     return table != NULL;
 }
@@ -51,9 +58,8 @@ void free_table() {
 void clear_table() {
     assert(table != NULL);
     
-    memset(table, 0, sizeof(struct entry));
+    memset(table, 0, sizeof(board));
 }
-
 
 int table_lookup(board player, board opponent, int *type, int *value) {
     assert(table != NULL);
@@ -61,24 +67,26 @@ int table_lookup(board player, board opponent, int *type, int *value) {
     stat_num_lookups++;
     
     board hash = hash_state(player, opponent);
-    int index = hash % TABLE_SIZE;
+    int index = get_index(hash);
 
-    struct entry result = table[index];
+    board result = table[index];
 
     // If this state has not been seen.
-    if (result.type_and_value == TYPE_NOT_PRESENT) {
+    if (result == 0) {
         return 0;
     }
 
+    board result_hash = (result & ~VALUE_MASK) | (hash & VALUE_MASK);
+
     // If this is a hash collision.
-    if (result.hash != hash) {
+    if (result_hash != hash) {
         stat_num_hash_collisions++;
         return 0;
     }
 
     // Otherwise reconstruct the type and value of the entry.
-    *type = result.type_and_value >> 6;
-    *value = (result.type_and_value & 63) - 1;
+    *type = (result & VALUE_MASK) >> 6;
+    *value = (result & 63) - 1;
 
     stat_num_successful_lookups++;
     return 1;
@@ -90,25 +98,20 @@ void table_store(board player, board opponent, int type, int value) {
     assert(-1 <= value && value <= 1);
     
     board hash = hash_state(player, opponent);
-    int index = hash % TABLE_SIZE;
+    int index = get_index(hash);
 
-    if (table[index].type_and_value == TYPE_NOT_PRESENT) {
+    if (table[index] == 0) {
         stat_num_entries++;
     } else {
         stat_num_overwrites++;
     }
 
-    struct entry new_entry = {
-        .type_and_value = (type << 6) | (value + 1),
-        .hash = hash
-    };
-
-    table[index] = new_entry;
+    table[index] = (hash & ~VALUE_MASK) | (type << 6) | (value + 1);
 }
 
 
 double get_table_size_in_gigabytes() {
-    return (double) TABLE_SIZE * sizeof(struct entry) / 1024 / 1024 / 1024;
+    return (double) TABLE_SIZE * sizeof(board) / 1024 / 1024 / 1024;
 }
 
 
