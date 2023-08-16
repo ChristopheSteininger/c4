@@ -144,8 +144,14 @@ int solve(board b0, board b1) {
     stat_num_child_nodes = 0;
     stat_num_moves_checked = 0;
     stat_num_best_moves_guessed = 0;
-    
-    return negamax(b0, b1, -1, 1);
+
+    int result = negamax(b0, b1, -1, 0);
+
+    if (result == 0) {
+        return negamax(b0, b1, 0, 1);
+    }
+
+    return result;
 }
 
 
