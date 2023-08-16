@@ -58,14 +58,14 @@ void free_table() {
 void clear_table() {
     assert(table != NULL);
     
-    memset(table, 0, sizeof(board));
+    memset(table, 0, TABLE_SIZE * sizeof(board));
 }
 
 int table_lookup(board player, board opponent, int *type, int *value) {
     assert(table != NULL);
 
     stat_num_lookups++;
-    
+
     board hash = hash_state(player, opponent);
     int index = get_index(hash);
 
