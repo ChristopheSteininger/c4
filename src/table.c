@@ -7,35 +7,31 @@
 #include "hashing.h"
 
 
-unsigned long stat_num_lookups = 0;
-unsigned long stat_num_successful_lookups = 0;
-unsigned long stat_num_hash_collisions = 0;
-
-unsigned long stat_num_entries = 0;
-unsigned long stat_num_overwrites = 0;
-
 const int TYPE_UPPER_BOUND = 1;
 const int TYPE_LOWER_BOUND = 2;
 const int TYPE_EXACT = 3;
 
-// The number of bits stored against each hash.
-static const unsigned long VALUE_SIZE = 8;
-
-// Affects performance. Use a prime number for fewer collisions.
-static const unsigned long BUCKET_SIZE = 800011;
-static const unsigned long TABLE_SIZE = (1 << VALUE_SIZE) * BUCKET_SIZE;
-
-static const board VALUE_MASK = (1 << VALUE_SIZE) - 1;
+// This table uses the Chineese Remainer Theorem to reduce the number of bits per entry.
+// For this to work, the size of the table must be odd. Use a prime number for fewer collisions.
+// Some example prime numbers:
+//  * 8388617    = 64 MB
+//  * 134217757  = 1 GB
+//  * 1073741827 = 8 GB
+static const unsigned int TABLE_SIZE = 134217757;
 
 static board *table = NULL;
 
+// The number of bits stored against each hash.
+static const unsigned int KEY_SIZE = 56;
+static const unsigned int VALUE_SIZE = 8;
+static const board VALUE_MASK = (1 << VALUE_SIZE) - 1;
 
-static int get_index(board hash) {
-    int bucket = hash & VALUE_MASK;
-    int mod = hash % BUCKET_SIZE;
+static unsigned long stat_num_lookups = 0;
+static unsigned long stat_num_successful_lookups = 0;
+static unsigned long stat_num_hash_collisions = 0;
 
-    return (bucket * BUCKET_SIZE) + mod;
-}
+static unsigned long stat_num_entries = 0;
+static unsigned long stat_num_overwrites = 0;
 
 
 int allocate_table() {
@@ -67,7 +63,7 @@ int table_lookup(board player, board opponent, int *type, int *value) {
     stat_num_lookups++;
 
     board hash = hash_state(player, opponent);
-    int index = get_index(hash);
+    int index = hash % TABLE_SIZE;
 
     board result = table[index];
 
@@ -76,10 +72,8 @@ int table_lookup(board player, board opponent, int *type, int *value) {
         return 0;
     }
 
-    board result_hash = (result & ~VALUE_MASK) | (hash & VALUE_MASK);
-
     // If this is a hash collision.
-    if (result_hash != hash) {
+    if ((result & ~VALUE_MASK) != (hash & ~VALUE_MASK)) {
         stat_num_hash_collisions++;
         return 0;
     }
@@ -98,7 +92,7 @@ void table_store(board player, board opponent, int type, int value) {
     assert(-1 <= value && value <= 1);
     
     board hash = hash_state(player, opponent);
-    int index = get_index(hash);
+    int index = hash % TABLE_SIZE;
 
     if (table[index] == 0) {
         stat_num_entries++;
