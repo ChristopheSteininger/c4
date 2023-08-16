@@ -20,7 +20,7 @@ board hash_state(board b0, board b1) {
 
     // The hash is a 1 on all positions played by player 0, and a 1 on top
     // of each column. This hash uniquely identifies the state.
-    board column_headers = (b0 | b1) + BOTTOM_ROW;
+    board column_headers = (b0 | b1 | dead_stones) + BOTTOM_ROW;
     board hash = b0 | dead_stones | column_headers;
     
     // Return the same hash for mirrored states.

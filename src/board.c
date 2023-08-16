@@ -105,33 +105,22 @@ static board dead_stones_in_direction(board b0, board b1, int dir) {
     // These patterns occur at the corners of the board when
     // checking the diagonals. All stones in these positions
     // are dead.
-    board excluded_stones = too_short(dir) & played_positions;
+    board excluded_stones = too_short(dir);
 
-    // Detect the patterns |_ and _|
-    //                      ^     ^
-    board border_cells = border_stones_in_direction(dir);
-    
-    // Detect the patterns |# and #|
-    //                      ^     ^
-    board stone_next_to_edge = (border_cells & played_positions);
-    
-    // Detect the patterns |. and .|
-    //                      ^     ^
-    board empty_next_to_edge = (border_cells & empty_positions);
-    
     // Detect the patterns O_X and X_O
     //                      ^       ^
-    board y
-        = (((b0 >> 2 * dir) & b1) << dir)
-        | (((b1 >> 2 * dir) & b0) << dir);
+    board between
+        = ((b0 >> dir) & (b1 << dir))
+        | ((b1 >> dir) & (b0 << dir));
 
     // Detect the patterns |#X_O and O_X#|
     //                      ^           ^
-    board e
-        = (stone_next_to_edge & (y >> 2 * dir) & (empty_positions >> 2 * dir))
-        | (stone_next_to_edge & (y << 2 * dir) & (empty_positions << 2 * dir));
-    
-    return covered_stones | excluded_stones | e;
+    board pinned
+        = border_stones_in_direction(dir)
+        & played_positions
+        & ((between >> 2 * dir) | (between << 2 * dir));
+
+    return covered_stones | excluded_stones | pinned;
 }
 
 
