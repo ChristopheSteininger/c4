@@ -62,6 +62,8 @@ char *test_with_file(char *filename) {
     mu_assert("Could not open the file.", data_file != NULL);
 
     unsigned long total_nodes = 0;
+    unsigned long total_interior_nodes = 0;
+    unsigned long total_best_moves_guessed = 0;
     double total_run_time_ms = 0;
 
     char line[100];
@@ -76,6 +78,8 @@ char *test_with_file(char *filename) {
         
         total_run_time_ms += (clock() - start_time) * 1000 / (double) CLOCKS_PER_SEC;
         total_nodes += get_num_nodes();
+        total_interior_nodes += get_num_interior_nodes();
+        total_best_moves_guessed += get_num_best_moves_guessed();
 
         // Fail if the solver returned the wrong result.
         if (test_data.expected != actual) {
@@ -89,10 +93,11 @@ char *test_with_file(char *filename) {
         // Increment before we print the update.
         num_tests++;
 
-        printf("\r\t%-30s %'15.0f %'15.0f %'15.0f %'15d",
+        printf("\r\t%-30s %'15.0f %'15.0f %14.1f%% %'15.0f %'15d",
             filename,
             (double) total_nodes / num_tests,
             total_nodes / total_run_time_ms,
+            (double) total_best_moves_guessed * 100 / total_interior_nodes,
             total_run_time_ms / 1000,
             num_tests);
         fflush(stdout);
@@ -141,7 +146,7 @@ char *all_known_states_tests() {
     mu_assert("Board must be 6 high.", BOARD_HEIGHT == 6);
 
     printf("Running known state tests . . .\n");
-    printf("\t%-30s %15s %15s %15s %15s\n", "Test", "Mean nodes", "Nodes per ms", "Time (s)",
+    printf("\t%-30s %15s %15s %15s %15s %15s\n", "Test", "Mean nodes", "Nodes per ms", "Guess rate", "Time (s)",
         "Trials passed");
 
     mu_run_test(test_endgame_L1);

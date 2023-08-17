@@ -12,6 +12,7 @@
 unsigned long stat_num_nodes;
 unsigned long stat_num_child_nodes;
 unsigned long stat_num_moves_checked;
+unsigned long stat_num_interior_nodes;
 unsigned long stat_num_best_moves_guessed;
 
 
@@ -125,9 +126,11 @@ static int negamax(const board player, const board opponent, int alpha, int beta
     }
 
 
-    // Update stat counters to measure move heuristic performance.
+    // Update stat counters.
     stat_num_child_nodes += num_moves;
     stat_num_moves_checked += i;
+
+    stat_num_interior_nodes++;
     if (move_with_best_score == 0) {
         stat_num_best_moves_guessed++;
     }
@@ -143,6 +146,7 @@ int solve(board b0, board b1) {
     stat_num_nodes = 0;
     stat_num_child_nodes = 0;
     stat_num_moves_checked = 0;
+    stat_num_interior_nodes = 0;
     stat_num_best_moves_guessed = 0;
 
     int result = negamax(b0, b1, -1, 0);
@@ -174,7 +178,7 @@ int solve_verbose(board b0, board b1) {
     printf("Table collision rate = %6.2f%%\n", get_table_collision_rate() * 100);
     printf("Table density        = %6.2f%%\n", get_table_density() * 100);
     printf("Table overwrite rate = %6.2f%%\n", get_table_overwrite_rate() * 100);
-    printf("Best moves guessed   = %6.2f%%\n", get_best_moves_guessed_rate() * 100);
+    printf("Best moves guessed   = %6.2f%%\n", (double) get_num_best_moves_guessed() * 100 / get_num_interior_nodes());
     printf("Moves checked        = %6.2f%%\n", get_moves_checked_rate() * 100);
     
     return score;
@@ -186,8 +190,13 @@ unsigned long get_num_nodes() {
 }
 
 
-double get_best_moves_guessed_rate() {
-    return (double) stat_num_best_moves_guessed / stat_num_child_nodes;
+unsigned long get_num_best_moves_guessed() {
+    return stat_num_best_moves_guessed;
+}
+
+
+unsigned long get_num_interior_nodes() {
+    return stat_num_interior_nodes;
 }
 
 
