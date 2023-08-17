@@ -1,6 +1,8 @@
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 #include <assert.h>
+#include <math.h>
 
 #include "table.h"
 #include "settings.h"
@@ -21,8 +23,10 @@ static const unsigned int TABLE_SIZE = 134217757;
 
 static board *table = NULL;
 
-// The number of bits stored against each hash.
+// The number of bits of the hash stored in each entry.
 static const unsigned int KEY_SIZE = 56;
+static const board KEY_MASK = (1 << KEY_SIZE) - 1;
+// The number of bits stored against each hash.
 static const unsigned int VALUE_SIZE = 8;
 static const board VALUE_MASK = (1 << VALUE_SIZE) - 1;
 
@@ -37,8 +41,16 @@ static unsigned long stat_num_overwrites = 0;
 int allocate_table() {
     assert(table == NULL);
     
+    // Not all bits of the hash are saved, however the hashing will still by unique
+    // by the Chinese Remainder Theorem as long as the check below passes.
+    if (log2(TABLE_SIZE) + KEY_SIZE < BOARD_HEIGHT_1 * BOARD_WIDTH) {
+        printf("The table is too small which may result in invalid results. Exiting.\n");
+
+        return 0;
+    }
+
     table = calloc(TABLE_SIZE, sizeof(board));
-    
+
     return table != NULL;
 }
 
@@ -73,7 +85,7 @@ int table_lookup(board player, board opponent, int *type, int *value) {
     }
 
     // If this is a hash collision.
-    if ((result & ~VALUE_MASK) != (hash & ~VALUE_MASK)) {
+    if ((result >> VALUE_SIZE) != (hash & KEY_MASK)) {
         stat_num_hash_collisions++;
         return 0;
     }
@@ -100,7 +112,11 @@ void table_store(board player, board opponent, int type, int value) {
         stat_num_overwrites++;
     }
 
-    table[index] = (hash & ~VALUE_MASK) | (type << 6) | (value + 1);
+    // Only the partial hash needs to be stored. This is equivalent to
+    // hash % 2^KEY_SIZE.
+    board stored_hash = hash & KEY_MASK;
+
+    table[index] = (stored_hash << VALUE_SIZE) | (type << 6) | (value + 1);
 }
 
 
