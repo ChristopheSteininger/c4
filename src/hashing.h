@@ -4,6 +4,6 @@
 #include "board.h"
 
 
-board hash_state(board, board);
+board hash_state(board, board, int *);
 
 #endif

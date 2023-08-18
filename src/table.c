@@ -7,10 +7,11 @@
 #include "table.h"
 #include "settings.h"
 #include "hashing.h"
+#include "board.h"
 
 
-const int TYPE_UPPER_BOUND = 1;
-const int TYPE_LOWER_BOUND = 2;
+const int TYPE_UPPER = 1;
+const int TYPE_LOWER = 2;
 const int TYPE_EXACT = 3;
 
 // This table uses the Chineese Remainer Theorem to reduce the number of bits per entry.
@@ -25,7 +26,7 @@ static board *table = NULL;
 
 // The number of bits of the hash stored in each entry.
 static const unsigned int KEY_SIZE = 56;
-static const board KEY_MASK = (1 << KEY_SIZE) - 1;
+static const board KEY_MASK = ((board) 1 << KEY_SIZE) - 1;
 // The number of bits stored against each hash.
 static const unsigned int VALUE_SIZE = 8;
 static const board VALUE_MASK = (1 << VALUE_SIZE) - 1;
@@ -36,6 +37,7 @@ static unsigned long stat_num_hash_collisions = 0;
 
 static unsigned long stat_num_entries = 0;
 static unsigned long stat_num_overwrites = 0;
+static unsigned long stat_num_rewrites = 0;
 
 
 int allocate_table() {
@@ -69,14 +71,15 @@ void clear_table() {
     memset(table, 0, TABLE_SIZE * sizeof(board));
 }
 
-int table_lookup(board player, board opponent, int *type, int *value) {
+int table_lookup(board player, board opponent, int *best_move, int *type, int *value) {
     assert(table != NULL);
 
     stat_num_lookups++;
-
-    board hash = hash_state(player, opponent);
+    
+    int is_mirrored;
+    board hash = hash_state(player, opponent, &is_mirrored);
+    
     int index = hash % TABLE_SIZE;
-
     board result = table[index];
 
     // If this state has not been seen.
@@ -91,32 +94,52 @@ int table_lookup(board player, board opponent, int *type, int *value) {
     }
 
     // Otherwise reconstruct the type and value of the entry.
-    *type = (result & VALUE_MASK) >> 6;
-    *value = (result & 63) - 1;
+    board entry = result & VALUE_MASK;
+    *best_move = entry >> 4;
+    *type = (entry >> 2) & 3;
+    *value = (entry & 3) - 1;
+
+    // If we looked up a mirrored move, mirror the best move as well.
+    if (is_mirrored) {
+        *best_move = BOARD_WIDTH - *best_move - 1;
+    }
 
     stat_num_successful_lookups++;
     return 1;
 }
 
-void table_store(board player, board opponent, int type, int value) {
+void table_store(board player, board opponent, int best_move, int type, int value) {
     assert(table != NULL);
-    assert(type == TYPE_UPPER_BOUND || type == TYPE_LOWER_BOUND || type == TYPE_EXACT);
+    assert(best_move == BOARD_WIDTH || is_move_valid(player, opponent, best_move));
+    assert(type == TYPE_UPPER || type == TYPE_LOWER || type == TYPE_EXACT);
     assert(-1 <= value && value <= 1);
     
-    board hash = hash_state(player, opponent);
+    int is_mirrored;
+    board hash = hash_state(player, opponent, &is_mirrored);
+    
     int index = hash % TABLE_SIZE;
-
-    if (table[index] == 0) {
-        stat_num_entries++;
-    } else {
-        stat_num_overwrites++;
-    }
+    board current_entry = table[index];
 
     // Only the partial hash needs to be stored. This is equivalent to
     // hash % 2^KEY_SIZE.
     board stored_hash = hash & KEY_MASK;
 
-    table[index] = (stored_hash << VALUE_SIZE) | (type << 6) | (value + 1);
+    // Best move needs to be mirrored as well if we are storing the mirrored position.
+    if (is_mirrored) {
+        best_move = BOARD_WIDTH - best_move - 1;
+    }
+
+    // Update table statistics.
+    if (current_entry == 0) {
+        stat_num_entries++;
+    } else if ((current_entry >> VALUE_SIZE) == stored_hash) {
+        stat_num_rewrites++;
+    } else {
+        stat_num_overwrites++;
+    }
+
+    // Store.
+    table[index] = (stored_hash << VALUE_SIZE) | (best_move << 4) | (type << 2) | (value + 1);
 }
 
 
@@ -141,5 +164,10 @@ double get_table_density() {
 
 
 double get_table_overwrite_rate() {
-    return (double) stat_num_overwrites / (stat_num_entries + stat_num_overwrites);
+    return (double) stat_num_overwrites / (stat_num_entries + stat_num_rewrites + stat_num_overwrites);
+}
+
+
+double get_table_rewrite_rate() {
+    return (double) stat_num_rewrites / (stat_num_entries + stat_num_rewrites + stat_num_overwrites);
 }

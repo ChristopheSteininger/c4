@@ -13,6 +13,15 @@ int solve_verbose(board, board);
 unsigned long get_num_nodes();
 
 
+unsigned long get_num_exact_nodes();
+
+
+unsigned long get_num_lower_nodes();
+
+
+unsigned long get_num_upper_nodes();
+
+
 unsigned long get_num_best_moves_guessed();
 
 

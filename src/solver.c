@@ -11,6 +11,9 @@
 
 unsigned long stat_num_nodes;
 unsigned long stat_num_child_nodes;
+unsigned long stat_num_exact_nodes;
+unsigned long stat_num_lower_nodes;
+unsigned long stat_num_upper_nodes;
 unsigned long stat_num_moves_checked;
 unsigned long stat_num_interior_nodes;
 unsigned long stat_num_best_moves_guessed;
@@ -36,11 +39,11 @@ static int min(int a, int b) {
 
 static int get_node_type(int value, int alpha, int beta) {
     if (value <= alpha) {
-        return TYPE_UPPER_BOUND;
+        return TYPE_UPPER;
     }
 
     if (value >= beta) {
-        return TYPE_LOWER_BOUND;
+        return TYPE_LOWER;
     }
 
     return TYPE_EXACT;
@@ -84,19 +87,19 @@ static int negamax(const board player, const board opponent, int alpha, int beta
     }
 
     // Check if this state has already been seen.
-    int lookup_type, lookup_value;
-    int lookup_success = table_lookup(player, opponent, &lookup_type, &lookup_value);
+    int lookup_move, lookup_type, lookup_value;
+    int lookup_success = table_lookup(player, opponent, &lookup_move, &lookup_type, &lookup_value);
 
     if (lookup_success) {
         if (lookup_type == TYPE_EXACT) {
             return lookup_value;
         }
         
-        else if (lookup_type == TYPE_LOWER_BOUND) {
+        else if (lookup_type == TYPE_LOWER) {
             alpha = max(alpha, lookup_value);
         }
         
-        else if (lookup_type == TYPE_UPPER_BOUND) {
+        else if (lookup_type == TYPE_UPPER) {
             beta = min(beta, lookup_value);
         }
 
@@ -107,36 +110,53 @@ static int negamax(const board player, const board opponent, int alpha, int beta
 
     // If none of the above checks pass, then this is an internal node and we must
     // evaluate the child nodes to determine the score of this node.
-    int value = -10;
-    int move_with_best_score = -1;
+    int value = -1000;
+    int best_move_index, best_move_col;
 
-    board next_moves[BOARD_WIDTH];
-    int num_moves = order_moves(player, opponent, next_moves);
+    int moves[BOARD_WIDTH];
+    int num_moves = order_moves(player, opponent, moves, lookup_success ? lookup_move : BOARD_WIDTH);
 
     int i;
     for (i = 0; i < num_moves && alpha < beta; i++) {
-        int child_score = -negamax(opponent, next_moves[i], -beta, -alpha);
+        int col = moves[i];
+        board after_move = move(player, opponent, col);
+
+        int child_score = -negamax(opponent, after_move, -beta, -alpha);
 
         if (child_score > value) {
             value = child_score;
-            move_with_best_score = i;
+            best_move_index = i;
+            best_move_col = col;
         }
 
-        alpha = max(value, alpha);
-    }
-
-
-    // Update stat counters.
-    stat_num_child_nodes += num_moves;
-    stat_num_moves_checked += i;
-
-    stat_num_interior_nodes++;
-    if (move_with_best_score == 0) {
-        stat_num_best_moves_guessed++;
+        alpha = max(child_score, alpha);
     }
 
     // Store the result in the transposition table.
-    table_store(player, opponent, get_node_type(value, original_alpha, beta), value);
+    int type = get_node_type(value, original_alpha, beta);
+    table_store(player, opponent, best_move_col, type, value);
+
+    // Best move look ups from the table should always be correct.
+    if (type == TYPE_UPPER && lookup_success) {
+        assert(best_move_index == 0);
+    }
+
+    // Update statistics.
+    stat_num_interior_nodes++;
+    stat_num_child_nodes += num_moves;
+    stat_num_moves_checked += i;
+
+    if (best_move_index == 0) {
+        stat_num_best_moves_guessed++;
+    }
+
+    if (type == TYPE_EXACT) {
+        stat_num_exact_nodes++;
+    } else if (type == TYPE_LOWER) {
+        stat_num_lower_nodes++;
+    } else if (type == TYPE_UPPER) {
+        stat_num_upper_nodes++;
+    }
 
     return value;
 }
@@ -145,6 +165,9 @@ static int negamax(const board player, const board opponent, int alpha, int beta
 int solve(board b0, board b1) {
     stat_num_nodes = 0;
     stat_num_child_nodes = 0;
+    stat_num_exact_nodes = 0;
+    stat_num_lower_nodes = 0;
+    stat_num_upper_nodes = 0;
     stat_num_moves_checked = 0;
     stat_num_interior_nodes = 0;
     stat_num_best_moves_guessed = 0;
@@ -165,28 +188,49 @@ int solve_verbose(board b0, board b1) {
 
     unsigned long start_time = clock();
     int score = solve(b0, b1);
-    double run_time_ms = (clock() - start_time) * 1000 / (double) CLOCKS_PER_SEC;
+    double run_time_sec = (clock() - start_time) / (double) CLOCKS_PER_SEC;
 
     printf("\n");
     printf("Score is %d\n", score);
 
     printf("\n");
-    printf("Nodes seen           = %'lu\n", stat_num_nodes);
-    printf("Nodes per ms         = %'.0f\n", stat_num_nodes / run_time_ms);
-    printf("Time to solve        = %'.0f s\n", run_time_ms / 1000);
-    printf("Table hit rate       = %6.2f%%\n", get_table_hit_rate() * 100);
-    printf("Table collision rate = %6.2f%%\n", get_table_collision_rate() * 100);
-    printf("Table density        = %6.2f%%\n", get_table_density() * 100);
-    printf("Table overwrite rate = %6.2f%%\n", get_table_overwrite_rate() * 100);
+    printf("Time to solve        = %'.0f s\n", run_time_sec);
+    printf("Nodes per ms         = %'.0f\n", get_num_nodes() / run_time_sec / 1000);
+    printf("Nodes:\n");
+    printf("    Exact            = %'lu\n", get_num_exact_nodes());
+    printf("    Lower            = %'lu\n", get_num_lower_nodes());
+    printf("    Upper            = %'lu\n", get_num_upper_nodes());
+    printf("    Total            = %'lu\n", get_num_nodes());
+    printf("Table:\n");
+    printf("    Hit rate         = %6.2f%%\n", get_table_hit_rate() * 100);
+    printf("    Collision rate   = %6.2f%%\n", get_table_collision_rate() * 100);
+    printf("    Density          = %6.2f%%\n", get_table_density() * 100);
+    printf("    Rewrite rate     = %6.2f%%\n", get_table_rewrite_rate() * 100);
+    printf("    Overwrite rate   = %6.2f%%\n", get_table_overwrite_rate() * 100);
     printf("Best moves guessed   = %6.2f%%\n", (double) get_num_best_moves_guessed() * 100 / get_num_interior_nodes());
     printf("Moves checked        = %6.2f%%\n", get_moves_checked_rate() * 100);
-    
+
     return score;
 }
 
 
 unsigned long get_num_nodes() {
     return stat_num_nodes;
+}
+
+
+unsigned long get_num_exact_nodes() {
+    return stat_num_exact_nodes;
+}
+
+
+unsigned long get_num_lower_nodes() {
+    return stat_num_lower_nodes;
+}
+
+
+unsigned long get_num_upper_nodes() {
+    return stat_num_upper_nodes;
 }
 
 

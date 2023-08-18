@@ -7,6 +7,6 @@
  * Functions to guess the best move.
  */
 
-int order_moves(board, board, board *);
+int order_moves(board, board, int *, int);
 
 #endif

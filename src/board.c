@@ -147,6 +147,7 @@ board move(board player, board opponent, int column) {
     assert(is_board_valid(player));
     assert(is_board_valid(opponent));
     assert(is_move_valid(player, opponent, column));
+    assert(0 <= column && column < BOARD_WIDTH);
     
     board valid_moves = (player | opponent) + BOTTOM_ROW;
     board mask = FIRST_COLUMN << (BOARD_HEIGHT_1 * column);
@@ -214,6 +215,7 @@ board find_opportunities(board player, board opponent) {
 int is_move_valid(board b0, board b1, int column) {
     assert(is_board_valid(b0));
     assert(is_board_valid(b1));
+    assert(0 <= column && column < BOARD_WIDTH);
     
     board moves_played = b0 | b1;
     board move_mask = FIRST_COLUMN << (BOARD_HEIGHT_1 * column);
