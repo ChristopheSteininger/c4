@@ -207,8 +207,7 @@ board find_opportunities(board player, board opponent) {
         | find_threats_in_direction(player, BOARD_HEIGHT_1)
         | find_threats_in_direction(player, BOARD_HEIGHT_2);
 
-    board future_threats = all_threats & ~opponent & VALID_CELLS;
-    return future_threats;
+    return all_threats & ~opponent & VALID_CELLS;
 }
 
 

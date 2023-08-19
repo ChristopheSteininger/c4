@@ -27,6 +27,7 @@ static board *table = NULL;
 // The number of bits of the hash stored in each entry.
 static const unsigned int KEY_SIZE = 56;
 static const board KEY_MASK = ((board) 1 << KEY_SIZE) - 1;
+
 // The number of bits stored against each hash.
 static const unsigned int VALUE_SIZE = 8;
 static const board VALUE_MASK = (1 << VALUE_SIZE) - 1;
