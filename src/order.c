@@ -40,18 +40,18 @@ static float calc_score(board player, board opponent, int col, int best_move) {
     }
 
     board after_move = move(player, opponent, col);
-    board opportunities = find_opportunities(after_move, opponent);
+    board threats = find_threats(after_move, opponent);
 
-    int num_opportunities = count_bits(opportunities);
-    int num_odd_even_opportunities = (count_bits(player | opponent) & 1)
+    int num_threats = count_bits(threats);
+    int num_odd_even_threats = (count_bits(player | opponent) & 1)
         ? 0
-        : count_bits(odd(opportunities));
+        : count_bits(odd(threats));
 
-    return num_opportunities + 0.5 * num_odd_even_opportunities;
+    return num_threats + 0.5 * num_odd_even_threats;
 }
 
 
-int order_moves(board player, board opponent, int *moves, int best_move) {
+int order_moves(board player, board opponent, int *moves, board non_losing_moves, int best_move) {
     assert(best_move == BOARD_WIDTH || is_move_valid(player, opponent, best_move));
 
     float scores[BOARD_WIDTH];
@@ -63,13 +63,15 @@ int order_moves(board player, board opponent, int *moves, int best_move) {
 
     for (int x = 0; x < BOARD_WIDTH; x++) {
         int col = BOARD_WIDTH/2 + x/2 - x * (x & 1);
-        if (is_move_valid(player, opponent, col)) {
+        if (is_non_losing_move(player, opponent, non_losing_moves, col)) {
             float score = calc_score(player, opponent, col, best_move);
 
             insert(moves, scores, num_moves, col, score);
             num_moves++;
         }
     }
+
+    assert(num_moves > 0);
 
     return num_moves;
 }

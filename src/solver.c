@@ -71,19 +71,30 @@ static int negamax(const board player, const board opponent, int alpha, int beta
         return 0;
     }
 
-    // The player can win on this move if the player has any active threats.
-    if (find_threats(player, opponent)) {
-        return 1;
-    }
-
-    // If the opponent has multiple threats, then the game is lost. If the opponent has only
-    // one threat, then the player must block the threat.
-    board threats = find_threats(opponent, player);
-    if (threats & (threats - 1)) {
+    // If the player can only move below the opponents threats, the player will lose.
+    board opponent_threats = find_threats(opponent, player);
+    board non_losing_moves = find_non_losing_moves(player, opponent, opponent_threats);
+    if (non_losing_moves == 0) {
         return -1;
     }
-    if (threats) {
-        return -negamax(opponent, player | threats, -beta, -alpha);
+
+    // Check if the opponent could win next move.
+    board opponent_wins = wins_this_move(opponent, player, opponent_threats);
+    if (opponent_wins) {
+        // If the opponent has multiple threats, then the game is lost.
+        if (opponent_wins & (opponent_wins - 1)) {
+            return -1;
+        }
+
+        // If the opponent has two threats on top of each other, then the game is also lost.
+        if (!(opponent_wins & non_losing_moves)) {
+            return -1;
+        }
+
+        // Otherwise, the opponent has only one threat, and the player must block the threat.
+        else {
+            return -negamax(opponent, player | opponent_wins, -beta, -alpha);
+        }
     }
 
     // Check if this state has already been seen.
@@ -114,7 +125,7 @@ static int negamax(const board player, const board opponent, int alpha, int beta
     int best_move_index, best_move_col;
 
     int moves[BOARD_WIDTH];
-    int num_moves = order_moves(player, opponent, moves, lookup_success ? lookup_move : BOARD_WIDTH);
+    int num_moves = order_moves(player, opponent, moves, non_losing_moves, lookup_success ? lookup_move : BOARD_WIDTH);
 
     int i;
     for (i = 0; i < num_moves && alpha < beta; i++) {
@@ -131,6 +142,8 @@ static int negamax(const board player, const board opponent, int alpha, int beta
 
         alpha = max(child_score, alpha);
     }
+
+    assert(value != -1000);
 
     // Store the result in the transposition table.
     int type = get_node_type(value, original_alpha, beta);

@@ -114,7 +114,7 @@ void table_store(board player, board opponent, int best_move, int type, int valu
     assert(best_move == BOARD_WIDTH || is_move_valid(player, opponent, best_move));
     assert(type == TYPE_UPPER || type == TYPE_LOWER || type == TYPE_EXACT);
     assert(-1 <= value && value <= 1);
-    
+
     int is_mirrored;
     board hash = hash_state(player, opponent, &is_mirrored);
     

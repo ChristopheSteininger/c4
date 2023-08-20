@@ -190,24 +190,24 @@ board find_threats(board player, board opponent) {
         | find_threats_in_direction(player, BOARD_HEIGHT_1)
         | find_threats_in_direction(player, BOARD_HEIGHT_2);
 
-    // Exclude any threats which cannot be played immediately.
-    board next_valid_moves = ((player | opponent) + BOTTOM_ROW) & ~COLUMN_HEADERS;
-    return all_threats & next_valid_moves;
+    // Exclude any threats which the opponent already blocked.
+    return all_threats & ~opponent & VALID_CELLS;
 }
 
 
-board find_opportunities(board player, board opponent) {
-    assert(!has_won(player));
-    assert(!has_won(opponent));
-    assert(!is_draw(player, opponent));
+board wins_this_move(board player, board opponent, board player_threats) {
+    // Exclude any threat which cannot be played immediately.
+    board next_valid_moves = (player | opponent) + BOTTOM_ROW;
 
-    // Find any threat, including ones blocked by the opponent.
-    board all_threats = find_threats_in_direction(player, 1)
-        | find_threats_in_direction(player, BOARD_HEIGHT)
-        | find_threats_in_direction(player, BOARD_HEIGHT_1)
-        | find_threats_in_direction(player, BOARD_HEIGHT_2);
+    return player_threats & next_valid_moves;
+}
 
-    return all_threats & ~opponent & VALID_CELLS;
+
+board find_non_losing_moves(board player, board opponent, board opponent_threats) {
+    board below_threats = opponent_threats >> 1;
+    board valid_moves = (player | opponent) + BOTTOM_ROW;
+
+    return valid_moves & ~below_threats & VALID_CELLS;
 }
 
 
@@ -220,6 +220,13 @@ int is_move_valid(board b0, board b1, int column) {
     board move_mask = FIRST_COLUMN << (BOARD_HEIGHT_1 * column);
     
     return (moves_played & move_mask) != move_mask;
+}
+
+
+int is_non_losing_move(board b0, board b1, board non_losing_moves, int column) {
+    board move_mask = FIRST_COLUMN << (BOARD_HEIGHT_1 * column);
+
+    return is_move_valid(b0, b1, column) && (move_mask & non_losing_moves);
 }
 
 

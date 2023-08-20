@@ -43,15 +43,23 @@ int has_won(board);
 int is_draw(board, board);
 
 
-// Returns a 1 in any cell in which the first player threatens a win.
+// Returns a 1 in any cell in which the first player threatens a win,
+// even if the threat cannot be played this turn.
 board find_threats(board, board);
 
 
-board find_opportunities(board, board);
+// Returns a 1 in any cell in which the first player can win this move.
+board wins_this_move(board, board, board);
+
+
+board find_non_losing_moves(board, board, board);
 
 
 // Returns true only if a player is allowed to play the given move.
 int is_move_valid(board, board, int);
+
+
+int is_non_losing_move(board, board, board, int);
 
 
 // Returns the number of child states.
