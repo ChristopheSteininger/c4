@@ -175,6 +175,26 @@ static int negamax(const board player, const board opponent, int alpha, int beta
 }
 
 
+int get_best_move(board player, board opponent) {
+    int score = solve(player, opponent);
+
+    for (int col = 0; col < BOARD_WIDTH; col++) {
+        if (is_move_valid(player, opponent, col)) {
+            board after_move = move(player, opponent, col);
+            int child_score = -solve(opponent, after_move);
+
+            if (child_score >= score) {
+                return col;
+            }
+        }
+    }
+    
+    assert(0);
+
+    return 0;
+}
+
+
 int solve(board b0, board b1) {
     stat_num_nodes = 0;
     stat_num_child_nodes = 0;
@@ -184,6 +204,21 @@ int solve(board b0, board b1) {
     stat_num_moves_checked = 0;
     stat_num_interior_nodes = 0;
     stat_num_best_moves_guessed = 0;
+
+    // There is no point in check simple conditions like win in one move
+    // during search so handle these here.
+    if (has_won(b0)) {
+        return 1;
+    }
+    if (has_won(b1)) {
+        return -1;
+    }
+    if (wins_this_move(b0, b1, find_threats(b0, b1))) {
+        return 1;
+    }
+    if (is_draw(b0, b1)) {
+        return 0;
+    }
 
     int result = negamax(b0, b1, -1, 0);
 

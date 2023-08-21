@@ -4,6 +4,9 @@
 #include "board.h"
 
 
+int get_best_move(board, board);
+
+
 int solve(board, board);
 
 
