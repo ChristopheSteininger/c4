@@ -2,7 +2,7 @@
 
 #include "order.h"
 #include "settings.h"
-#include "board.h"
+#include "position.h"
 
 
 static int count_bits(board b) {
@@ -27,32 +27,24 @@ static void insert(int *moves, float *scores, int count, int move, float score) 
 }
 
 
-static board odd(board b) {
-    return (b & BOTTOM_ROW)
-        | (b & (BOTTOM_ROW << 2))
-        | (b & (BOTTOM_ROW << 4));
-}
-
-
-static float calc_score(board player, board opponent, int col, int best_move) {
-    if (col == best_move) {
+static float calc_score(Position &pos, int col, int table_move) {
+    if (col == table_move) {
         return 1000;
     }
 
-    board after_move = move(player, opponent, col);
-    board threats = find_threats(after_move, opponent);
+    board before_move = pos.move(col);
+    board threats = pos.find_opponent_threats();
+    pos.unmove(before_move);
 
     int num_threats = count_bits(threats);
-    int num_odd_even_threats = (count_bits(player | opponent) & 1)
-        ? 0
-        : count_bits(odd(threats));
+    int num_odd_even_threats = count_bits(pos.find_odd_even_threats(threats));
 
     return num_threats + 0.5 * num_odd_even_threats;
 }
 
 
-int order_moves(board player, board opponent, int *moves, board non_losing_moves, int best_move) {
-    assert(best_move == BOARD_WIDTH || is_move_valid(player, opponent, best_move));
+int order_moves(Position &pos, int *moves, board non_losing_moves, int table_move) {
+    assert(table_move == BOARD_WIDTH || pos.is_move_valid(table_move));
 
     float scores[BOARD_WIDTH];
     for (int col = 0; col < BOARD_WIDTH; col++) {
@@ -63,8 +55,8 @@ int order_moves(board player, board opponent, int *moves, board non_losing_moves
 
     for (int x = 0; x < BOARD_WIDTH; x++) {
         int col = BOARD_WIDTH/2 + x/2 - x * (x & 1);
-        if (is_non_losing_move(player, opponent, non_losing_moves, col)) {
-            float score = calc_score(player, opponent, col, best_move);
+        if (pos.is_non_losing_move(non_losing_moves, col)) {
+            float score = calc_score(pos, col, table_move);
 
             insert(moves, scores, num_moves, col, score);
             num_moves++;

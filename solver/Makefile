@@ -1,22 +1,22 @@
-CC = gcc
-CFLAGS = -I -Wall -O3
+CC = g++
+CFLAGS = -I -Wall -O3 -std=c++20
 
 SRC_DIR = src
 TST_DIR = tst
 OBJ_DIR = obj
 
-SRCS = $(wildcard $(SRC_DIR)/*.c)
-SRC_OBJ = $(patsubst %.c,$(OBJ_DIR)/%.o,$(SRCS))
+SRCS = $(wildcard $(SRC_DIR)/*.cpp)
+SRC_OBJ = $(patsubst %.cpp,$(OBJ_DIR)/%.o,$(SRCS))
 
-TSTS = $(wildcard $(TST_DIR)/*.c)
-TST_OBJ = $(patsubst %.c,$(OBJ_DIR)/%.o,$(TSTS))
+TSTS = $(wildcard $(TST_DIR)/*.cpp)
+TST_OBJ = $(patsubst %.cpp,$(OBJ_DIR)/%.o,$(TSTS))
 
 default: c4
 
 .SUFFIX:
-.SUFFIX: .o .c
+.SUFFIX: .o .cpp
 
-$(OBJ_DIR)/%.o: %.c $(OBJ_DIR)/Makefile.deps
+$(OBJ_DIR)/%.o: %.cpp $(OBJ_DIR)/Makefile.deps
 	@mkdir -p $(@D)
 	$(CC) -c -o $@ $< $(CFLAGS)
 

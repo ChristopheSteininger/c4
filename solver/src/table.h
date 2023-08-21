@@ -1,34 +1,41 @@
 #ifndef TABLE_H_
 #define TABLE_H_
 
-#include "board.h"
+#include "position.h"
 
 
 extern const int TYPE_LOWER;
 extern const int TYPE_UPPER;
 extern const int TYPE_EXACT;
 
+class Table {
+public:
+    Table();
+    ~Table();
 
-int allocate_table();
+    void clear();
 
-void free_table();
+    int get(Position &pos, int &best_move, int &type, int &value);
+    void put(Position &pos, int best_move, int type, int value);
 
-void clear_table();
+    double get_size_in_gigabytes() const;
+    double get_hit_rate() const;
+    double get_collision_rate() const;
+    double get_density() const;
+    double get_rewrite_rate() const;
+    double get_overwrite_rate() const;
 
-int table_lookup(board, board, int *, int *, int *);
+private:
+    board *table;
 
-void table_store(board, board, int, int, int);
+    unsigned long stat_num_lookups = 0;
+    unsigned long stat_num_successful_lookups = 0;
+    unsigned long stat_num_hash_collisions = 0;
 
-double get_table_size_in_gigabytes();
+    unsigned long stat_num_entries = 0;
+    unsigned long stat_num_overwrites = 0;
+    unsigned long stat_num_rewrites = 0;
+};
 
-double get_table_hit_rate();
-
-double get_table_collision_rate();
-
-double get_table_density();
-
-double get_table_rewrite_rate();
-
-double get_table_overwrite_rate();
 
 #endif

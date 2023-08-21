@@ -1,36 +1,38 @@
 #ifndef SOLVER_H_
 #define SOLVER_H_
 
-#include "board.h"
+#include "position.h"
+#include "table.h"
 
 
-int get_best_move(board, board);
+class Solver {
+public:
+    int get_best_move(Position &pos);
+    int solve(Position &pos);
+    int solve_verbose(Position &pos);
 
+    unsigned long get_num_nodes() const;
+    unsigned long get_num_exact_nodes() const;
+    unsigned long get_num_lower_nodes() const;
+    unsigned long get_num_upper_nodes() const;
+    unsigned long get_num_best_moves_guessed() const;
+    unsigned long get_num_interior_nodes() const;
+    double get_moves_checked_rate() const;
 
-int solve(board, board);
+private:
+    Table table = Table();
 
+    unsigned long stat_num_nodes;
+    unsigned long stat_num_child_nodes;
+    unsigned long stat_num_exact_nodes;
+    unsigned long stat_num_lower_nodes;
+    unsigned long stat_num_upper_nodes;
+    unsigned long stat_num_moves_checked;
+    unsigned long stat_num_interior_nodes;
+    unsigned long stat_num_best_moves_guessed;
 
-int solve_verbose(board, board);
+    int negamax(Position &pos, int alpha, int beta);
+};
 
-
-unsigned long get_num_nodes();
-
-
-unsigned long get_num_exact_nodes();
-
-
-unsigned long get_num_lower_nodes();
-
-
-unsigned long get_num_upper_nodes();
-
-
-unsigned long get_num_best_moves_guessed();
-
-
-unsigned long get_num_interior_nodes();
-
-
-double get_moves_checked_rate();
 
 #endif

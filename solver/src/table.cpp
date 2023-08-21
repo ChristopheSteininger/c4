@@ -1,13 +1,11 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <assert.h>
-#include <math.h>
+#include <stdexcept>
+#include <cassert>
+#include <algorithm>
+#include <cmath>
 
 #include "table.h"
 #include "settings.h"
-#include "hashing.h"
-#include "board.h"
+#include "position.h"
 
 
 const int TYPE_UPPER = 1;
@@ -22,8 +20,6 @@ const int TYPE_EXACT = 3;
 //  * 1073741827 = 8 GB
 static const unsigned int TABLE_SIZE = 134217757;
 
-static board *table = NULL;
-
 // The number of bits of the hash stored in each entry.
 static const unsigned int KEY_SIZE = 56;
 static const board KEY_MASK = ((board) 1 << KEY_SIZE) - 1;
@@ -32,54 +28,42 @@ static const board KEY_MASK = ((board) 1 << KEY_SIZE) - 1;
 static const unsigned int VALUE_SIZE = 8;
 static const board VALUE_MASK = (1 << VALUE_SIZE) - 1;
 
-static unsigned long stat_num_lookups = 0;
-static unsigned long stat_num_successful_lookups = 0;
-static unsigned long stat_num_hash_collisions = 0;
 
-static unsigned long stat_num_entries = 0;
-static unsigned long stat_num_overwrites = 0;
-static unsigned long stat_num_rewrites = 0;
-
-
-int allocate_table() {
-    assert(table == NULL);
-    
+Table::Table() {
     // Not all bits of the hash are saved, however the hashing will still by unique
     // by the Chinese Remainder Theorem as long as the check below passes.
-    if (log2(TABLE_SIZE) + KEY_SIZE < BOARD_HEIGHT_1 * BOARD_WIDTH) {
-        printf("The table is too small which may result in invalid results. Exiting.\n");
-
-        return 0;
+    if (std::log2(TABLE_SIZE) + KEY_SIZE < BOARD_HEIGHT_1 * BOARD_WIDTH) {
+        throw std::runtime_error("The table is too small which may result in invalid results. Increase table size.");
     }
 
-    table = calloc(TABLE_SIZE, sizeof(board));
-
-    return table != NULL;
+    table = new board[TABLE_SIZE]();
 }
 
 
-void free_table() {
-    assert(table != NULL);
-    
-    free(table);
-    table = NULL;
+Table::~Table() {
+    delete [] table;
 }
 
 
-void clear_table() {
-    assert(table != NULL);
-    
-    memset(table, 0, TABLE_SIZE * sizeof(board));
+void Table::clear() {
+    std::fill(table, table + TABLE_SIZE, 0);
+
+    stat_num_lookups = 0;
+    stat_num_successful_lookups = 0;
+    stat_num_hash_collisions = 0;
+
+    stat_num_entries = 0;
+    stat_num_overwrites = 0;
+    stat_num_rewrites = 0;
 }
 
-int table_lookup(board player, board opponent, int *best_move, int *type, int *value) {
-    assert(table != NULL);
 
+int Table::get(Position &pos, int &best_move, int &type, int &value) {
     stat_num_lookups++;
     
-    int is_mirrored;
-    board hash = hash_state(player, opponent, &is_mirrored);
-    
+    bool is_mirrored;
+    board hash = pos.hash(is_mirrored);
+
     int index = hash % TABLE_SIZE;
     board result = table[index];
 
@@ -96,27 +80,27 @@ int table_lookup(board player, board opponent, int *best_move, int *type, int *v
 
     // Otherwise reconstruct the type and value of the entry.
     board entry = result & VALUE_MASK;
-    *best_move = entry >> 4;
-    *type = (entry >> 2) & 3;
-    *value = (entry & 3) - 1;
+    best_move = entry >> 4;
+    type = (entry >> 2) & 3;
+    value = (entry & 3) - 1;
 
     // If we looked up a mirrored move, mirror the best move as well.
     if (is_mirrored) {
-        *best_move = BOARD_WIDTH - *best_move - 1;
+        best_move = BOARD_WIDTH - best_move - 1;
     }
 
     stat_num_successful_lookups++;
     return 1;
 }
 
-void table_store(board player, board opponent, int best_move, int type, int value) {
-    assert(table != NULL);
-    assert(best_move == BOARD_WIDTH || is_move_valid(player, opponent, best_move));
+
+void Table::put(Position &pos, int best_move, int type, int value) {
+    assert(best_move == BOARD_WIDTH || pos.is_move_valid(best_move));
     assert(type == TYPE_UPPER || type == TYPE_LOWER || type == TYPE_EXACT);
     assert(-1 <= value && value <= 1);
 
-    int is_mirrored;
-    board hash = hash_state(player, opponent, &is_mirrored);
+    bool is_mirrored;
+    board hash = pos.hash(is_mirrored);
     
     int index = hash % TABLE_SIZE;
     board current_entry = table[index];
@@ -140,35 +124,39 @@ void table_store(board player, board opponent, int best_move, int type, int valu
     }
 
     // Store.
-    table[index] = (stored_hash << VALUE_SIZE) | (best_move << 4) | (type << 2) | (value + 1);
+    table[index]
+        = (stored_hash << VALUE_SIZE)
+        | (best_move << 4)
+        | (type << 2)
+        | (value + 1);
 }
 
 
-double get_table_size_in_gigabytes() {
+double Table::get_size_in_gigabytes() const {
     return (double) TABLE_SIZE * sizeof(board) / 1024 / 1024 / 1024;
 }
 
 
-double get_table_hit_rate() {
+double Table::get_hit_rate() const {
     return (double) stat_num_successful_lookups / stat_num_lookups;
 }
 
 
-double get_table_collision_rate() {
+double Table::get_collision_rate() const {
     return (double) stat_num_hash_collisions / stat_num_lookups;
 }
 
 
-double get_table_density() {
+double Table::get_density() const {
     return (double) stat_num_entries / TABLE_SIZE;
 }
 
 
-double get_table_overwrite_rate() {
+double Table::get_overwrite_rate() const {
     return (double) stat_num_overwrites / (stat_num_entries + stat_num_rewrites + stat_num_overwrites);
 }
 
 
-double get_table_rewrite_rate() {
+double Table::get_rewrite_rate() const {
     return (double) stat_num_rewrites / (stat_num_entries + stat_num_rewrites + stat_num_overwrites);
 }

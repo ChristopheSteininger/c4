@@ -5,14 +5,13 @@
 #include "known_states.h"
 #include "minunit.h"
 #include "../src/settings.h"
-#include "../src/board.h"
+#include "../src/position.h"
 #include "../src/solver.h"
 #include "../src/table.h"
 
 
 struct test_data {
-    board b0;
-    board b1;
+    Position pos;
     int expected;
 };
 
@@ -31,24 +30,18 @@ int sign(int x) {
 
 
 struct test_data read_line(char *line) {
-    board b0 = 0;
-    board b1 = 0;
+    Position pos = Position();
 
     // Reconstruct the board.
-    int pos = 0;
-    for (; '1' <= line[pos] && line[pos] <= '7'; pos++) {
-        b0 = move(b0, b1, line[pos] - '1');
-
-        board tmp = b0;
-        b0 = b1;
-        b1 = tmp;
+    int i = 0;
+    for (; '1' <= line[i] && line[i] <= '7'; i++) {
+        pos.move(line[i] - '1');
     }
 
-    int expected = sign(atoi(line + pos));
+    int expected = sign(atoi(line + i));
     
     struct test_data result = {
-        .b0 = b0,
-        .b1 = b1,
+        .pos = pos,
         .expected = expected
     };
 
@@ -56,7 +49,7 @@ struct test_data read_line(char *line) {
 }
 
 
-char *test_with_file(char *filename) {
+const char *test_with_file(const char *filename) {
     
     FILE *data_file = fopen(filename, "r");
     mu_assert("Could not open the file.", data_file != NULL);
@@ -66,25 +59,25 @@ char *test_with_file(char *filename) {
     unsigned long total_best_moves_guessed = 0;
     double total_run_time_ms = 0;
 
+    Solver solver = Solver();
+
     char line[100];
     for (int num_tests = 0; fgets(line, sizeof(line), data_file) != NULL;) {
         // Read the test data.
         struct test_data test_data = read_line(line);
 
-        clear_table();
-
         unsigned long start_time = clock();
-        int actual = solve(test_data.b0, test_data.b1);
-        
+        int actual = solver.solve(test_data.pos);
+
         total_run_time_ms += (clock() - start_time) * 1000 / (double) CLOCKS_PER_SEC;
-        total_nodes += get_num_nodes();
-        total_interior_nodes += get_num_interior_nodes();
-        total_best_moves_guessed += get_num_best_moves_guessed();
+        total_nodes += solver.get_num_nodes();
+        total_interior_nodes += solver.get_num_interior_nodes();
+        total_best_moves_guessed += solver.get_num_best_moves_guessed();
 
         // Fail if the solver returned the wrong result.
         if (test_data.expected != actual) {
             printf("\nThe position below has score %d, but got %d.\n", test_data.expected, actual);
-            printb(test_data.b0, test_data.b1);
+            test_data.pos.printb();
             
             fclose(data_file);
             mu_assert("Known state evaluation failed.", 0);
@@ -111,37 +104,37 @@ char *test_with_file(char *filename) {
 }
 
 
-char *test_endgame_L1() {
+const char *test_endgame_L1() {
     return test_with_file("tst/data/endgame_L1.txt");
 }
 
 
-char *test_midgame_L1() {
+const char *test_midgame_L1() {
     return test_with_file("tst/data/midgame_L1.txt");
 }
 
 
-char *test_midgame_L2() {
+const char *test_midgame_L2() {
     return test_with_file("tst/data/midgame_L2.txt");
 }
 
 
-char *test_opening_L1() {
+const char *test_opening_L1() {
     return test_with_file("tst/data/opening_L1.txt");
 }
 
 
-char *test_opening_L2() {
+const char *test_opening_L2() {
     return test_with_file("tst/data/opening_L2.txt");
 }
 
 
-char *test_opening_L3() {
+const char *test_opening_L3() {
     return test_with_file("tst/data/opening_L3.txt");
 }
 
 
-char *all_known_states_tests() {
+const char *all_known_states_tests() {
     mu_assert("Board must be 7 wide.", BOARD_WIDTH == 7);
     mu_assert("Board must be 6 high.", BOARD_HEIGHT == 6);
 

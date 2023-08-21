@@ -1,39 +1,22 @@
+#include <iostream>
 #include <stdio.h>
 #include <assert.h>
 #include <time.h>
 
 #include "solver.h"
 #include "settings.h"
-#include "board.h"
+#include "position.h"
 #include "table.h"
 #include "order.h"
 
 
-unsigned long stat_num_nodes;
-unsigned long stat_num_child_nodes;
-unsigned long stat_num_exact_nodes;
-unsigned long stat_num_lower_nodes;
-unsigned long stat_num_upper_nodes;
-unsigned long stat_num_moves_checked;
-unsigned long stat_num_interior_nodes;
-unsigned long stat_num_best_moves_guessed;
-
-
 static int max(int a, int b) {
-    if (a > b) {
-        return a;
-    }
-
-    return b;
+    return (a > b) ? a : b;
 }
 
 
 static int min(int a, int b) {
-    if (a < b) {
-        return a;
-    }
-
-    return b;
+    return (a < b) ? a : b;
 }
 
 
@@ -50,7 +33,7 @@ static int get_node_type(int value, int alpha, int beta) {
 }
 
 
-static int negamax(const board player, const board opponent, int alpha, int beta) {
+int Solver::negamax(Position &pos, int alpha, int beta) {
     assert(alpha < beta);
     
     stat_num_nodes++;
@@ -60,11 +43,10 @@ static int negamax(const board player, const board opponent, int alpha, int beta
     // If there are too few empty spaces left on the board for either player to win, then
     // adjust the bounds of the search. If neither player can win then the game is guaranteed
     // to end in a draw.
-    board empty_positions = VALID_CELLS & ~(player | opponent);
-    if (!has_won(opponent | empty_positions)) {
+    if (!pos.can_opponent_win()) {
         alpha = max(alpha, 0);
     }
-    if (!has_won(player | empty_positions)) {
+    if (!pos.can_player_win()) {
         beta = min(beta, 0);
     }
     if (alpha >= beta) {
@@ -72,14 +54,14 @@ static int negamax(const board player, const board opponent, int alpha, int beta
     }
 
     // If the player can only move below the opponents threats, the player will lose.
-    board opponent_threats = find_threats(opponent, player);
-    board non_losing_moves = find_non_losing_moves(player, opponent, opponent_threats);
+    board opponent_threats = pos.find_opponent_threats();
+    board non_losing_moves = pos.find_non_losing_moves(opponent_threats);
     if (non_losing_moves == 0) {
         return -1;
     }
 
     // Check if the opponent could win next move.
-    board opponent_wins = wins_this_move(opponent, player, opponent_threats);
+    board opponent_wins = pos.wins_this_move(opponent_threats);
     if (opponent_wins) {
         // If the opponent has multiple threats, then the game is lost.
         if (opponent_wins & (opponent_wins - 1)) {
@@ -93,13 +75,17 @@ static int negamax(const board player, const board opponent, int alpha, int beta
 
         // Otherwise, the opponent has only one threat, and the player must block the threat.
         else {
-            return -negamax(opponent, player | opponent_wins, -beta, -alpha);
+            board before_move = pos.move(opponent_wins);
+            int score = -negamax(pos, -beta, -alpha);
+            pos.unmove(before_move);
+
+            return score;
         }
     }
 
     // Check if this state has already been seen.
     int lookup_move, lookup_type, lookup_value;
-    int lookup_success = table_lookup(player, opponent, &lookup_move, &lookup_type, &lookup_value);
+    int lookup_success = table.get(pos, lookup_move, lookup_type, lookup_value);
 
     if (lookup_success) {
         if (lookup_type == TYPE_EXACT) {
@@ -125,14 +111,14 @@ static int negamax(const board player, const board opponent, int alpha, int beta
     int best_move_index, best_move_col;
 
     int moves[BOARD_WIDTH];
-    int num_moves = order_moves(player, opponent, moves, non_losing_moves, lookup_success ? lookup_move : BOARD_WIDTH);
+    int num_moves = order_moves(pos, moves, non_losing_moves, lookup_success ? lookup_move : BOARD_WIDTH);
 
     int i;
     for (i = 0; i < num_moves && alpha < beta; i++) {
         int col = moves[i];
-        board after_move = move(player, opponent, col);
-
-        int child_score = -negamax(opponent, after_move, -beta, -alpha);
+        board before_move = pos.move(col);
+        int child_score = -negamax(pos, -beta, -alpha);
+        pos.unmove(before_move);
 
         if (child_score > value) {
             value = child_score;
@@ -147,7 +133,7 @@ static int negamax(const board player, const board opponent, int alpha, int beta
 
     // Store the result in the transposition table.
     int type = get_node_type(value, original_alpha, beta);
-    table_store(player, opponent, best_move_col, type, value);
+    table.put(pos, best_move_col, type, value);
 
     // Best move look ups from the table should always be correct.
     if (type == TYPE_UPPER && lookup_success) {
@@ -175,13 +161,14 @@ static int negamax(const board player, const board opponent, int alpha, int beta
 }
 
 
-int get_best_move(board player, board opponent) {
-    int score = solve(player, opponent);
+int Solver::get_best_move(Position &pos) {
+    int score = solve(pos);
 
     for (int col = 0; col < BOARD_WIDTH; col++) {
-        if (is_move_valid(player, opponent, col)) {
-            board after_move = move(player, opponent, col);
-            int child_score = -solve(opponent, after_move);
+        if (pos.is_move_valid(col)) {
+            board before_move = pos.move(col);
+            int child_score = -solve(pos);
+            pos.unmove(before_move);
 
             if (child_score >= score) {
                 return col;
@@ -195,7 +182,7 @@ int get_best_move(board player, board opponent) {
 }
 
 
-int solve(board b0, board b1) {
+int Solver::solve(Position &pos) {
     stat_num_nodes = 0;
     stat_num_child_nodes = 0;
     stat_num_exact_nodes = 0;
@@ -207,35 +194,38 @@ int solve(board b0, board b1) {
 
     // There is no point in check simple conditions like win in one move
     // during search so handle these here.
-    if (has_won(b0)) {
+    if (pos.has_player_won()) {
         return 1;
     }
-    if (has_won(b1)) {
+    if (pos.has_opponent_won()) {
         return -1;
     }
-    if (wins_this_move(b0, b1, find_threats(b0, b1))) {
+    if (pos.wins_this_move(pos.find_player_threats())) {
         return 1;
     }
-    if (is_draw(b0, b1)) {
+    if (pos.is_draw()) {
         return 0;
     }
 
-    int result = negamax(b0, b1, -1, 0);
+    int result = negamax(pos, -1, 0);
 
     if (result == 0) {
-        return negamax(b0, b1, 0, 1);
+        return negamax(pos, 0, 1);
     }
 
     return result;
 }
 
 
-int solve_verbose(board b0, board b1) {
+int Solver::solve_verbose(Position &pos) {
+    printf("Using a %d x %d board and %.2f GB table.\n",
+        BOARD_WIDTH, BOARD_HEIGHT, table.get_size_in_gigabytes());
+
     printf("Solving:\n");
-    printb(b0, b1);
+    pos.printb();
 
     unsigned long start_time = clock();
-    int score = solve(b0, b1);
+    int score = solve(pos);
     double run_time_sec = (clock() - start_time) / (double) CLOCKS_PER_SEC;
 
     printf("\n");
@@ -250,11 +240,11 @@ int solve_verbose(board b0, board b1) {
     printf("    Upper            = %'lu\n", get_num_upper_nodes());
     printf("    Total            = %'lu\n", get_num_nodes());
     printf("Table:\n");
-    printf("    Hit rate         = %6.2f%%\n", get_table_hit_rate() * 100);
-    printf("    Collision rate   = %6.2f%%\n", get_table_collision_rate() * 100);
-    printf("    Density          = %6.2f%%\n", get_table_density() * 100);
-    printf("    Rewrite rate     = %6.2f%%\n", get_table_rewrite_rate() * 100);
-    printf("    Overwrite rate   = %6.2f%%\n", get_table_overwrite_rate() * 100);
+    printf("    Hit rate         = %6.2f%%\n", table.get_hit_rate() * 100);
+    printf("    Collision rate   = %6.2f%%\n", table.get_collision_rate() * 100);
+    printf("    Density          = %6.2f%%\n", table.get_density() * 100);
+    printf("    Rewrite rate     = %6.2f%%\n", table.get_rewrite_rate() * 100);
+    printf("    Overwrite rate   = %6.2f%%\n", table.get_overwrite_rate() * 100);
     printf("Best moves guessed   = %6.2f%%\n", (double) get_num_best_moves_guessed() * 100 / get_num_interior_nodes());
     printf("Moves checked        = %6.2f%%\n", get_moves_checked_rate() * 100);
 
@@ -262,36 +252,36 @@ int solve_verbose(board b0, board b1) {
 }
 
 
-unsigned long get_num_nodes() {
+unsigned long Solver::get_num_nodes() const {
     return stat_num_nodes;
 }
 
 
-unsigned long get_num_exact_nodes() {
+unsigned long Solver::get_num_exact_nodes() const {
     return stat_num_exact_nodes;
 }
 
 
-unsigned long get_num_lower_nodes() {
+unsigned long Solver::get_num_lower_nodes() const {
     return stat_num_lower_nodes;
 }
 
 
-unsigned long get_num_upper_nodes() {
+unsigned long Solver::get_num_upper_nodes() const {
     return stat_num_upper_nodes;
 }
 
 
-unsigned long get_num_best_moves_guessed() {
+unsigned long Solver::get_num_best_moves_guessed() const {
     return stat_num_best_moves_guessed;
 }
 
 
-unsigned long get_num_interior_nodes() {
+unsigned long Solver::get_num_interior_nodes() const {
     return stat_num_interior_nodes;
 }
 
 
-double get_moves_checked_rate() {
+double Solver::get_moves_checked_rate() const {
     return (double) stat_num_moves_checked / stat_num_child_nodes;
 }
