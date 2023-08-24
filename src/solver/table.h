@@ -15,7 +15,7 @@ public:
 
     void clear();
 
-    int get(Position &pos, int &best_move, int &type, int &value);
+    bool get(Position &pos, int &best_move, int &type, int &value);
     void put(Position &pos, int best_move, int type, int value);
 
     double get_size_in_gigabytes() const;

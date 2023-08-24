@@ -58,7 +58,7 @@ void Table::clear() {
 }
 
 
-int Table::get(Position &pos, int &best_move, int &type, int &value) {
+bool Table::get(Position &pos, int &best_move, int &type, int &value) {
     stat_num_lookups++;
     
     bool is_mirrored;
@@ -69,13 +69,13 @@ int Table::get(Position &pos, int &best_move, int &type, int &value) {
 
     // If this state has not been seen.
     if (result == 0) {
-        return 0;
+        return false;
     }
 
     // If this is a hash collision.
     if ((result >> VALUE_SIZE) != (hash & KEY_MASK)) {
         stat_num_hash_collisions++;
-        return 0;
+        return false;
     }
 
     // Otherwise reconstruct the type and value of the entry.
@@ -90,7 +90,7 @@ int Table::get(Position &pos, int &best_move, int &type, int &value) {
     }
 
     stat_num_successful_lookups++;
-    return 1;
+    return true;
 }
 
 
