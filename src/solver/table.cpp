@@ -21,11 +21,11 @@ const int TYPE_EXACT = 3;
 static const unsigned int TABLE_SIZE = 134217757;
 
 // The number of bits of the hash stored in each entry.
-static const unsigned int KEY_SIZE = 56;
+static const unsigned int KEY_SIZE = 50;
 static const board KEY_MASK = ((board) 1 << KEY_SIZE) - 1;
 
 // The number of bits stored against each hash.
-static const unsigned int VALUE_SIZE = 8;
+static const unsigned int VALUE_SIZE = 14;
 static const board VALUE_MASK = (1 << VALUE_SIZE) - 1;
 
 
@@ -80,9 +80,9 @@ int Table::get(Position &pos, int &best_move, int &type, int &value) {
 
     // Otherwise reconstruct the type and value of the entry.
     board entry = result & VALUE_MASK;
-    best_move = entry >> 4;
-    type = (entry >> 2) & 3;
-    value = (entry & 3) - 1;
+    best_move = entry >> 10;
+    type = (entry >> 8) & 3;
+    value = (entry & 255);
 
     // If we looked up a mirrored move, mirror the best move as well.
     if (is_mirrored) {
@@ -97,7 +97,7 @@ int Table::get(Position &pos, int &best_move, int &type, int &value) {
 void Table::put(Position &pos, int best_move, int type, int value) {
     assert(best_move == BOARD_WIDTH || pos.is_move_valid(best_move));
     assert(type == TYPE_UPPER || type == TYPE_LOWER || type == TYPE_EXACT);
-    assert(-1 <= value && value <= 1);
+    assert(0 <= value && value < (1 << 14));
 
     bool is_mirrored;
     board hash = pos.hash(is_mirrored);
@@ -126,9 +126,9 @@ void Table::put(Position &pos, int best_move, int type, int value) {
     // Store.
     table[index]
         = (stored_hash << VALUE_SIZE)
-        | (best_move << 4)
-        | (type << 2)
-        | (value + 1);
+        | (best_move << 10)
+        | (type << 8)
+        | (value);
 }
 
 

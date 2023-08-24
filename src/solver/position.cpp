@@ -227,6 +227,11 @@ void Position::unmove(board before_move) {
 }
 
 
+int Position::num_moves() {
+    return ply;
+}
+
+
 bool Position::has_player_won() {
     return has_won(b0) != 0;
 }

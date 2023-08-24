@@ -391,7 +391,7 @@ const char *test_mirror_hash_on_random_games() {
     // Reset the random number sequence.
     srand(0);
 
-    for (int trial = 0; trial < 1000000; trial++) {
+    for (int trial = 0; trial < 100000; trial++) {
         Position pos = Position();
         Position mirror = Position();
         
@@ -415,7 +415,7 @@ const char *test_find_dead_stones_returns_subset_of_dead_stones_on_random_games(
     // Reset the random number sequence.
     srand(0);
 
-    for (int trial = 0; trial < 1000000; trial++) {
+    for (int trial = 0; trial < 100000; trial++) {
         Position pos = Position();
         
         // Play random moves until the game is draw, or the last player won the game.

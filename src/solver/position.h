@@ -42,6 +42,8 @@ public:
     // Undo the last move, given the result of the last call to move().
     void unmove(board before_move);
 
+    int num_moves();
+
     // Returns true only if the current player will win or lose the game.
     bool has_player_won();
     bool has_opponent_won();

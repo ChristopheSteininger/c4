@@ -12,12 +12,16 @@ TSTS = $(wildcard $(TST_DIR)/*.cpp)
 TST_OBJ = $(patsubst %.cpp,$(OBJ_DIR)/%.o,$(TSTS))
 
 
-ifeq ($(optimise),yes)
-	CFLAGS += -O3 -DNDEBUG -flto=full
+ifeq ($(debug), yes)
+	CFLAGS += -g
+else ifeq ($(optimise), yes)
+	CFLAGS += -O3 -flto=full -DNDEBUG
+else
+	CFLAGS += -O3 -flto=full
 endif
 
 
-default: c4
+default: all
 
 .SUFFIX:
 .SUFFIX: .o .cpp

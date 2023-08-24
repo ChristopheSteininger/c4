@@ -8,7 +8,8 @@
 class Solver {
 public:
     int get_best_move(Position &pos);
-    int solve(Position &pos);
+    int solve_weak(Position &pos);
+    int solve_strong(Position &pos);
     int solve_verbose(Position &pos);
 
     unsigned long get_num_nodes() const;
@@ -32,6 +33,7 @@ private:
     unsigned long stat_num_best_moves_guessed;
 
     int negamax(Position &pos, int alpha, int beta);
+    int solve(Position &pos, int alpha, int beta);
 };
 
 

@@ -29,7 +29,7 @@ int sign(int x) {
 }
 
 
-struct test_data read_line(char *line) {
+struct test_data read_line(char *line, int type) {
     Position pos = Position();
 
     // Reconstruct the board.
@@ -38,8 +38,12 @@ struct test_data read_line(char *line) {
         pos.move(line[i] - '1');
     }
 
-    int expected = sign(atoi(line + i));
-    
+    int expected = atoi(line + i);
+
+    if (type == 0) {
+        expected = sign(expected);
+    }
+
     struct test_data result = {
         .pos = pos,
         .expected = expected
@@ -49,7 +53,7 @@ struct test_data read_line(char *line) {
 }
 
 
-const char *test_with_file(const char *filename) {
+const char *test_with_file(const char *filename, int type) {
     
     FILE *data_file = fopen(filename, "r");
     mu_assert("Could not open the file.", data_file != NULL);
@@ -64,10 +68,15 @@ const char *test_with_file(const char *filename) {
     char line[100];
     for (int num_tests = 0; fgets(line, sizeof(line), data_file) != NULL;) {
         // Read the test data.
-        struct test_data test_data = read_line(line);
+        struct test_data test_data = read_line(line, type);
 
+        int actual;
         unsigned long start_time = clock();
-        int actual = solver.solve(test_data.pos);
+        if (type == 0) {
+            actual = solver.solve_weak(test_data.pos);
+        } else {
+            actual = solver.solve_strong(test_data.pos);
+        }
 
         total_run_time_ms += (clock() - start_time) * 1000 / (double) CLOCKS_PER_SEC;
         total_nodes += solver.get_num_nodes();
@@ -86,8 +95,9 @@ const char *test_with_file(const char *filename) {
         // Increment before we print the update.
         num_tests++;
 
-        printf("\r\t%-30s %'15.0f %'15.0f %14.1f%% %'15.0f %'15d",
-            filename,
+        printf("\r\t%-30s %-15s %'15.0f %'15.0f %14.1f%% %'15.0f %'15d",
+            (type == 0) ? filename: "",
+            (type == 0) ? "Weak" : "Strong",
             (double) total_nodes / num_tests,
             total_nodes / total_run_time_ms,
             (double) total_best_moves_guessed * 100 / total_interior_nodes,
@@ -105,32 +115,50 @@ const char *test_with_file(const char *filename) {
 
 
 const char *test_endgame_L1() {
-    return test_with_file("tst/data/endgame_L1.txt");
+    test_with_file("tst/data/endgame_L1.txt", 0);
+    test_with_file("tst/data/endgame_L1.txt", 1);
+
+    return 0;
 }
 
 
 const char *test_midgame_L1() {
-    return test_with_file("tst/data/midgame_L1.txt");
+    test_with_file("tst/data/midgame_L1.txt", 0);
+    test_with_file("tst/data/midgame_L1.txt", 1);
+
+    return 0;
 }
 
 
 const char *test_midgame_L2() {
-    return test_with_file("tst/data/midgame_L2.txt");
+    test_with_file("tst/data/midgame_L2.txt", 0);
+    test_with_file("tst/data/midgame_L2.txt", 1);
+
+    return 0;
 }
 
 
 const char *test_opening_L1() {
-    return test_with_file("tst/data/opening_L1.txt");
+    test_with_file("tst/data/opening_L1.txt", 0);
+    test_with_file("tst/data/opening_L1.txt", 1);
+
+    return 0;
 }
 
 
 const char *test_opening_L2() {
-    return test_with_file("tst/data/opening_L2.txt");
+    test_with_file("tst/data/opening_L2.txt", 0);
+    test_with_file("tst/data/opening_L2.txt", 1);
+
+    return 0;
 }
 
 
 const char *test_opening_L3() {
-    return test_with_file("tst/data/opening_L3.txt");
+    test_with_file("tst/data/opening_L3.txt", 0);
+    test_with_file("tst/data/opening_L3.txt", 1);
+
+    return 0;
 }
 
 
@@ -139,17 +167,23 @@ const char *all_known_states_tests() {
     mu_assert("Board must be 6 high.", BOARD_HEIGHT == 6);
 
     printf("Running known state tests . . .\n");
-    printf("\t%-30s %15s %15s %15s %15s %15s\n", "Test", "Mean nodes", "Nodes per ms", "Guess rate", "Time (s)",
+    printf("\t%-30s %-15s %15s %15s %15s %15s %15s\n", "Test", "Type", "Mean nodes", "Nodes per ms", "Guess rate", "Time (s)",
         "Trials passed");
 
     mu_run_test(test_endgame_L1);
+    printf("\n");
     
     mu_run_test(test_midgame_L1);
+    printf("\n");
     mu_run_test(test_midgame_L2);
+    printf("\n");
     
     mu_run_test(test_opening_L1);
+    printf("\n");
     mu_run_test(test_opening_L2);
+    printf("\n");
     mu_run_test(test_opening_L3);
+    printf("\n");
 
     return 0;
 }

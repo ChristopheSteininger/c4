@@ -21,7 +21,7 @@ const char *test_table_lookup_returns_stored_results() {
         for (int x = 0; x < BOARD_WIDTH; x++) {
             pos1.move(x);
             
-            table.put(pos1, x, (counter % 3) + 1, (counter % 3) - 1);
+            table.put(pos1, x, (counter % 3) + 1, (counter % 3));
             counter++;
         }
     }
@@ -39,7 +39,7 @@ const char *test_table_lookup_returns_stored_results() {
             mu_assert("table lookup in mock game.", success);
             mu_assert("move lookup in mock game.", move == x);
             mu_assert("type lookup in mock game.", type == (counter % 3) + 1);
-            mu_assert("value lookup in mock game.", value == (counter % 3) - 1);
+            mu_assert("value lookup in mock game.", value == (counter % 3));
             
             counter++;
         }
