@@ -1,5 +1,6 @@
 .vscode/
 obj/
 c4
+arena
 test
 .DS_Store

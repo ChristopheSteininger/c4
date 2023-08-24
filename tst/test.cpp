@@ -4,9 +4,9 @@
 #include "minunit.h"
 #include "known_states.h"
 #include "test_board.h"
-#include "../src/settings.h"
-#include "../src/position.h"
-#include "../src/table.h"
+#include "../src/solver/settings.h"
+#include "../src/solver/position.h"
+#include "../src/solver/table.h"
 
 
 int tests_run = 0;

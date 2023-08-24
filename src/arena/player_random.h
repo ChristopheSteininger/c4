@@ -5,11 +5,13 @@
 
 #include "player.h"
 
+#include "../solver/position.h"
+
 
 class PlayerRandom : public Player {
 public:
     PlayerRandom();
-    int move(board, board) override;
+    int move(Position &pos) override;
 
 private:
     std::mt19937 gen;

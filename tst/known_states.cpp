@@ -4,10 +4,10 @@
 
 #include "known_states.h"
 #include "minunit.h"
-#include "../src/settings.h"
-#include "../src/position.h"
-#include "../src/solver.h"
-#include "../src/table.h"
+#include "../src/solver/settings.h"
+#include "../src/solver/position.h"
+#include "../src/solver/solver.h"
+#include "../src/solver/table.h"
 
 
 struct test_data {

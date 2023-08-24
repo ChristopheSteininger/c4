@@ -2,6 +2,7 @@
 #define ARENA_H_
 
 #include "player.h"
+#include "../solver/position.h"
 
 
 class Arena {
@@ -23,7 +24,7 @@ private:
     int p0_calc_millis = 0;
     int p1_calc_millis = 0;
 
-    int play_game(board, board, Player *, Player *);
+    int play_game(Position &pos, Player *cur, Player *next);
 };
 
 

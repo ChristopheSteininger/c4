@@ -1,8 +1,8 @@
 #include <stdio.h>
 
 #include "minunit.h"
-#include "../src/settings.h"
-#include "../src/position.h"
+#include "../src/solver/settings.h"
+#include "../src/solver/position.h"
 
 
 static int get_random_move(Position &pos) {

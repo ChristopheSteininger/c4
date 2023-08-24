@@ -5,7 +5,7 @@ SRC_DIR = src
 TST_DIR = tst
 OBJ_DIR = obj
 
-SRCS = $(wildcard $(SRC_DIR)/*.cpp)
+SRCS = $(shell find $(SRC_DIR) -name "*.cpp")
 SRC_OBJ = $(patsubst %.cpp,$(OBJ_DIR)/%.o,$(SRCS))
 
 TSTS = $(wildcard $(TST_DIR)/*.cpp)
@@ -20,10 +20,13 @@ $(OBJ_DIR)/%.o: %.cpp $(OBJ_DIR)/Makefile.deps
 	@mkdir -p $(@D)
 	$(CC) -c -o $@ $< $(CFLAGS)
 
-c4: $(SRC_OBJ)
+c4: $(filter-out %/main.o, $(SRC_OBJ))
 	$(CC) -o $@ $^ $(CFLAGS)
 
-test: $(patsubst $(OBJ_DIR)/$(SRC_DIR)/c4.o,,$(SRC_OBJ)) $(TST_OBJ)
+arena: $(filter-out %/c4.o, $(SRC_OBJ))
+	$(CC) -o $@ $^ $(CFLAGS)
+
+test: $(filter-out %/c4.o %/main.o, $(SRC_OBJ)) $(TST_OBJ)
 	$(CC) -o $@ $^ $(CFLAGS)
 
 .PHONY:
@@ -40,7 +43,7 @@ clean:
 	-rm -rf $(OBJ_DIR)
 
 clobber: clean
-	-rm -f c4 test
+	-rm -f c4 arena test
 
 $(OBJ_DIR)/Makefile.deps:
 	@mkdir -p $(@D)

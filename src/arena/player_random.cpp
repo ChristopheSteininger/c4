@@ -2,10 +2,6 @@
 
 #include "player_random.h"
 
-extern "C" {
-    #include "../../solver/src/board.h"
-}
-
 
 PlayerRandom::PlayerRandom()
         : dis(0, 6)  {
@@ -14,17 +10,17 @@ PlayerRandom::PlayerRandom()
 }
 
 
-int PlayerRandom::move(board player, board opponent) {
+int PlayerRandom::move(Position &pos) {
     for (int i = 0; i < 1000; i++) {
         int col = dis(gen);
 
-        if (is_move_valid(player, opponent, col)) {
+        if (pos.is_move_valid(col)) {
             return col;
         }
     }
     
     std::cout << "Random player could not find a valid move in this position:" << std::endl;
-    printb(player, opponent);
+    pos.printb();
 
     return 0;
 }
