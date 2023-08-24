@@ -1,5 +1,5 @@
 CC = g++
-CFLAGS = -I -Wall -O3 -std=c++20
+CFLAGS = -I -Wall -std=c++20
 
 SRC_DIR = src
 TST_DIR = tst
@@ -10,6 +10,12 @@ SRC_OBJ = $(patsubst %.cpp,$(OBJ_DIR)/%.o,$(SRCS))
 
 TSTS = $(wildcard $(TST_DIR)/*.cpp)
 TST_OBJ = $(patsubst %.cpp,$(OBJ_DIR)/%.o,$(TSTS))
+
+
+ifeq ($(optimise),yes)
+	CFLAGS += -O3 -DNDEBUG -flto=full
+endif
+
 
 default: c4
 
