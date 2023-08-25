@@ -9,11 +9,19 @@ class Solver {
 public:
     int solve_weak(Position &pos, bool verbose = false);
     int solve_strong(Position &pos, bool verbose = false);
-    int solve_verbose(Position &pos);
 
     int get_best_move(Position &pos);
     int get_principal_variation(Position &pos, int *moves);
+    int get_num_moves_prediction(Position &pos, int score) const;
 
+    void reset_stats();
+
+    double get_table_size_in_gigabytes() const;
+    double get_table_hit_rate() const;
+    double get_table_collision_rate() const;
+    double get_table_density() const;
+    double get_table_rewrite_rate() const;
+    double get_table_overwrite_rate() const;
     unsigned long get_num_nodes() const;
     unsigned long get_num_exact_nodes() const;
     unsigned long get_num_lower_nodes() const;

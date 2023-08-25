@@ -51,6 +51,8 @@ public:
     // Returns true only if the players have drawn the game.
     bool is_draw();
 
+    bool is_game_over();
+
     // Returns true only if either of the players does not have enough
     // space left to win the game.
     bool can_player_win();

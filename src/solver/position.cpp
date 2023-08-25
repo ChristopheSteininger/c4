@@ -250,6 +250,11 @@ bool Position::is_draw() {
 }
 
 
+bool Position::is_game_over() {
+    return has_player_won() || has_opponent_won() || is_draw();
+}
+
+
 bool Position::can_player_win() {
     board empty_positions = VALID_CELLS & ~(b0 | b1);
 

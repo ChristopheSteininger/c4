@@ -1,7 +1,6 @@
 #include <iostream>
 #include <stdio.h>
 #include <assert.h>
-#include <time.h>
 
 #include "solver.h"
 #include "settings.h"
@@ -38,13 +37,13 @@ static int get_node_type(int value, int alpha, int beta) {
 }
 
 
-static int score_loss(Position &pos) {
-    return (-BOARD_WIDTH * BOARD_HEIGHT + pos.num_moves()) / 2;
+static int score_loss(Position &pos, int turns) {
+    return (-BOARD_WIDTH * BOARD_HEIGHT + turns + pos.num_moves()) / 2;
 }
 
 
-static int score_win(Position &pos) {
-    return (BOARD_WIDTH * BOARD_HEIGHT + 1 + pos.num_moves()) / 2;
+static int score_win(Position &pos, int turns) {
+    return (BOARD_WIDTH * BOARD_HEIGHT + 1 - turns - pos.num_moves()) / 2;
 }
 
 
@@ -94,7 +93,7 @@ int Solver::negamax(Position &pos, int alpha, int beta) {
     assert(alpha < beta);
     assert(!pos.has_player_won());
     assert(!pos.has_opponent_won());
-    assert(!pos.is_draw());
+    // assert(!pos.is_draw());
 
     stat_num_nodes++;
 
@@ -103,24 +102,28 @@ int Solver::negamax(Position &pos, int alpha, int beta) {
 
     // If there are too few empty spaces left on the board for the player to win, then the best
     // score possible is a draw.
-    if (!pos.can_player_win()) {
-        beta = min(beta, 0);
-    }
-    if (alpha >= beta) {
+    // if (!pos.can_player_win()) {
+    //     beta = min(beta, 0);
+    // }
+    // if (alpha >= beta) {
+    //     return 0;
+    // }
+
+    if (pos.is_draw()) {
         return 0;
     }
 
     // The minimum score possible increases each turn.
-    alpha = max(alpha, score_loss(pos));
-    if (alpha >= beta) {
-        return alpha;
-    }
+    // alpha = max(alpha, score_loss(pos, 2));
+    // if (alpha >= beta) {
+    //     // return alpha;
+    // }
 
     // If the player can only move below the opponents threats, the player will lose.
     board opponent_threats = pos.find_opponent_threats();
     board non_losing_moves = pos.find_non_losing_moves(opponent_threats);
     if (non_losing_moves == 0) {
-        return score_loss(pos);
+        return score_loss(pos, 0);
     }
 
     // Check if the opponent could win next move.
@@ -128,12 +131,12 @@ int Solver::negamax(Position &pos, int alpha, int beta) {
     if (opponent_wins) {
         // If the opponent has multiple threats, then the game is lost.
         if (opponent_wins & (opponent_wins - 1)) {
-            return score_loss(pos);
+            return score_loss(pos, 0);
         }
 
         // If the opponent has two threats on top of each other, then the game is also lost.
         if (!(opponent_wins & non_losing_moves)) {
-            return score_loss(pos);
+            return score_loss(pos, 0);
         }
 
         // Otherwise, the opponent has only one threat, and the player must block the threat.
@@ -229,6 +232,11 @@ int Solver::get_best_move(Position &pos) {
     // can be solved by static analysis. For these positions we need find the best
     // move ourselves.
 
+    // If neither player will be able to win, moves don't matter anymore.
+    if (!pos.can_player_win() && !pos.can_opponent_win()) {
+        return get_any_move(pos);
+    }
+
     // If the player can win this move, then end the game.
     board player_threats = pos.find_player_threats();
     board player_wins = pos.wins_this_move(player_threats);
@@ -266,50 +274,43 @@ int Solver::get_best_move(Position &pos) {
     int best_move, type, value;
     
     bool lookup_success = table.get(pos, best_move, type, value);
-    if (lookup_success) {
+    if (lookup_success && type == TYPE_EXACT) {
         return best_move;
     }
 
     // The results are occasionally overrwritten. If so start another search which
     // will write the best move into the table before returning.
     negamax(pos, MIN_SCORE, MAX_SCORE);
-    
+
     lookup_success = table.get(pos, best_move, type, value);
-    if (lookup_success) {
+    if (lookup_success && type == TYPE_EXACT) {
         return best_move;
     }
 
     // A second miss should never occur.
-    std::cout << "Error: second cache miss." << std::endl;
+    std::cout << "Error: could not get a best move." << std::endl;
+    assert(0);
+
     return -1;
 }
 
 
 int Solver::solve(Position &pos, int alpha, int beta, bool verbose) {
-    stat_num_nodes = 0;
-    stat_num_child_nodes = 0;
-    stat_num_exact_nodes = 0;
-    stat_num_lower_nodes = 0;
-    stat_num_upper_nodes = 0;
-    stat_num_moves_checked = 0;
-    stat_num_interior_nodes = 0;
-    stat_num_best_moves_guessed = 0;
-
     // There is no point in check simple conditions like win in one move
     // during search so handle these here.
     if (pos.has_player_won()
             || pos.wins_this_move(pos.find_player_threats())) {
-        return score_win(pos);
+        return score_win(pos, 0);
     }
     if (pos.has_opponent_won()) {
-        return score_loss(pos);
+        return score_loss(pos, 0);
     }
     if (pos.is_draw()) {
         return 0;
     }
 
-    alpha = max(alpha, score_loss(pos));
-    beta = min(beta, score_win(pos));
+    alpha = max(alpha, score_loss(pos, 0));
+    beta = min(beta, score_win(pos, 0));
 
     int a = 0;
     int b = 1;
@@ -333,6 +334,59 @@ int Solver::solve(Position &pos, int alpha, int beta, bool verbose) {
     }
 
     return negamax(pos, alpha, beta);
+}
+
+
+int Solver::get_principal_variation(Position &pos, int *moves) {
+    Position pv = Position(pos);
+
+    for (int i = 0; i < BOARD_WIDTH * BOARD_HEIGHT; i++) {
+        if (pv.is_game_over()) {
+            return i;
+        }
+
+        int best_move = get_best_move(pv);
+
+        moves[i] = best_move;
+        pv.move(best_move);
+    }
+
+    assert(0);
+    return -1;
+}
+
+
+int Solver::get_num_moves_prediction(Position &pos, int score) const {
+    // Run the calculation from the perspective of the first player.
+    if (pos.num_moves() & 1) {
+        score *= -1;
+    }
+
+    if (score > 0) {
+        return BOARD_WIDTH * BOARD_HEIGHT - (score * 2) + 1;
+    } else if (score < 0) {
+        return BOARD_WIDTH * BOARD_HEIGHT + ((score + 1) * 2);
+    } else {
+        return BOARD_WIDTH * BOARD_HEIGHT;
+    }
+}
+
+
+int Solver::solve_weak(Position &pos, bool verbose) {
+    int result = solve(pos, -1, 1, verbose);
+
+    if (result > 0) {
+        return 1;
+    } else if (result < 0) {
+        return -1;
+    } else {
+        return 0;
+    }
+}
+
+
+int Solver::solve_strong(Position &pos, bool verbose) {
+    return solve(pos, MIN_SCORE, MAX_SCORE, verbose);
 }
 
 
@@ -360,72 +414,45 @@ void Solver::print_pv_update(Position &pos, int *pv0, int *pv1, int *pv0_size, i
 }
 
 
-int Solver::get_principal_variation(Position &pos, int *moves) {
-    Position pv = Position(pos);
-
-    for (int i = 0; i < BOARD_WIDTH * BOARD_HEIGHT; i++) {
-        if (pv.has_player_won() || pv.has_opponent_won() || pv.is_draw()) {
-            return i;
-        }
-
-        int best_move = get_best_move(pv);
-
-        moves[i] = best_move;
-        pv.move(best_move);
-    }
-
-    assert(0);
-    return -1;
+void Solver::reset_stats() {
+    stat_num_nodes = 0;
+    stat_num_child_nodes = 0;
+    stat_num_exact_nodes = 0;
+    stat_num_lower_nodes = 0;
+    stat_num_upper_nodes = 0;
+    stat_num_moves_checked = 0;
+    stat_num_interior_nodes = 0;
+    stat_num_best_moves_guessed = 0;
 }
 
-int Solver::solve_weak(Position &pos, bool verbose) {
-    int result = solve(pos, -1, 1, verbose);
 
-    if (result > 0) {
-        return 1;
-    } else if (result < 0) {
-        return -1;
-    } else {
-        return 0;
-    }
+double Solver::get_table_size_in_gigabytes() const {
+    return table.get_size_in_gigabytes();
 }
 
-int Solver::solve_strong(Position &pos, bool verbose) {
-    return solve(pos, MIN_SCORE, MAX_SCORE, verbose);
+
+double Solver::get_table_hit_rate() const {
+    return table.get_hit_rate();
 }
 
-int Solver::solve_verbose(Position &pos) {
-    printf("Using a %d x %d board and %.2f GB table.\n",
-        BOARD_WIDTH, BOARD_HEIGHT, table.get_size_in_gigabytes());
 
-    printf("Solving:\n");
-    pos.printb();
+double Solver::get_table_collision_rate() const {
+    return table.get_collision_rate();
+}
 
-    unsigned long start_time = clock();
-    int score = solve_strong(pos, true);
-    double run_time_sec = (clock() - start_time) / (double) CLOCKS_PER_SEC;
 
-    printf("\n");
-    printf("Score is %d\n", score);
+double Solver::get_table_density() const {
+    return table.get_density();
+}
 
-    printf("\n");
-    printf("Time to solve        = %'.0f s\n", run_time_sec);
-    printf("Nodes per ms         = %'.0f\n", get_num_nodes() / run_time_sec / 1000);
-    printf("Nodes:\n");
-    printf("    Exact            = %'lu\n", get_num_exact_nodes());
-    printf("    Lower            = %'lu\n", get_num_lower_nodes());
-    printf("    Upper            = %'lu\n", get_num_upper_nodes());
-    printf("    Total            = %'lu\n", get_num_nodes());
-    printf("Table:\n");
-    printf("    Hit rate         = %6.2f%%\n", table.get_hit_rate() * 100);
-    printf("    Collision rate   = %6.2f%%\n", table.get_collision_rate() * 100);
-    printf("    Density          = %6.2f%%\n", table.get_density() * 100);
-    printf("    Rewrite rate     = %6.2f%%\n", table.get_rewrite_rate() * 100);
-    printf("    Overwrite rate   = %6.2f%%\n", table.get_overwrite_rate() * 100);
-    printf("Best moves guessed   = %6.2f%%\n", (double) get_num_best_moves_guessed() * 100 / get_num_interior_nodes());
-    printf("Moves checked        = %6.2f%%\n", get_moves_checked_rate() * 100);
 
-    return score;
+double Solver::get_table_rewrite_rate() const {
+    return table.get_rewrite_rate();
+}
+
+
+double Solver::get_table_overwrite_rate() const {
+    return table.get_overwrite_rate();
 }
 
 
