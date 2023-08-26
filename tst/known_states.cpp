@@ -98,7 +98,7 @@ bool self_play_test(Solver &solver, struct test_data test_data) {
 
     // The length of the PV must match the number of expected moves.
     if (expected_num_moves != num_pv_moves + pos.num_moves()) {
-        printf("PV length does not match expected num moves. Expected num moves was %d but got %d from PV.",
+        printf("PV length does not match expected num moves. Expected num moves was %d but got %d from PV.\n",
             expected_num_moves, num_pv_moves + pos.num_moves());
         pos.printb();
 
@@ -121,7 +121,7 @@ bool self_play_test(Solver &solver, struct test_data test_data) {
 
         // Fail if the solver changed score while playing.
         if (score != expected_score) {
-            printf("Solver changed score during play. Expected %d but got %d.", expected_score, score);
+            printf("Solver changed score during play. Expected %d but got %d.\n", expected_score, score);
             pos.printb();
             
             return false;
@@ -129,7 +129,7 @@ bool self_play_test(Solver &solver, struct test_data test_data) {
 
         // Fail if the move is not part of the principal variation.
         if (move != pv[moves_played]) {
-            printf("Solver gave a move not part of the original principal variation. Move was %d PV move was %d.",
+            printf("Solver gave a move not part of the original principal variation. Move was %d PV move was %d.\n",
                 move, pv[moves_played]);
             pos.printb();
 
@@ -142,7 +142,7 @@ bool self_play_test(Solver &solver, struct test_data test_data) {
 
     // Fail if the game ended earlier or later than predicted.
     if (expected_num_moves != pos.num_moves()) {
-        printf("Game ended on unexpected move. Expected move count was %d but got %d.", expected_num_moves, pos.num_moves());
+        printf("Game ended on unexpected move. Expected move count was %d but got %d.\n", expected_num_moves, pos.num_moves());
         pos.printb();
         
         return false;
@@ -150,7 +150,7 @@ bool self_play_test(Solver &solver, struct test_data test_data) {
 
     // Fail if the game ended earlier or later than predicted.
     if (expected_num_moves != moves_played + test_data.pos.num_moves()) {
-        printf("Game ended on unexpected move. Expected move count was %d but moved %d times.",
+        printf("Game ended on unexpected move. Expected move count was %d but moved %d times.\n",
             expected_num_moves, moves_played + test_data.pos.num_moves());
         pos.printb();
         

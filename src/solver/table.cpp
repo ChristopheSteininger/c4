@@ -58,11 +58,8 @@ void Table::clear() {
 }
 
 
-bool Table::get(Position &pos, int &best_move, int &type, int &value) {
+bool Table::get(board hash, bool is_mirrored, int &best_move, int &type, int &value) {
     stat_num_lookups++;
-    
-    bool is_mirrored;
-    board hash = pos.hash(is_mirrored);
 
     int index = hash % TABLE_SIZE;
     board result = table[index];
@@ -94,14 +91,11 @@ bool Table::get(Position &pos, int &best_move, int &type, int &value) {
 }
 
 
-void Table::put(Position &pos, int best_move, int type, int value) {
-    assert(best_move == BOARD_WIDTH || pos.is_move_valid(best_move));
+void Table::put(board hash, bool is_mirrored, int best_move, int type, int value) {
+    assert(0 <= best_move && best_move <= BOARD_WIDTH);
     assert(type == TYPE_UPPER || type == TYPE_LOWER || type == TYPE_EXACT);
     assert(0 <= value && value < (1 << 14));
 
-    bool is_mirrored;
-    board hash = pos.hash(is_mirrored);
-    
     int index = hash % TABLE_SIZE;
     board current_entry = table[index];
 

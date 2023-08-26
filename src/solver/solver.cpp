@@ -106,6 +106,7 @@ int Solver::negamax(Position &pos, int alpha, int beta) {
     assert(alpha < beta);
     assert(!pos.has_player_won());
     assert(!pos.has_opponent_won());
+    assert(!pos.is_draw());
 
     stat_num_nodes++;
 
@@ -116,9 +117,6 @@ int Solver::negamax(Position &pos, int alpha, int beta) {
     // score possible is a draw.
     if (!pos.can_player_win()) {
         beta = min(beta, 0);
-    }
-    if (!pos.can_opponent_win()) {
-        alpha = max(alpha, 0);
     }
     if (alpha >= beta) {
         return 0;
@@ -169,8 +167,11 @@ int Solver::negamax(Position &pos, int alpha, int beta) {
     }
 
     // Check if this state has already been seen.
+    bool is_mirrored;
     int lookup_move, lookup_type, lookup_value;
-    bool lookup_success = table.get(pos, lookup_move, lookup_type, lookup_value);
+
+    board hash = pos.hash(is_mirrored);
+    bool lookup_success = table.get(hash, is_mirrored, lookup_move, lookup_type, lookup_value);
     lookup_value += MIN_SCORE;
 
     if (lookup_success) {
@@ -219,7 +220,7 @@ int Solver::negamax(Position &pos, int alpha, int beta) {
 
     // Store the result in the transposition table.
     int type = get_node_type(value, original_alpha, original_beta);
-    table.put(pos, best_move_col, type, value + -MIN_SCORE);
+    table.put(hash, is_mirrored, best_move_col, type, value + -MIN_SCORE);
 
     // Update statistics.
     stat_num_interior_nodes++;
@@ -290,9 +291,11 @@ int Solver::get_best_move(Position &pos) {
     }
 
     // Otherwise this is a complex position and will be stored in the table.
+    bool is_mirrored;
     int best_move, type, value;
     
-    bool lookup_success = table.get(pos, best_move, type, value);
+    board hash = pos.hash(is_mirrored);
+    bool lookup_success = table.get(hash, is_mirrored, best_move, type, value);
     if (lookup_success && type == TYPE_EXACT) {
         return best_move;
     }
@@ -301,7 +304,7 @@ int Solver::get_best_move(Position &pos) {
     // will write the best move into the table before returning.
     int score = negamax_entry(pos, -INFINITY, INFINITY);
 
-    lookup_success = table.get(pos, best_move, type, value);
+    lookup_success = table.get(hash, is_mirrored, best_move, type, value);
     if (lookup_success && type == TYPE_EXACT) {
         return best_move;
     }

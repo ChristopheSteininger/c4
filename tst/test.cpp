@@ -13,15 +13,18 @@ int tests_run = 0;
 
 
 const char *test_table_lookup_returns_stored_results() {
-    Position pos1 = Position();
-    Table table = Table();
+    Position pos1;
+    Table table;
+    
     int counter = 0;
+    bool is_mirrored;
     
     for (int y = 0; y < BOARD_HEIGHT - 1; y++) {
         for (int x = 0; x < BOARD_WIDTH; x++) {
             pos1.move(x);
             
-            table.put(pos1, x, (counter % 3) + 1, (counter % 3));
+            board hash = pos1.hash(is_mirrored);
+            table.put(hash, is_mirrored, x, (counter % 3) + 1, (counter % 3));
             counter++;
         }
     }
@@ -29,12 +32,14 @@ const char *test_table_lookup_returns_stored_results() {
     Position pos2 = Position();
     counter = 0;
     
+    int move, type, value;
+    
     for (int y = 0; y < BOARD_HEIGHT - 1; y++) {
         for (int x = 0; x < BOARD_WIDTH; x++) {
             pos2.move(x);
             
-            int move, type, value;
-            int success = table.get(pos2, move, type, value);
+            board hash = pos2.hash(is_mirrored);
+            int success = table.get(hash, is_mirrored, move, type, value);
 
             mu_assert("table lookup in mock game.", success);
             mu_assert("move lookup in mock game.", move == x);

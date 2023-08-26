@@ -15,8 +15,8 @@ public:
 
     void clear();
 
-    bool get(Position &pos, int &best_move, int &type, int &value);
-    void put(Position &pos, int best_move, int type, int value);
+    bool get(board hash, bool is_mirrored, int &best_move, int &type, int &value);
+    void put(board hash, bool is_mirrored, int best_move, int type, int value);
 
     double get_size_in_gigabytes() const;
     double get_hit_rate() const;
