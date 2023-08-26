@@ -15,6 +15,7 @@ public:
 
     void clear();
 
+    void prefetch(board hash);
     bool get(board hash, bool is_mirrored, int &best_move, int &type, int &value);
     void put(board hash, bool is_mirrored, int best_move, int type, int value);
 

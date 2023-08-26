@@ -58,6 +58,16 @@ void Table::clear() {
 }
 
 
+void Table::prefetch(board hash) {
+    int index = hash % TABLE_SIZE;
+
+    // void __builtin_prefetch(const void *addr, int rw=0, int locality=3)
+    // rw       = read/write flag. 0 for read, 1 for write & read/write.
+    // locality = persistance in cache.
+    __builtin_prefetch(table + index, 1, 2);
+}
+
+
 bool Table::get(board hash, bool is_mirrored, int &best_move, int &type, int &value) {
     stat_num_lookups++;
 

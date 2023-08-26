@@ -113,6 +113,11 @@ int Solver::negamax(Position &pos, int alpha, int beta) {
     int original_alpha = alpha;
     int original_beta = beta;
 
+    // Prefetch the position's entry.
+    bool is_mirrored;
+    board hash = pos.hash(is_mirrored);
+    table.prefetch(hash);
+
     // If there are too few empty spaces left on the board for the player to win, then the best
     // score possible is a draw.
     if (!pos.can_player_win()) {
@@ -167,10 +172,8 @@ int Solver::negamax(Position &pos, int alpha, int beta) {
     }
 
     // Check if this state has already been seen.
-    bool is_mirrored;
     int lookup_move, lookup_type, lookup_value;
 
-    board hash = pos.hash(is_mirrored);
     bool lookup_success = table.get(hash, is_mirrored, lookup_move, lookup_type, lookup_value);
     lookup_value += MIN_SCORE;
 
