@@ -361,14 +361,22 @@ void Position::printb() {
 
 
 void Position::print_mask(board a, board b) {
+#ifdef COLOR_OUTPUT
+    const char *p0 = "\x1B[31mO\033[0m ";
+    const char *p1 = "\x1B[33mX\033[0m ";
+#else
+    const char *p0 = "O ";
+    const char *p1 = "X ";
+#endif
+
     for (int y = BOARD_HEIGHT - 1; y >= 0; y--) {
         for (int x = 0; x < BOARD_WIDTH; x++) {
             int shift = y + x * BOARD_HEIGHT_1;
     
             if ((a >> shift) & 1) {
-                std::cout << "O ";
+                std::cout << p0;
             } else if ((b >> shift) & 1) {
-                std::cout << "X ";
+                std::cout << p1;
             } else {
                 std::cout << ". ";
             }

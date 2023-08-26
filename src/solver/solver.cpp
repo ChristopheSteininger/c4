@@ -127,15 +127,12 @@ int Solver::negamax(Position &pos, int alpha, int beta) {
         return 0;
     }
 
-    // The minimum score possible increases each turn.
-    alpha = max(alpha, score_loss(pos));
-    if (alpha >= beta) {
-        return alpha;
-    }
-
-    // If the player can only move below the opponents threats, the player will lose.
+    // Find the opponents threats, and any moves directly below a threat.
+    // These moves will not be played.
     board opponent_threats = pos.find_opponent_threats();
     board non_losing_moves = pos.find_non_losing_moves(opponent_threats);
+
+    // If the player can only move below the opponents threats, the player will lose.
     if (non_losing_moves == 0) {
         return score_loss(pos);
     }
@@ -152,23 +149,24 @@ int Solver::negamax(Position &pos, int alpha, int beta) {
         if (!(opponent_wins & non_losing_moves)) {
             return score_loss(pos);
         }
-
-        // Otherwise, the opponent has only one threat, and the player must block the threat.
-        else {
-            board before_move = pos.move(opponent_wins);
-            int score = -negamax(pos, -beta, -alpha);
-            pos.unmove(before_move);
-
-            return score;
-        }
     }
 
-    // At this point we know it is not possible to win or lose next turn.
+    // At this point we know it is not possible to win or lose next turn,
+    // so tighten bounds.
     alpha = max(alpha, score_loss(pos, 2));
     beta = min(beta, score_win(pos, 2));
     if (alpha >= beta) {
         assert(alpha == beta);
         return alpha;
+    }
+
+    // If the opponent has only one threat, then the player must block the threat.
+    if (opponent_wins) {
+        board before_move = pos.move(opponent_wins);
+        int score = -negamax(pos, -beta, -alpha);
+        pos.unmove(before_move);
+
+        return score;
     }
 
     // Check if this state has already been seen.

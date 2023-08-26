@@ -15,9 +15,9 @@ TST_OBJ = $(patsubst %.cpp,$(OBJ_DIR)/%.o,$(TSTS))
 ifeq ($(debug), yes)
 	CFLAGS += -g
 else ifeq ($(optimise), yes)
-	CFLAGS += -O3 -flto=full -DNDEBUG
+	CFLAGS += -O3 -flto=full -DNDEBUG -DCOLOR_OUTPUT
 else
-	CFLAGS += -O3 -flto=full
+	CFLAGS += -O3 -flto=full -DCOLOR_OUTPUT
 endif
 
 
