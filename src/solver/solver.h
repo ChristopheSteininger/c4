@@ -1,6 +1,8 @@
 #ifndef SOLVER_H_
 #define SOLVER_H_
 
+#include <vector>
+
 #include "position.h"
 #include "table.h"
 
@@ -11,7 +13,7 @@ public:
     int solve_strong(Position &pos, bool verbose = false);
 
     int get_best_move(Position &pos);
-    int get_principal_variation(Position &pos, int *moves);
+    int get_principal_variation(Position &pos, std::vector<int> &moves);
     int get_num_moves_prediction(Position &pos, int score) const;
 
     void reset_stats();
@@ -46,7 +48,7 @@ private:
     int negamax(Position &pos, int alpha, int beta);
     int solve(Position &pos, int alpha, int beta, bool verbose = false);
 
-    void print_pv_update(Position &pos, int *pv0, int *pv1, int *pv0_size, int *pv1_size, int &cur_pv);
+    void print_pv_update(Position &pos, std::vector<int> &prev_pv, std::vector<int> &curr_pv);
 };
 
 

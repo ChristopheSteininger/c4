@@ -1,6 +1,5 @@
 #include <iostream>
-#include <stdio.h>
-#include <assert.h>
+#include <cassert>
 
 #include "solver.h"
 #include "settings.h"
@@ -90,6 +89,8 @@ static bool arrays_equal(int *a, int *b, int length) {
 
 
 int Solver::negamax_entry(Position &pos, int alpha, int beta) {
+    // The search does not check simple conditions like win in one move
+    // so handle these here.
     if (pos.has_opponent_won()) {
         return -score_loss(pos, -1);
     }
@@ -97,7 +98,7 @@ int Solver::negamax_entry(Position &pos, int alpha, int beta) {
     if (pos.has_player_won()) {
         return -score_win(pos, -1);
     }
-    
+
     if (pos.is_draw()) {
         return 0;
     }
@@ -333,48 +334,40 @@ int Solver::get_best_move(Position &pos) {
 
 
 int Solver::solve(Position &pos, int alpha, int beta, bool verbose) {
-    // There is no point in check simple conditions like win in one move
-    // during search so handle these here.
-    if (pos.has_player_won()
-            || pos.wins_this_move(pos.find_player_threats())) {
-        return score_win(pos, 0);
-    }
-    if (pos.has_opponent_won()) {
-        return score_loss(pos, 0);
-    }
-    if (pos.is_draw()) {
-        return 0;
-    }
-
-    alpha = max(alpha, score_loss(pos, 0));
-    beta = min(beta, score_win(pos, 0));
-
     int a = 0;
     int b = 1;
 
-    int cur_pv = 0;
-    int pv0_size, pv1_size;
-    int pv0[BOARD_WIDTH * BOARD_HEIGHT];
-    int pv1[BOARD_WIDTH * BOARD_HEIGHT];
-    pv1[0] = -1;  // To ensure first iteration prints PV.
-
+    std::vector<int> curr_pv, prev_pv;
     while (a > alpha || b < beta) {
-        int result = negamax(pos, a, b);
+        int result = negamax_entry(pos, a, b);
 
         if (verbose) {
             std::cout << "Completed search in [" << a << ", " << b << "]. " << "Score is " << result << ". ";
-            print_pv_update(pos, pv0, pv1, &pv0_size, &pv1_size, cur_pv);
+            print_pv_update(pos, prev_pv, curr_pv);
+
+            curr_pv.swap(prev_pv);
         }
 
-        a--;
-        b++;
+        // If the result is within the bounds, then the result is exact and we can exit.
+        if (a < result && result < b) {
+            return result;
+        }
+
+        // Increase bounds for the next search.
+        if (result <= a) {
+            a--;
+        } else {
+            b++;
+        }
     }
 
-    return negamax(pos, alpha, beta);
+    return negamax_entry(pos, alpha, beta);
 }
 
 
-int Solver::get_principal_variation(Position &pos, int *moves) {
+int Solver::get_principal_variation(Position &pos, std::vector<int> &moves) {
+    assert(moves.size() == 0);
+
     Position pv = Position(pos);
 
     for (int i = 0; i < BOARD_WIDTH * BOARD_HEIGHT; i++) {
@@ -384,7 +377,7 @@ int Solver::get_principal_variation(Position &pos, int *moves) {
 
         int best_move = get_best_move(pv);
 
-        moves[i] = best_move;
+        moves.push_back(best_move);
         pv.move(best_move);
     }
 
@@ -410,7 +403,13 @@ int Solver::get_num_moves_prediction(Position &pos, int score) const {
 
 
 int Solver::solve_weak(Position &pos, bool verbose) {
-    int result = solve(pos, -1, 1, verbose);
+    int result = negamax(pos, 0, 1);
+
+    if (result > 0) {
+        return 1;
+    }
+
+    result = negamax(pos, -1, 0);
 
     if (result > 0) {
         return 1;
@@ -423,26 +422,18 @@ int Solver::solve_weak(Position &pos, bool verbose) {
 
 
 int Solver::solve_strong(Position &pos, bool verbose) {
-    return solve(pos, MIN_SCORE, MAX_SCORE, verbose);
+    return solve(pos, -INFINITY, INFINITY, verbose);
 }
 
 
-void Solver::print_pv_update(Position &pos, int *pv0, int *pv1, int *pv0_size, int *pv1_size, int &cur_pv) {
-    int *pv = pv0;
-    int *pv_size = pv0_size;
+void Solver::print_pv_update(Position &pos, std::vector<int> &prev_pv, std::vector<int> &curr_pv) {
+    curr_pv.clear();
+    get_principal_variation(pos, curr_pv);
 
-    if (cur_pv == 1) {
-        pv = pv1;
-        pv_size = pv1_size;
-    }
-    cur_pv = 1 - cur_pv;
-
-    *pv_size = get_principal_variation(pos, pv);
-
-    if (*pv0_size != *pv1_size || !arrays_equal(pv0, pv1, *pv_size)) {
+    if (curr_pv != prev_pv) {
         std::cout << "Principal variation is:" << std::endl;
-        for (int i = 0; i < *pv_size; i++) {
-            std::cout << pv[i] << " ";
+        for (int move : curr_pv) {
+            std::cout << move << " ";
         }
         std::cout << std::endl << std::endl;
     } else {

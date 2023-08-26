@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
+#include <vector>
 
 #include "known_states.h"
 #include "minunit.h"
@@ -90,10 +91,10 @@ bool strong_test(Solver &solver, struct test_data test_data) {
 bool self_play_test(Solver &solver, struct test_data test_data) {
     Position pos = Position(test_data.pos);
 
-    int pv_moves[BOARD_WIDTH * BOARD_HEIGHT];
+    std::vector<int> pv;
     int expected_score = test_data.expected;
     int expected_num_moves = solver.get_num_moves_prediction(pos, expected_score);
-    int num_pv_moves = solver.get_principal_variation(pos, pv_moves);
+    int num_pv_moves = solver.get_principal_variation(pos, pv);
 
     // The length of the PV must match the number of expected moves.
     if (expected_num_moves != num_pv_moves + pos.num_moves()) {
@@ -127,9 +128,9 @@ bool self_play_test(Solver &solver, struct test_data test_data) {
         }
 
         // Fail if the move is not part of the principal variation.
-        if (move != pv_moves[moves_played]) {
+        if (move != pv[moves_played]) {
             printf("Solver gave a move not part of the original principal variation. Move was %d PV move was %d.",
-                move, pv_moves[moves_played]);
+                move, pv[moves_played]);
             pos.printb();
 
             return false;

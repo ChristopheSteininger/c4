@@ -14,10 +14,10 @@ int main() {
     // Allow thousands separator.
     setlocale(LC_NUMERIC, "");
 
-    Position pos = Position();
-    Solver solver = Solver();
+    Position pos;
+    Solver solver;
 
-    printf("Using a %d x %d board and %.2f GB table.\n",
+    printf("Using a %d x %d board and %.2f GB table.\n\n",
         BOARD_WIDTH, BOARD_HEIGHT, solver.get_table_size_in_gigabytes());
     printf("Solving:\n");
     pos.printb();
@@ -27,7 +27,14 @@ int main() {
     double run_time_sec = (clock() - start_time) / (double) CLOCKS_PER_SEC;
 
     printf("\n");
-    printf("Score is %d\n", score);
+    printf("Score is %d ", score);
+    if (score < 0) {
+        printf("(loss on move %d).\n", solver.get_num_moves_prediction(pos, score));
+    } else if (score > 0) {
+        printf("(win on move %d).\n", solver.get_num_moves_prediction(pos, score));
+    } else {
+        printf("(draw).\n");
+    }
 
     printf("\n");
     printf("Time to solve        = %'.0f s\n", run_time_sec);
