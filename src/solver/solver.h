@@ -42,6 +42,7 @@ private:
     unsigned long stat_num_interior_nodes;
     unsigned long stat_num_best_moves_guessed;
 
+    int negamax_entry(Position &pos, int alpha, int beta);
     int negamax(Position &pos, int alpha, int beta);
     int solve(Position &pos, int alpha, int beta, bool verbose = false);
 

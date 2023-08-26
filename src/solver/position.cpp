@@ -361,34 +361,21 @@ void Position::printb() {
 
 
 void Position::print_mask(board a, board b) {
-    std::cout << "+";
-    for (int x = 0; x < BOARD_WIDTH; x++) {
-        std::cout << "-";
-    }
-    std::cout << "+" << std::endl;
-
     for (int y = BOARD_HEIGHT - 1; y >= 0; y--) {
-        std::cout << "|";
         for (int x = 0; x < BOARD_WIDTH; x++) {
             int shift = y + x * BOARD_HEIGHT_1;
     
             if ((a >> shift) & 1) {
-                std::cout << "O";
+                std::cout << "O ";
             } else if ((b >> shift) & 1) {
-                std::cout << "X";
+                std::cout << "X ";
             } else {
-                std::cout << ".";
+                std::cout << ". ";
             }
         }
 
-        std::cout << "|" << std::endl;
+        std::cout << std::endl;
     }
-
-    std::cout << "+";
-    for (int x = 0; x < BOARD_WIDTH; x++) {
-        std::cout << "-";
-    }
-    std::cout << "+" << std::endl;
 }
 
 

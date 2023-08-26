@@ -89,11 +89,33 @@ static bool arrays_equal(int *a, int *b, int length) {
 }
 
 
+int Solver::negamax_entry(Position &pos, int alpha, int beta) {
+    if (pos.has_opponent_won()) {
+        return -score_loss(pos, -1);
+    }
+
+    if (pos.has_player_won()) {
+        return -score_win(pos, -1);
+    }
+    
+    if (pos.is_draw()) {
+        return 0;
+    }
+
+    // If the player can win this move, then end the game.
+    board player_threats = pos.find_player_threats();
+    if (pos.wins_this_move(player_threats)) {
+        return score_win(pos, 0);
+    }
+
+    return negamax(pos, alpha, beta);
+}
+
+
 int Solver::negamax(Position &pos, int alpha, int beta) {
     assert(alpha < beta);
     assert(!pos.has_player_won());
     assert(!pos.has_opponent_won());
-    // assert(!pos.is_draw());
 
     stat_num_nodes++;
 
@@ -102,22 +124,21 @@ int Solver::negamax(Position &pos, int alpha, int beta) {
 
     // If there are too few empty spaces left on the board for the player to win, then the best
     // score possible is a draw.
-    // if (!pos.can_player_win()) {
-    //     beta = min(beta, 0);
-    // }
-    // if (alpha >= beta) {
-    //     return 0;
-    // }
-
-    if (pos.is_draw()) {
+    if (!pos.can_player_win()) {
+        beta = min(beta, 0);
+    }
+    if (!pos.can_opponent_win()) {
+        alpha = max(alpha, 0);
+    }
+    if (alpha >= beta) {
         return 0;
     }
 
     // The minimum score possible increases each turn.
-    // alpha = max(alpha, score_loss(pos, 2));
-    // if (alpha >= beta) {
-    //     // return alpha;
-    // }
+    alpha = max(alpha, score_loss(pos, -2));
+    if (alpha >= beta) {
+        return alpha;
+    }
 
     // If the player can only move below the opponents threats, the player will lose.
     board opponent_threats = pos.find_opponent_threats();
@@ -280,17 +301,33 @@ int Solver::get_best_move(Position &pos) {
 
     // The results are occasionally overrwritten. If so start another search which
     // will write the best move into the table before returning.
-    negamax(pos, MIN_SCORE, MAX_SCORE);
+    int score = negamax_entry(pos, -INFINITY, INFINITY);
 
     lookup_success = table.get(pos, best_move, type, value);
     if (lookup_success && type == TYPE_EXACT) {
         return best_move;
     }
 
-    // A second miss should never occur.
-    std::cout << "Error: could not get a best move." << std::endl;
-    assert(0);
+    // If we still have a miss, then try each move until we find a move which
+    // gives the same score as the position.
+    for (int move = 0; move < BOARD_WIDTH; move++) {
+        if (pos.is_move_valid(move)) {
+            board before_move = pos.move(move);
+            int child_score = -negamax_entry(pos, -INFINITY, INFINITY);
+            pos.unmove(before_move);
 
+            if (child_score == score) {
+                return move;
+            }
+        }
+    }
+
+
+    // This point should never be reached.
+    std::cout << "Error: could not get a best move. In this position:" << std::endl;
+    pos.printb();
+
+    assert(0);
     return -1;
 }
 
