@@ -36,13 +36,13 @@ static int get_node_type(int value, int alpha, int beta) {
 }
 
 
-static int score_loss(Position &pos, int turns) {
-    return (-BOARD_WIDTH * BOARD_HEIGHT + turns + pos.num_moves()) / 2;
+static int score_win(Position &pos, int turns = 0) {
+    return (BOARD_WIDTH * BOARD_HEIGHT + 1 - turns - pos.num_moves()) / 2;
 }
 
 
-static int score_win(Position &pos, int turns) {
-    return (BOARD_WIDTH * BOARD_HEIGHT + 1 - turns - pos.num_moves()) / 2;
+static int score_loss(Position &pos, int turns = 0) {
+    return -score_win(pos, turns + 1);
 }
 
 
@@ -77,17 +77,6 @@ static int get_move_from_mask(board b) {
 }
 
 
-static bool arrays_equal(int *a, int *b, int length) {
-    for (int i = 0; i < 0; i++) {
-        if (a[i] != b[i]) {
-            return false;
-        }
-    }
-
-    return true;
-}
-
-
 int Solver::negamax_entry(Position &pos, int alpha, int beta) {
     // The search does not check simple conditions like win in one move
     // so handle these here.
@@ -106,7 +95,7 @@ int Solver::negamax_entry(Position &pos, int alpha, int beta) {
     // If the player can win this move, then end the game.
     board player_threats = pos.find_player_threats();
     if (pos.wins_this_move(player_threats)) {
-        return score_win(pos, 0);
+        return score_win(pos);
     }
 
     return negamax(pos, alpha, beta);
@@ -136,7 +125,7 @@ int Solver::negamax(Position &pos, int alpha, int beta) {
     }
 
     // The minimum score possible increases each turn.
-    alpha = max(alpha, score_loss(pos, -2));
+    alpha = max(alpha, score_loss(pos));
     if (alpha >= beta) {
         return alpha;
     }
@@ -145,7 +134,7 @@ int Solver::negamax(Position &pos, int alpha, int beta) {
     board opponent_threats = pos.find_opponent_threats();
     board non_losing_moves = pos.find_non_losing_moves(opponent_threats);
     if (non_losing_moves == 0) {
-        return score_loss(pos, 0);
+        return score_loss(pos);
     }
 
     // Check if the opponent could win next move.
@@ -153,12 +142,12 @@ int Solver::negamax(Position &pos, int alpha, int beta) {
     if (opponent_wins) {
         // If the opponent has multiple threats, then the game is lost.
         if (opponent_wins & (opponent_wins - 1)) {
-            return score_loss(pos, 0);
+            return score_loss(pos);
         }
 
         // If the opponent has two threats on top of each other, then the game is also lost.
         if (!(opponent_wins & non_losing_moves)) {
-            return score_loss(pos, 0);
+            return score_loss(pos);
         }
 
         // Otherwise, the opponent has only one threat, and the player must block the threat.
@@ -169,6 +158,14 @@ int Solver::negamax(Position &pos, int alpha, int beta) {
 
             return score;
         }
+    }
+
+    // At this point we know it is not possible to win or lose next turn.
+    alpha = max(alpha, score_loss(pos, 2));
+    beta = min(beta, score_win(pos, 2));
+    if (alpha >= beta) {
+        assert(alpha == beta);
+        return alpha;
     }
 
     // Check if this state has already been seen.
