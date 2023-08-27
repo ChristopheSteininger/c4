@@ -349,6 +349,7 @@ int Solver::solve(Position &pos, int alpha, int beta, bool verbose) {
     while (a > alpha || b < beta) {
         int result = negamax_entry(pos, a, b);
 
+        // The search will occasionally find a better PV as the bounds increase. Print updates here.
         if (verbose) {
             std::cout << "Completed search in [" << a << ", " << b << "]. " << "Score is " << result << ". ";
             print_pv_update(pos, prev_pv, curr_pv);
@@ -467,11 +468,6 @@ void Solver::reset_stats() {
     stat_num_moves_checked = 0;
     stat_num_interior_nodes = 0;
     stat_num_best_moves_guessed = 0;
-}
-
-
-double Solver::get_table_size_in_gigabytes() const {
-    return table.get_size_in_gigabytes();
 }
 
 

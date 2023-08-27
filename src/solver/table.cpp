@@ -2,6 +2,8 @@
 #include <cassert>
 #include <algorithm>
 #include <cmath>
+#include <sstream>
+#include <iomanip>
 
 #include "Tracy.hpp"
 
@@ -17,10 +19,12 @@ const int TYPE_EXACT = 3;
 // This table uses the Chineese Remainer Theorem to reduce the number of bits per entry.
 // For this to work, the size of the table must be odd. Use a prime number for fewer collisions.
 // Some example prime numbers:
+//  * 131101     =  1 MB
+//  * 1048583    =  8 MB
 //  * 8388617    = 64 MB
-//  * 134217757  = 1 GB
-//  * 1073741827 = 8 GB
-static const unsigned int TABLE_SIZE = 134217757;
+//  * 134217757  =  1 GB
+//  * 1073741827 =  8 GB
+static const unsigned int TABLE_SIZE = 8388617;
 
 // The number of bits of the hash stored in each entry.
 static const unsigned int KEY_SIZE = 50;
@@ -146,11 +150,6 @@ void Table::put(board hash, bool is_mirrored, int best_move, int type, int value
 }
 
 
-double Table::get_size_in_gigabytes() const {
-    return (double) TABLE_SIZE * sizeof(board) / 1024 / 1024 / 1024;
-}
-
-
 double Table::get_hit_rate() const {
     return (double) stat_num_successful_lookups / stat_num_lookups;
 }
@@ -173,4 +172,27 @@ double Table::get_overwrite_rate() const {
 
 double Table::get_rewrite_rate() const {
     return (double) stat_num_rewrites / (stat_num_entries + stat_num_rewrites + stat_num_overwrites);
+}
+
+
+std::string get_table_size() {
+    std::stringstream result;
+    result << std::fixed << std::setprecision(2);
+
+    int bytes = TABLE_SIZE * sizeof(board);
+    double kb = bytes / 1024.0;
+    double mb = kb / 1024.0;
+    double gb = mb / 1024.0;
+
+    if (kb < 1) {
+        result << bytes << " B";
+    } else if (mb < 1) {
+        result << kb << " kB";
+    } else if (gb < 1) {
+        result << mb << " MB";
+    } else {
+        result << gb << " GB";
+    }
+    
+    return result.str();
 }

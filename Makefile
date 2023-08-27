@@ -30,7 +30,7 @@ default: all
 .SUFFIX: .o .cpp
 
 obj/tracy.o: tracy/public/TracyClient.cpp
-	$(CC) -w -c -o $@ $< -std=c++11 -DTRACY_ENABLE
+	$(CC) -w -c -o $@ $< -std=c++11 -O3 -flto=full -mcpu=apple-m1 -DTRACY_ENABLE
 
 $(OBJ_DIR)/%.o: %.cpp $(OBJ_DIR)/Makefile.deps
 	@mkdir -p $(@D)

@@ -1,4 +1,4 @@
-#include <stdio.h>
+#include <iostream>
 #include <locale.h>
 
 #include "minunit.h"
@@ -185,15 +185,16 @@ int main() {
     // Allow thousands separator.
     setlocale(LC_NUMERIC, "");
     
-    printf("Using a %d x %d board.\n", BOARD_WIDTH, BOARD_HEIGHT);
-    
+    std::cout << "Using a " << BOARD_WIDTH << " x " << BOARD_HEIGHT << " board and a "
+        << get_table_size() << " table." << std::endl;
+
     const char *result = all_tests();
 
-    printf("Tests run: %d\n", tests_run);
+    std::cout << "Tests run: " << tests_run << std::endl;
     if (result != 0) {
-        printf("Error: %s\n", result);
+        std::cout << "Error: " << result << std::endl;
     } else {
-        printf("All tests passed.\n");
+        std::cout << "All tests passed." << std::endl;
     }
 
     return result != 0;

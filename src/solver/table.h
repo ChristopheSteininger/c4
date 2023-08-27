@@ -1,6 +1,9 @@
 #ifndef TABLE_H_
 #define TABLE_H_
 
+
+#include <string>
+
 #include "position.h"
 
 
@@ -19,7 +22,6 @@ public:
     bool get(board hash, bool is_mirrored, int &best_move, int &type, int &value);
     void put(board hash, bool is_mirrored, int best_move, int type, int value);
 
-    double get_size_in_gigabytes() const;
     double get_hit_rate() const;
     double get_collision_rate() const;
     double get_density() const;
@@ -37,6 +39,9 @@ private:
     unsigned long stat_num_overwrites = 0;
     unsigned long stat_num_rewrites = 0;
 };
+
+
+std::string get_table_size();
 
 
 #endif

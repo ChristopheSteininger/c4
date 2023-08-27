@@ -18,7 +18,6 @@ public:
 
     void reset_stats();
 
-    double get_table_size_in_gigabytes() const;
     double get_table_hit_rate() const;
     double get_table_collision_rate() const;
     double get_table_density() const;

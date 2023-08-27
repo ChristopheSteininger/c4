@@ -1,5 +1,6 @@
 #include <cassert>
 #include <iostream>
+#include <iomanip>
 
 #include "Tracy.hpp"
 
@@ -366,14 +367,16 @@ void Position::printb() {
 
 
 void Position::print_mask(board a, board b) {
+    // Allow colors to be switched off if not displaying correctly.
 #ifdef NO_COLOR_OUTPUT
-    const char *p0 = "O ";
-    const char *p1 = "X ";
+    const char *p0 = " O";
+    const char *p1 = " X";
 #else
-    const char *p0 = "\x1B[31mO\033[0m ";
-    const char *p1 = "\x1B[33mX\033[0m ";
+    const char *p0 = " \x1B[31mO\033[0m";
+    const char *p1 = " \x1B[33mX\033[0m";
 #endif
 
+    // Print the board.
     for (int y = BOARD_HEIGHT - 1; y >= 0; y--) {
         for (int x = 0; x < BOARD_WIDTH; x++) {
             int shift = y + x * BOARD_HEIGHT_1;
@@ -383,12 +386,18 @@ void Position::print_mask(board a, board b) {
             } else if ((b >> shift) & 1) {
                 std::cout << p1;
             } else {
-                std::cout << ". ";
+                std::cout << " .";
             }
         }
 
         std::cout << std::endl;
     }
+
+    // Print the column numbers.
+    for (int x = 0; x < BOARD_WIDTH; x++) {
+        std::cout << std::setw(2) << std::setfill(' ') << x;
+    }
+    std::cout << std::endl;
 }
 
 

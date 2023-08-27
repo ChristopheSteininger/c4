@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <iostream>
 #include <stdio.h>
 #include <locale.h>
 #include <time.h>
@@ -6,6 +7,7 @@
 #include "settings.h"
 #include "position.h"
 #include "solver.h"
+#include "table.h"
 
 
 int main() {
@@ -17,8 +19,8 @@ int main() {
     Position pos;
     Solver solver;
 
-    printf("Using a %d x %d board and %.2f GB table.\n\n",
-        BOARD_WIDTH, BOARD_HEIGHT, solver.get_table_size_in_gigabytes());
+    std::cout << "Using a " << BOARD_WIDTH << " x " << BOARD_HEIGHT << " board and a "
+        << get_table_size() << " table." << std::endl;
     printf("Solving:\n");
     pos.printb();
 

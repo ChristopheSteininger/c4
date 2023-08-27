@@ -135,17 +135,34 @@ bool self_play_test(Solver &solver, struct test_data test_data) {
             return false;
         }
 
-        // Fail if the move is not part of the principal variation.
-        if (move != pv[moves_played]) {
-            printf("Solver gave a move not part of the original principal variation. Move was %d PV move was %d.\n",
-                move, pv[moves_played]);
-            pos.printb();
+        // The move may be different to the original PV line if more than one move have the same score.
+        // However, the length of the PV cannot change.
+        if (move != pv[0]) {
+            pv.clear();
+            int num_new_pv_moves = solver.get_principal_variation(pos, pv);
 
-            return false;
+            // New PV must still have the same length.
+            if (expected_num_moves != num_new_pv_moves + pos.num_moves()) {
+                printf("Updated PV length does not match expected num moves. Expected num moves was %d but got %d from PV.\n",
+                    expected_num_moves, num_pv_moves + pos.num_moves());
+                pos.printb();
+
+                return false;
+            }
+
+            // New PV must match move.
+            if (move != pv[0]) {
+                printf("Solver gave a move not part of the original principal variation. Move was %d PV move was %d.\n",
+                    move, pv[0]);
+                pos.printb();
+
+                return false;
+            }
         }
 
         pos.move(move);
         expected_score = -expected_score;
+        pv.erase(pv.begin());
     }
 
     // Fail if the game ended earlier or later than predicted.
