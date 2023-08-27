@@ -3,6 +3,8 @@
 #include <time.h>
 #include <vector>
 
+#include "Tracy.hpp"
+
 #include "known_states.h"
 #include "minunit.h"
 #include "../src/solver/settings.h"
@@ -58,6 +60,8 @@ struct test_data read_line(char *line) {
 
 
 bool weak_test(Solver &solver, struct test_data test_data) {
+    ZoneScoped;
+
     int actual = solver.solve_weak(test_data.pos);
     int expected = sign(test_data.expected);
     
@@ -72,6 +76,8 @@ bool weak_test(Solver &solver, struct test_data test_data) {
 
 
 bool strong_test(Solver &solver, struct test_data test_data) {
+    ZoneScoped;
+
     int actual = solver.solve_strong(test_data.pos);
     
     if (test_data.expected != actual) {
@@ -89,6 +95,8 @@ bool strong_test(Solver &solver, struct test_data test_data) {
 // solve_strong(), get_best_move(), get_num_moves_prediction(), and get_principal_variation()
 // must be consistent with each other for the entire game.
 bool self_play_test(Solver &solver, struct test_data test_data) {
+    ZoneScoped;
+
     Position pos = Position(test_data.pos);
 
     std::vector<int> pv;
@@ -179,6 +187,8 @@ bool run_test(Solver &solver, struct test_data test_data, TestType type) {
 
 
 bool test_with_file(const char *filename, TestType type) {
+    ZoneScoped;
+
     FILE *data_file = fopen(filename, "r");
     if (!data_file) {
         printf("Could not open the file.\n");

@@ -21,9 +21,6 @@ private:
 
     int total_games = 0;
 
-    int p0_calc_millis = 0;
-    int p1_calc_millis = 0;
-
     int play_game(Position &pos, Player *cur, Player *next);
 };
 

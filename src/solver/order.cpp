@@ -1,5 +1,7 @@
 #include <assert.h>
 
+#include "Tracy.hpp"
+
 #include "order.h"
 #include "settings.h"
 #include "position.h"
@@ -44,6 +46,8 @@ static float calc_score(Position &pos, int col, int table_move) {
 
 
 int order_moves(Position &pos, int *moves, board non_losing_moves, int table_move) {
+    ZoneScoped;
+
     assert(table_move == BOARD_WIDTH || pos.is_move_valid(table_move));
 
     float scores[BOARD_WIDTH];

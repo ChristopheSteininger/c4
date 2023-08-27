@@ -3,6 +3,8 @@
 #include <algorithm>
 #include <cmath>
 
+#include "Tracy.hpp"
+
 #include "table.h"
 #include "settings.h"
 #include "position.h"
@@ -37,10 +39,12 @@ Table::Table() {
     }
 
     table = new board[TABLE_SIZE]();
+    TracyAlloc(table, TABLE_SIZE * sizeof(board));
 }
 
 
 Table::~Table() {
+    TracyFree(table);
     delete [] table;
 }
 
@@ -59,6 +63,8 @@ void Table::clear() {
 
 
 void Table::prefetch(board hash) {
+    ZoneScoped;
+
     int index = hash % TABLE_SIZE;
 
     // void __builtin_prefetch(const void *addr, int rw=0, int locality=3)
@@ -69,6 +75,8 @@ void Table::prefetch(board hash) {
 
 
 bool Table::get(board hash, bool is_mirrored, int &best_move, int &type, int &value) {
+    ZoneScoped;
+
     stat_num_lookups++;
 
     int index = hash % TABLE_SIZE;
@@ -102,6 +110,8 @@ bool Table::get(board hash, bool is_mirrored, int &best_move, int &type, int &va
 
 
 void Table::put(board hash, bool is_mirrored, int best_move, int type, int value) {
+    ZoneScoped;
+
     assert(0 <= best_move && best_move <= BOARD_WIDTH);
     assert(type == TYPE_UPPER || type == TYPE_LOWER || type == TYPE_EXACT);
     assert(0 <= value && value < (1 << 14));

@@ -1,6 +1,8 @@
 #include <cassert>
 #include <iostream>
 
+#include "Tracy.hpp"
+
 #include "position.h"
 #include "settings.h"
 
@@ -21,16 +23,22 @@ static const board COLUMN_HEADERS = BOTTOM_ROW << BOARD_HEIGHT;
 // 1 in each valid cell.
 const board VALID_CELLS = COLUMN_HEADERS - BOTTOM_ROW;
 
-// 1 in each invalid cell.
-static const board INVALID_CELLS = ~VALID_CELLS;
+static board border_stones_in_direction(int dir);
+static const board BORDER_0 = border_stones_in_direction(0);
+static const board BORDER_H0 = border_stones_in_direction(BOARD_HEIGHT);
+static const board BORDER_H1 = border_stones_in_direction(BOARD_HEIGHT_1);
+static const board BORDER_H2 = border_stones_in_direction(BOARD_HEIGHT_2);
+
+// These patterns occur at the corners of the board when
+// checking the diagonals. All stones in these positions
+// are dead.
+static board too_short(int dir);
+static const board TOO_SHORT_H0 = too_short(BOARD_HEIGHT);
+static const board TOO_SHORT_H2 = too_short(BOARD_HEIGHT_2);
 
 
 // Helper methods.
 
-
-static board min(board a, board b) {
-    return (a < b) ? a : b;
-}
 
 static board find_threats_in_direction(board b, int dir) {
     board doubles = b & (b << dir);
@@ -73,7 +81,9 @@ static board border_stones_in_direction(int dir) {
 }
 
 
-static board dead_stones_in_direction(board b0, board b1, int dir) {   
+static board dead_stones_in_direction(board b0, board b1, int dir, board border) {   
+    ZoneScoped;
+
     board played_positions = b0 | b1;
     board empty_positions = VALID_CELLS & ~played_positions;
 
@@ -112,13 +122,6 @@ static board dead_stones_in_direction(board b0, board b1, int dir) {
         & ~uncovered
         & ~covered_by_1
         & ~covered_by_pair;
-    
-    // Detect the patterns |___|, |__|, and |_|
-    //                      ^^^    ^^        ^
-    // These patterns occur at the corners of the board when
-    // checking the diagonals. All stones in these positions
-    // are dead.
-    board excluded_stones = too_short(dir);
 
     // Detect the patterns O_X and X_O
     //                      ^       ^
@@ -129,11 +132,11 @@ static board dead_stones_in_direction(board b0, board b1, int dir) {
     // Detect the patterns |#X_O and O_X#|
     //                      ^           ^
     board pinned
-        = border_stones_in_direction(dir)
+        = border
         & played_positions
         & ((between >> 2 * dir) | (between << 2 * dir));
 
-    return covered_stones | excluded_stones | pinned;
+    return covered_stones | pinned;
 }
 
 
@@ -334,6 +337,8 @@ bool Position::is_non_losing_move(board non_losing_moves, int col) {
 
 
 board Position::hash(bool &is_mirrored) {
+    ZoneScoped;
+
     // Find any stones which cannot impact the rest of the game and assume
     // player 0 played these stones. This prevents these stones from
     // influencing the hash.
@@ -361,12 +366,12 @@ void Position::printb() {
 
 
 void Position::print_mask(board a, board b) {
-#ifdef COLOR_OUTPUT
-    const char *p0 = "\x1B[31mO\033[0m ";
-    const char *p1 = "\x1B[33mX\033[0m ";
-#else
+#ifdef NO_COLOR_OUTPUT
     const char *p0 = "O ";
     const char *p1 = "X ";
+#else
+    const char *p0 = "\x1B[31mO\033[0m ";
+    const char *p1 = "\x1B[33mX\033[0m ";
 #endif
 
     for (int y = BOARD_HEIGHT - 1; y >= 0; y--) {
@@ -414,14 +419,16 @@ bool Position::are_dead_stones_valid() {
 
 
 board Position::find_dead_stones() {
-    return dead_stones_in_direction(b0, b1, 1)
-        & dead_stones_in_direction(b0, b1, BOARD_HEIGHT)
-        & dead_stones_in_direction(b0, b1, BOARD_HEIGHT_1)
-        & dead_stones_in_direction(b0, b1, BOARD_HEIGHT_2);
+    return dead_stones_in_direction(b0, b1, 1, BORDER_0)
+        & (dead_stones_in_direction(b0, b1, BOARD_HEIGHT, BORDER_H0) | TOO_SHORT_H0)
+        & dead_stones_in_direction(b0, b1, BOARD_HEIGHT_1, BORDER_H1)
+        & (dead_stones_in_direction(b0, b1, BOARD_HEIGHT_2, BORDER_H2) | TOO_SHORT_H2);
 }
 
 
 board Position::mirror(board b) {
+    ZoneScoped;
+
     board mirror = 0;
     
     for (int col = 0; col <= (BOARD_WIDTH - 1) / 2; col++) {

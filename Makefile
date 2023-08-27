@@ -1,5 +1,5 @@
 CC = g++
-CFLAGS = -I -Wall -std=c++20
+CFLAGS = -I -Itracy/public -Itracy/public/tracy -Wall -std=c++20
 
 SRC_DIR = src
 TST_DIR = tst
@@ -13,11 +13,14 @@ TST_OBJ = $(patsubst %.cpp,$(OBJ_DIR)/%.o,$(TSTS))
 
 
 ifeq ($(debug), yes)
-	CFLAGS += -g
+	CFLAGS += -g -DNO_COLOR_OUTPUT
 else ifeq ($(optimise), yes)
-	CFLAGS += -O3 -flto=full -DNDEBUG -DCOLOR_OUTPUT
+	CFLAGS += -O3 -flto=full -mcpu=apple-m1 -DNDEBUG
+else ifeq ($(profile), yes)
+	CFLAGS += -O3 -flto=full -mcpu=apple-m1 -DNDEBUG -DTRACY_ENABLE
+	SRC_OBJ += obj/tracy.o
 else
-	CFLAGS += -O3 -flto=full -DCOLOR_OUTPUT
+	CFLAGS += -O3 -flto=full -mcpu=apple-m1
 endif
 
 
@@ -25,6 +28,9 @@ default: all
 
 .SUFFIX:
 .SUFFIX: .o .cpp
+
+obj/tracy.o: tracy/public/TracyClient.cpp
+	$(CC) -w -c -o $@ $< -std=c++11 -DTRACY_ENABLE
 
 $(OBJ_DIR)/%.o: %.cpp $(OBJ_DIR)/Makefile.deps
 	@mkdir -p $(@D)
@@ -57,4 +63,4 @@ clobber: clean
 
 $(OBJ_DIR)/Makefile.deps:
 	@mkdir -p $(@D)
-	$(CC) -MM $(SRCS) $(TSTS) > $@
+	$(CC) $(CFLAGS) -MM $(SRCS) $(TSTS) > $@

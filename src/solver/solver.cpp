@@ -1,6 +1,8 @@
 #include <iostream>
 #include <cassert>
 
+#include "Tracy.hpp"
+
 #include "solver.h"
 #include "settings.h"
 #include "position.h"
@@ -8,7 +10,6 @@
 #include "order.h"
 
 
-static const int MAX_SCORE = (BOARD_WIDTH * BOARD_HEIGHT + 1) / 2;
 static const int MIN_SCORE = -BOARD_WIDTH * BOARD_HEIGHT / 2;
 static const int INFINITY = 10000;
 
@@ -98,11 +99,15 @@ int Solver::negamax_entry(Position &pos, int alpha, int beta) {
         return score_win(pos);
     }
 
-    return negamax(pos, alpha, beta);
+    int result = negamax(pos, alpha, beta);
+
+    return result;
 }
 
 
 int Solver::negamax(Position &pos, int alpha, int beta) {
+    ZoneScoped;
+
     assert(alpha < beta);
     assert(!pos.has_player_won());
     assert(!pos.has_opponent_won());
@@ -244,6 +249,8 @@ int Solver::negamax(Position &pos, int alpha, int beta) {
 }
 
 int Solver::get_best_move(Position &pos) {
+    ZoneScoped;
+
     assert(!pos.has_player_won());
     assert(!pos.has_opponent_won());
     assert(!pos.is_draw());
@@ -367,6 +374,8 @@ int Solver::solve(Position &pos, int alpha, int beta, bool verbose) {
 
 
 int Solver::get_principal_variation(Position &pos, std::vector<int> &moves) {
+    ZoneScoped;
+
     assert(moves.size() == 0);
 
     Position pv = Position(pos);
@@ -388,6 +397,8 @@ int Solver::get_principal_variation(Position &pos, std::vector<int> &moves) {
 
 
 int Solver::get_num_moves_prediction(Position &pos, int score) const {
+    ZoneScoped;
+
     // Run the calculation from the perspective of the first player.
     if (pos.num_moves() & 1) {
         score *= -1;
@@ -404,13 +415,15 @@ int Solver::get_num_moves_prediction(Position &pos, int score) const {
 
 
 int Solver::solve_weak(Position &pos, bool verbose) {
-    int result = negamax(pos, 0, 1);
+    ZoneScoped;
+
+    int result = negamax_entry(pos, 0, 1);
 
     if (result > 0) {
         return 1;
     }
 
-    result = negamax(pos, -1, 0);
+    result = negamax_entry(pos, -1, 0);
 
     if (result > 0) {
         return 1;
@@ -423,6 +436,8 @@ int Solver::solve_weak(Position &pos, bool verbose) {
 
 
 int Solver::solve_strong(Position &pos, bool verbose) {
+    ZoneScoped;
+
     return solve(pos, -INFINITY, INFINITY, verbose);
 }
 
