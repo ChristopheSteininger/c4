@@ -2,7 +2,7 @@
 #include <iostream>
 #include <stdio.h>
 #include <locale.h>
-#include <time.h>
+#include <chrono>
 
 #include "settings.h"
 #include "position.h"
@@ -19,14 +19,17 @@ int main() {
     Position pos;
     Solver solver;
 
-    std::cout << "Using a " << BOARD_WIDTH << " x " << BOARD_HEIGHT << " board and a "
-        << get_table_size() << " table." << std::endl;
+    std::cout << "Using a " << BOARD_WIDTH << " x " << BOARD_HEIGHT << " board, a "
+        << get_table_size() << " table, and " << NUM_THREADS << " threads." << std::endl;
     printf("Solving:\n");
     pos.printb();
 
-    unsigned long start_time = clock();
+    auto start_time = std::chrono::high_resolution_clock::now();
     int score = solver.solve_strong(pos, true);
-    double run_time_sec = (clock() - start_time) / (double) CLOCKS_PER_SEC;
+    auto run_time = std::chrono::high_resolution_clock::now() - start_time;
+
+    long long run_time_ms = std::chrono::duration_cast<std::chrono::milliseconds>(run_time).count();
+    const Stats stats = solver.get_merged_stats();
 
     printf("\n");
     printf("Score is %d ", score);
@@ -39,19 +42,18 @@ int main() {
     }
 
     printf("\n");
-    printf("Time to solve        = %'.0f s\n", run_time_sec);
-    printf("Nodes per ms         = %'.0f\n", solver.get_num_nodes() / run_time_sec / 1000);
+    printf("Time to solve        = %'.2f s\n", run_time_ms / 1000.0);
+    printf("Nodes per ms         = %'.0f\n", stats.get_num_nodes() / (double) run_time_ms);
     printf("Nodes:\n");
-    printf("    Exact            = %'lu\n", solver.get_num_exact_nodes());
-    printf("    Lower            = %'lu\n", solver.get_num_lower_nodes());
-    printf("    Upper            = %'lu\n", solver.get_num_upper_nodes());
-    printf("    Total            = %'lu\n", solver.get_num_nodes());
+    printf("    Exact            = %'lu\n", stats.get_num_exact_nodes());
+    printf("    Lower            = %'lu\n", stats.get_num_lower_nodes());
+    printf("    Upper            = %'lu\n", stats.get_num_upper_nodes());
+    printf("    Total            = %'lu\n", stats.get_num_nodes());
     printf("Table:\n");
-    printf("    Hit rate         = %6.2f%%\n", solver.get_table_hit_rate() * 100);
-    printf("    Collision rate   = %6.2f%%\n", solver.get_table_collision_rate() * 100);
-    printf("    Density          = %6.2f%%\n", solver.get_table_density() * 100);
-    printf("    Rewrite rate     = %6.2f%%\n", solver.get_table_rewrite_rate() * 100);
-    printf("    Overwrite rate   = %6.2f%%\n", solver.get_table_overwrite_rate() * 100);
-    printf("Best moves guessed   = %6.2f%%\n", (double) solver.get_num_best_moves_guessed() * 100 / solver.get_num_interior_nodes());
-    printf("Moves checked        = %6.2f%%\n", solver.get_moves_checked_rate() * 100);
+    printf("    Hit rate         = %6.2f%%\n", stats.get_hit_rate() * 100);
+    printf("    Collision rate   = %6.2f%%\n", stats.get_collision_rate() * 100);
+    printf("    Density          = %6.2f%%\n", stats.get_density() * 100);
+    printf("    Rewrite rate     = %6.2f%%\n", stats.get_rewrite_rate() * 100);
+    printf("    Overwrite rate   = %6.2f%%\n", stats.get_overwrite_rate() * 100);
+    printf("Best moves guessed   = %6.2f%%\n", (double) stats.get_num_best_moves_guessed() * 100 / stats.get_num_interior_nodes());
 }

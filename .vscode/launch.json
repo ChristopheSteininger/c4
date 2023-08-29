@@ -1,0 +1,31 @@
+{
+    "configurations": [
+        {
+            "name": "Debug Tests",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/test",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "lldb",
+            "preLaunchTask": "Build Tests (debug)"
+        },
+        {
+            "name": "Debug c4",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/c4",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "lldb",
+            "preLaunchTask": "Build c4 (debug)"
+        }
+    ],
+    "version": "2.0.0"
+}

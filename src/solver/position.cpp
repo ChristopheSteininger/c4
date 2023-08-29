@@ -41,7 +41,7 @@ static const board TOO_SHORT_H2 = too_short(BOARD_HEIGHT_2);
 // Helper methods.
 
 
-static board find_threats_in_direction(board b, int dir) {
+static board find_threats_in_direction(const board b, const int dir) {
     board doubles = b & (b << dir);
     board triples = doubles & (doubles << dir);
     
@@ -52,7 +52,7 @@ static board find_threats_in_direction(board b, int dir) {
 }
 
 
-static board find_threats(board b) {
+static board find_threats(const board b) {
     return find_threats_in_direction(b, 1)
         | find_threats_in_direction(b, BOARD_HEIGHT)
         | find_threats_in_direction(b, BOARD_HEIGHT_1)
@@ -60,7 +60,7 @@ static board find_threats(board b) {
 }
 
 
-static board too_short(int dir) {
+static board too_short(const int dir) {
     board pairs = (VALID_CELLS >> dir) & VALID_CELLS;
     board triples = (pairs >> dir) & VALID_CELLS;
     board quads = (triples >> dir) & VALID_CELLS;
@@ -72,7 +72,7 @@ static board too_short(int dir) {
 }
 
 
-static board border_stones_in_direction(int dir) {
+static board border_stones_in_direction(const int dir) {
     board stones_right_of_border = (VALID_CELLS << dir) & VALID_CELLS;
     board stones_left_of_border = (VALID_CELLS >> dir) & VALID_CELLS;
 
@@ -82,7 +82,7 @@ static board border_stones_in_direction(int dir) {
 }
 
 
-static board dead_stones_in_direction(board b0, board b1, int dir, board border) {   
+static board dead_stones_in_direction(board b0, board b1, int dir, board border) {
     ZoneScoped;
 
     board played_positions = b0 | b1;
@@ -141,7 +141,7 @@ static board dead_stones_in_direction(board b0, board b1, int dir, board border)
 }
 
 
-static board find_winning_stones_in_direction(board b, int dir) {
+static board find_winning_stones_in_direction(const board b, const int dir) {
     board pairs = b & (b << 2 * dir);
     board quads = pairs & (pairs << dir);
 
@@ -152,7 +152,7 @@ static board find_winning_stones_in_direction(board b, int dir) {
 
 
 // Returns a 1 in any cell which is part of a 4 in a row.
-static board find_winning_stones(board b) {
+static board find_winning_stones(const board b) {
     return find_winning_stones_in_direction(b, 1)
         | find_winning_stones_in_direction(b, BOARD_HEIGHT)
         | find_winning_stones_in_direction(b, BOARD_HEIGHT_1)
@@ -160,14 +160,14 @@ static board find_winning_stones(board b) {
 }
 
 
-static board has_won_in_direction(board b, int dir) {
+static board has_won_in_direction(const board b, const int dir) {
     board pairs = b & (b << 2 * dir);
     
     return pairs & (pairs << dir);
 }
 
 
-static board has_won(board b) {
+static board has_won(const board b) {
     return has_won_in_direction(b, 1)
         | has_won_in_direction(b, BOARD_HEIGHT)
         | has_won_in_direction(b, BOARD_HEIGHT_1)
@@ -231,22 +231,22 @@ void Position::unmove(board before_move) {
 }
 
 
-int Position::num_moves() {
+int Position::num_moves() const {
     return ply;
 }
 
 
-bool Position::has_player_won() {
+bool Position::has_player_won() const {
     return has_won(b0) != 0;
 }
 
 
-bool Position::has_opponent_won() {
+bool Position::has_opponent_won() const {
     return has_won(b1) != 0;
 }
 
 
-bool Position::is_draw() {
+bool Position::is_draw() const {
     assert(!has_player_won());
     assert(!has_opponent_won());
 
@@ -254,26 +254,26 @@ bool Position::is_draw() {
 }
 
 
-bool Position::is_game_over() {
+bool Position::is_game_over() const {
     return has_player_won() || has_opponent_won() || is_draw();
 }
 
 
-bool Position::can_player_win() {
+bool Position::can_player_win() const {
     board empty_positions = VALID_CELLS & ~(b0 | b1);
 
     return has_won(b0 | empty_positions);
 }
 
 
-bool Position::can_opponent_win() {
+bool Position::can_opponent_win() const {
     board empty_positions = VALID_CELLS & ~(b0 | b1);
 
     return has_won(b1 | empty_positions);
 }
 
 
-board Position::find_player_threats() {
+board Position::find_player_threats() const {
     assert(!has_player_won());
     assert(!has_opponent_won());
     assert(!is_draw());
@@ -283,7 +283,7 @@ board Position::find_player_threats() {
 }
 
 
-board Position::find_opponent_threats() {
+board Position::find_opponent_threats() const {
     assert(!has_player_won());
     assert(!has_opponent_won());
     assert(!is_draw());
@@ -293,7 +293,7 @@ board Position::find_opponent_threats() {
 }
 
 
-board Position::find_odd_even_threats(board threats) {
+board Position::find_odd_even_threats(board threats) const {
     if (ply & 1) {
         return 0;
     } else {
@@ -304,7 +304,7 @@ board Position::find_odd_even_threats(board threats) {
 }
 
 
-board Position::wins_this_move(board threats) {
+board Position::wins_this_move(board threats) const {
     board next_valid_moves = (b0 | b1) + BOTTOM_ROW;
 
     // Exclude any threat which cannot be played immediately.
@@ -312,7 +312,7 @@ board Position::wins_this_move(board threats) {
 }
 
 
-board Position::find_non_losing_moves(board opponent_threats) {
+board Position::find_non_losing_moves(board opponent_threats) const {
     board below_threats = opponent_threats >> 1;
     board valid_moves = (b0 | b1) + BOTTOM_ROW;
 
@@ -320,7 +320,7 @@ board Position::find_non_losing_moves(board opponent_threats) {
 }
 
 
-bool Position::is_move_valid(int col) {
+bool Position::is_move_valid(int col) const {
     assert(0 <= col && col < BOARD_WIDTH);
 
     board moves_played = b0 | b1;
@@ -330,14 +330,24 @@ bool Position::is_move_valid(int col) {
 }
 
 
-bool Position::is_non_losing_move(board non_losing_moves, int col) {
+bool Position::is_non_losing_move(board non_losing_moves, int col) const {
     board move_mask = FIRST_COLUMN << (BOARD_HEIGHT_1 * col);
 
     return is_move_valid(col) && (move_mask & non_losing_moves);
 }
 
 
-board Position::hash(bool &is_mirrored) {
+int Position::score_win(int turns) const {
+    return (BOARD_WIDTH * BOARD_HEIGHT - turns - ply + 1) / 2;
+}
+
+
+int Position::score_loss(int turns) const {
+    return -score_win(turns + 1);
+}
+
+
+board Position::hash(bool &is_mirrored) const {
     ZoneScoped;
 
     // Find any stones which cannot impact the rest of the game and assume
@@ -361,12 +371,12 @@ board Position::hash(bool &is_mirrored) {
 }
 
 
-void Position::printb() {
+void Position::printb() const {
     print_mask(b0, b1);
 }
 
 
-void Position::print_mask(board a, board b) {
+void Position::print_mask(board a, board b) const {
     // Allow colors to be switched off if not displaying correctly.
 #ifdef NO_COLOR_OUTPUT
     const char *p0 = " O";
@@ -401,7 +411,7 @@ void Position::print_mask(board a, board b) {
 }
 
 
-bool Position::are_dead_stones_valid() {
+bool Position::are_dead_stones_valid() const {
     board dead_stones = find_dead_stones();
     board empty_positions = VALID_CELLS & ~(b0 | b1);
 
@@ -427,7 +437,7 @@ bool Position::are_dead_stones_valid() {
 // Private functions
 
 
-board Position::find_dead_stones() {
+board Position::find_dead_stones() const {
     return dead_stones_in_direction(b0, b1, 1, BORDER_0)
         & (dead_stones_in_direction(b0, b1, BOARD_HEIGHT, BORDER_H0) | TOO_SHORT_H0)
         & dead_stones_in_direction(b0, b1, BOARD_HEIGHT_1, BORDER_H1)
@@ -435,7 +445,7 @@ board Position::find_dead_stones() {
 }
 
 
-board Position::mirror(board b) {
+board Position::mirror(board b) const {
     ZoneScoped;
 
     board mirror = 0;
@@ -454,7 +464,7 @@ board Position::mirror(board b) {
 }
 
 
-bool Position::is_board_valid() {
+bool Position::is_board_valid() const {
     return !(b0 & ~VALID_CELLS)
         && !(b1 & ~VALID_CELLS)
         && !(b0 & b1);

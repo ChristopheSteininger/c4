@@ -4,6 +4,7 @@
 #include <cmath>
 #include <sstream>
 #include <iomanip>
+#include <memory>
 
 #include "Tracy.hpp"
 
@@ -16,7 +17,7 @@ const int TYPE_UPPER = 1;
 const int TYPE_LOWER = 2;
 const int TYPE_EXACT = 3;
 
-// This table uses the Chineese Remainer Theorem to reduce the number of bits per entry.
+// This table uses the Chinese Remainer Theorem to reduce the number of bits per entry.
 // For this to work, the size of the table must be odd. Use a prime number for fewer collisions.
 // Some example prime numbers:
 //  * 131101     =  1 MB
@@ -24,7 +25,7 @@ const int TYPE_EXACT = 3;
 //  * 8388617    = 64 MB
 //  * 134217757  =  1 GB
 //  * 1073741827 =  8 GB
-static const unsigned int TABLE_SIZE = 8388617;
+const int TABLE_SIZE = 134217757;
 
 // The number of bits of the hash stored in each entry.
 static const unsigned int KEY_SIZE = 50;
@@ -42,27 +43,28 @@ Table::Table() {
         throw std::runtime_error("The table is too small which may result in invalid results. Increase table size.");
     }
 
-    table = new board[TABLE_SIZE]();
-    TracyAlloc(table, TABLE_SIZE * sizeof(board));
+    this->table = std::shared_ptr<board>(new board[TABLE_SIZE], std::default_delete<board[]>());
+    this->stats = std::make_shared<Stats>();
+
+    TracyAlloc(table.get(), TABLE_SIZE * sizeof(board));
+
+    clear();
+}
+
+
+Table::Table(const Table &parent, const std::shared_ptr<Stats> stats) {
+    this->table = parent.table;
+    this->stats = stats;
 }
 
 
 Table::~Table() {
-    TracyFree(table);
-    delete [] table;
+    TracyFree(table.get());
 }
 
 
 void Table::clear() {
-    std::fill(table, table + TABLE_SIZE, 0);
-
-    stat_num_lookups = 0;
-    stat_num_successful_lookups = 0;
-    stat_num_hash_collisions = 0;
-
-    stat_num_entries = 0;
-    stat_num_overwrites = 0;
-    stat_num_rewrites = 0;
+    std::fill(table.get(), table.get() + TABLE_SIZE, 0);
 }
 
 
@@ -74,26 +76,25 @@ void Table::prefetch(board hash) {
     // void __builtin_prefetch(const void *addr, int rw=0, int locality=3)
     // rw       = read/write flag. 0 for read, 1 for write & read/write.
     // locality = persistance in cache.
-    __builtin_prefetch(table + index, 1, 2);
+    __builtin_prefetch(table.get() + index, 1, 2);
 }
 
 
 bool Table::get(board hash, bool is_mirrored, int &best_move, int &type, int &value) {
     ZoneScoped;
 
-    stat_num_lookups++;
-
     int index = hash % TABLE_SIZE;
     board result = table[index];
 
     // If this state has not been seen.
     if (result == 0) {
+        stats->lookup_miss();
         return false;
     }
 
     // If this is a hash collision.
     if ((result >> VALUE_SIZE) != (hash & KEY_MASK)) {
-        stat_num_hash_collisions++;
+        stats->lookup_collision();
         return false;
     }
 
@@ -108,7 +109,7 @@ bool Table::get(board hash, bool is_mirrored, int &best_move, int &type, int &va
         best_move = BOARD_WIDTH - best_move - 1;
     }
 
-    stat_num_successful_lookups++;
+    stats->lookup_success();
     return true;
 }
 
@@ -134,11 +135,11 @@ void Table::put(board hash, bool is_mirrored, int best_move, int type, int value
 
     // Update table statistics.
     if (current_entry == 0) {
-        stat_num_entries++;
+        stats->store_new_entry();
     } else if ((current_entry >> VALUE_SIZE) == stored_hash) {
-        stat_num_rewrites++;
+        stats->store_rewrite();
     } else {
-        stat_num_overwrites++;
+        stats->store_overwrite();
     }
 
     // Store.
@@ -150,36 +151,11 @@ void Table::put(board hash, bool is_mirrored, int best_move, int type, int value
 }
 
 
-double Table::get_hit_rate() const {
-    return (double) stat_num_successful_lookups / stat_num_lookups;
-}
-
-
-double Table::get_collision_rate() const {
-    return (double) stat_num_hash_collisions / stat_num_lookups;
-}
-
-
-double Table::get_density() const {
-    return (double) stat_num_entries / TABLE_SIZE;
-}
-
-
-double Table::get_overwrite_rate() const {
-    return (double) stat_num_overwrites / (stat_num_entries + stat_num_rewrites + stat_num_overwrites);
-}
-
-
-double Table::get_rewrite_rate() const {
-    return (double) stat_num_rewrites / (stat_num_entries + stat_num_rewrites + stat_num_overwrites);
-}
-
-
 std::string get_table_size() {
     std::stringstream result;
     result << std::fixed << std::setprecision(2);
 
-    int bytes = TABLE_SIZE * sizeof(board);
+    long bytes = TABLE_SIZE * sizeof(board);
     double kb = bytes / 1024.0;
     double mb = kb / 1024.0;
     double gb = mb / 1024.0;

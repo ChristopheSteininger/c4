@@ -1,0 +1,55 @@
+{
+    "tasks": [
+        {
+            "label": "Build Tests (debug)",
+            "type": "shell",
+            "command": "make",
+            "args": [
+                "test",
+                "debug=yes"
+            ],
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "detail": "Builds tests for debugging."
+        },
+        {
+            "label": "Build c4 (debug)",
+            "type": "shell",
+            "command": "make",
+            "args": [
+                "c4",
+                "debug=yes"
+            ],
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "detail": "Builds c4 for debugging."
+        },
+        {
+            "label": "Clean",
+            "type": "shell",
+            "command": "make",
+            "args": [
+                "clobber"
+            ],
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": {
+                "kind": "none",
+                "isDefault": false
+            },
+            "detail": "Remove compiled artifacts."
+        }
+    ],
+    "version": "2.0.0"
+}

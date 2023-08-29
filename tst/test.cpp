@@ -15,7 +15,7 @@ int tests_run = 0;
 const char *test_table_lookup_returns_stored_results() {
     Position pos1;
     Table table;
-    
+
     int counter = 0;
     bool is_mirrored;
     
@@ -184,9 +184,9 @@ const char *all_tests() {
 int main() {
     // Allow thousands separator.
     setlocale(LC_NUMERIC, "");
-    
-    std::cout << "Using a " << BOARD_WIDTH << " x " << BOARD_HEIGHT << " board and a "
-        << get_table_size() << " table." << std::endl;
+
+    std::cout << "Using a " << BOARD_WIDTH << " x " << BOARD_HEIGHT << " board, a "
+        << get_table_size() << " table, and " << NUM_THREADS << " threads." << std::endl;
 
     const char *result = all_tests();
 

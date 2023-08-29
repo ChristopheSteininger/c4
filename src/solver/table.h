@@ -3,18 +3,24 @@
 
 
 #include <string>
+#include <memory>
 
 #include "position.h"
+#include "stats.h"
 
 
 extern const int TYPE_LOWER;
 extern const int TYPE_UPPER;
 extern const int TYPE_EXACT;
 
+
 class Table {
 public:
     Table();
+    Table(const Table &parent, const std::shared_ptr<Stats> stats);
     ~Table();
+
+    Table(const Table &table) = delete;
 
     void clear();
 
@@ -22,22 +28,12 @@ public:
     bool get(board hash, bool is_mirrored, int &best_move, int &type, int &value);
     void put(board hash, bool is_mirrored, int best_move, int type, int value);
 
-    double get_hit_rate() const;
-    double get_collision_rate() const;
-    double get_density() const;
-    double get_rewrite_rate() const;
-    double get_overwrite_rate() const;
-
 private:
-    board *table;
+    // The table is shared across all threads.
+    std::shared_ptr<board[]> table;
 
-    unsigned long stat_num_lookups = 0;
-    unsigned long stat_num_successful_lookups = 0;
-    unsigned long stat_num_hash_collisions = 0;
-
-    unsigned long stat_num_entries = 0;
-    unsigned long stat_num_overwrites = 0;
-    unsigned long stat_num_rewrites = 0;
+    // Stats are only shared with other objects on the same thread.
+    std::shared_ptr<Stats> stats;
 };
 
 

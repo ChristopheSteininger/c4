@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <string.h>
-#include <time.h>
 #include <vector>
+#include <chrono>
 
 #include "Tracy.hpp"
 
@@ -92,7 +92,7 @@ bool strong_test(Solver &solver, struct test_data test_data) {
 
 
 // Tests that if playing a game, the game proceeds as expected. The results of
-// solve_strong(), get_best_move(), get_num_moves_prediction(), and get_principal_variation()
+// solve_strong(), get_num_moves_prediction(), and get_principal_variation()
 // must be consistent with each other for the entire game.
 bool self_play_test(Solver &solver, struct test_data test_data) {
     ZoneScoped;
@@ -117,7 +117,7 @@ bool self_play_test(Solver &solver, struct test_data test_data) {
     int moves_played;
     for (moves_played = 0; !pos.is_game_over(); moves_played++) {
         int score = solver.solve_strong(pos);
-        int move = solver.get_best_move(pos);
+        int move = pv[moves_played];
 
         // Fail if the solver outputted an invalid move.
         if (!pos.is_move_valid(move)) {
@@ -135,34 +135,8 @@ bool self_play_test(Solver &solver, struct test_data test_data) {
             return false;
         }
 
-        // The move may be different to the original PV line if more than one move have the same score.
-        // However, the length of the PV cannot change.
-        if (move != pv[0]) {
-            pv.clear();
-            int num_new_pv_moves = solver.get_principal_variation(pos, pv);
-
-            // New PV must still have the same length.
-            if (expected_num_moves != num_new_pv_moves + pos.num_moves()) {
-                printf("Updated PV length does not match expected num moves. Expected num moves was %d but got %d from PV.\n",
-                    expected_num_moves, num_pv_moves + pos.num_moves());
-                pos.printb();
-
-                return false;
-            }
-
-            // New PV must match move.
-            if (move != pv[0]) {
-                printf("Solver gave a move not part of the original principal variation. Move was %d PV move was %d.\n",
-                    move, pv[0]);
-                pos.printb();
-
-                return false;
-            }
-        }
-
         pos.move(move);
         expected_score = -expected_score;
-        pv.erase(pv.begin());
     }
 
     // Fail if the game ended earlier or later than predicted.
@@ -214,31 +188,35 @@ bool test_with_file(const char *filename, TestType type) {
 
     Solver solver = Solver();
 
-    double total_run_time_ms = 0;
+    std::chrono::steady_clock::duration total_run_time{};
+
     char line[100];
     for (int num_tests = 0; fgets(line, sizeof(line), data_file) != NULL;) {
         // Read the test data.
         struct test_data test_data = read_line(line);
 
         // Run the test.
-        unsigned long start_time = clock();
+        auto start_time = std::chrono::high_resolution_clock::now();
         bool result = run_test(solver, test_data, type);
-        total_run_time_ms += (clock() - start_time) * 1000 / (double) CLOCKS_PER_SEC;
+        total_run_time += std::chrono::high_resolution_clock::now() - start_time;
 
         if (!result) {
             fclose(data_file);
             return false;
         }
 
+        const Stats stats = solver.get_merged_stats();
+        auto total_run_time_ms = std::chrono::duration_cast<std::chrono::milliseconds>(total_run_time).count();
+
         // Increment before we print the update.
         num_tests++;
-        printf("\r\t%-30s %-15s %'15.0f %'15.0f %14.1f%% %'15.0f %'15d",
+        printf("\r\t%-30s %-15s %'15.0f %'15.0f %14.1f%% %'15.2f %'15d",
             filename,
             (type == 0) ? "Weak" : (type == 1) ? "Strong" : "Self Play",
-            (double) solver.get_num_nodes() / num_tests,
-            solver.get_num_nodes() / total_run_time_ms,
-            (double) solver.get_num_best_moves_guessed() * 100 / solver.get_num_interior_nodes(),
-            total_run_time_ms / 1000,
+            (double) stats.get_num_nodes() / num_tests,
+            (double) stats.get_num_nodes() / total_run_time_ms,
+            (double) stats.get_num_best_moves_guessed() * 100 / stats.get_num_interior_nodes(),
+            (double) total_run_time_ms / 1000,
             num_tests);
         fflush(stdout);
     }
