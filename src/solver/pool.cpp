@@ -42,6 +42,7 @@ int Pool::search(Position &pos, int alpha, int beta) {
         window += step;
     }
 
+    // Block until any of the workers find the solution.
     int score = result->wait_for_result();
 
     // No need for the other workers to do anything else.

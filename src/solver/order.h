@@ -9,7 +9,7 @@
  * Functions to guess the best move.
  */
 
-int order_moves(Position &pos, int *moves, board non_losing_moves, int table_move);
+int order_moves(Position &pos, int *moves, board non_losing_moves, int table_move, int move_offset);
 
 
 #endif

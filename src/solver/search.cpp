@@ -155,9 +155,9 @@ int Search::negamax(Position &pos, int alpha, int beta, int move_offset) {
     }
 
     // Check if this state has already been seen.
-    int lookup_move, lookup_type, lookup_value;
+    int table_move = -1, lookup_type, lookup_value;
 
-    bool lookup_success = table.get(hash, is_mirrored, lookup_move, lookup_type, lookup_value);
+    bool lookup_success = table.get(hash, is_mirrored, table_move, lookup_type, lookup_value);
     lookup_value += MIN_SCORE;
 
     if (lookup_success) {
@@ -178,42 +178,24 @@ int Search::negamax(Position &pos, int alpha, int beta, int move_offset) {
         }
     }
 
-    int table_move = lookup_success ? lookup_move : BOARD_WIDTH;
-
     // If none of the above checks pass, then this is an internal node and we must
     // evaluate the child nodes to determine the score of this node.
     int value = -INF_SCORE;
     int best_move_index, best_move_col;
 
     int moves[BOARD_WIDTH];
-    int num_moves = order_moves(pos, moves, non_losing_moves, table_move);
+    int num_moves = order_moves(pos, moves, non_losing_moves, table_move, move_offset);
 
     int i;
     for (i = 0; i < num_moves && alpha < beta; i++) {
+        int col = moves[i];
+
+        // Table moves do not respect the move offset, so pass it onto the child.
         int child_move_offset = 0;
-        int col;
-        // If we don't have a move offset, play moves as ordered.
-        if (move_offset == 0) {
-            col = moves[i];
-        }
-
-        // If we have a move offset but no table move, then offset the ordered
-        // moves.
-        else if (table_move == BOARD_WIDTH) {
-            col = moves[(i + move_offset) % num_moves];
-        }
-
-        // If we have a move offset and table move, play the table move first.
-        else if (i == 0) {
-            col = table_move;
+        if (table_move != -1 && i == 0) {
             child_move_offset = move_offset;
         }
 
-        // If we have both a move offset and a table move, then offset the non table moves.
-        else {
-            col = moves[((i + move_offset - 1) % (num_moves - 1)) + 1];
-        }
-    
         board before_move = pos.move(col);
         int child_score = -negamax(pos, -beta, -alpha, child_move_offset);
         pos.unmove(before_move);
