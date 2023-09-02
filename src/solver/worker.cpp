@@ -184,7 +184,7 @@ int Worker::run_search() {
     int b = window + 1;
 
     while (true) {
-        int score = search->search(pos, a, b, move_offset);
+        int score = search->negamax(pos, a, b, move_offset);
 
         if (score == SEARCH_STOPPED) {
             return SEARCH_STOPPED;

@@ -16,7 +16,7 @@ class Search {
 public:
     Search(const Table &parent_table, const std::shared_ptr<Stats> stats);
 
-    int search(Position &pos, int alpha, int beta, int move_offset);
+    int negamax(Position &pos, int alpha, int beta, int move_offset);
 
     void start();
     void stop();
@@ -26,8 +26,6 @@ private:
     std::shared_ptr<Stats> stats;
 
     bool stop_search;
-
-    int negamax(Position &pos, int alpha, int beta, int move_offset);
 };
 
 

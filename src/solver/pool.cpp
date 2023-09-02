@@ -25,6 +25,20 @@ Pool::~Pool() {
 
 
 int Pool::search(Position &pos, int alpha, int beta) {
+    // Check if the game is already over before launching the full search.
+    if (pos.has_opponent_won()) {
+        return pos.score_loss(-2);
+    }
+    if (pos.has_player_won()) {
+        return pos.score_win(-2);
+    }
+    if (pos.is_draw()) {
+        return 0;
+    }
+    if (pos.wins_this_move(pos.find_player_threats())) {
+        return pos.score_win();
+    }
+
     // No worker should still be running at this point.
     wait_all();
 
@@ -37,7 +51,7 @@ int Pool::search(Position &pos, int alpha, int beta) {
     // Spread out the workers over the input bounds.
     double window = min;
     double step = (double) (max - min) / workers.size();
-    for (int i = 0; i < workers.size() && window < max; i++) {
+    for (int i = 0; i < workers.size(); i++) {
         workers[i]->start(pos, min, max, (int) window, i);
         window += step;
     }

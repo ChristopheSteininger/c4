@@ -36,32 +36,6 @@ Search::Search(const Table &parent_table, const std::shared_ptr<Stats> stats)
     : table(parent_table, stats), stats(stats) {
 }
 
-
-int Search::search(Position &pos, int alpha, int beta, int move_offset) {
-    // The search does not check simple conditions like win in one move
-    // so handle these here.
-    if (pos.has_opponent_won()) {
-        return -pos.score_loss(-1);
-    }
-
-    if (pos.has_player_won()) {
-        return -pos.score_win(-1);
-    }
-
-    if (pos.is_draw()) {
-        return 0;
-    }
-
-    // If the player can win this move, then end the game.
-    board player_threats = pos.find_player_threats();
-    if (pos.wins_this_move(player_threats)) {
-        return pos.score_win();
-    }
-
-    return negamax(pos, alpha, beta, move_offset);
-}
-
-
 void Search::start() {
     stop_search = false;
 }
@@ -79,6 +53,7 @@ int Search::negamax(Position &pos, int alpha, int beta, int move_offset) {
     assert(!pos.has_player_won());
     assert(!pos.has_opponent_won());
     assert(!pos.is_draw());
+    assert(!pos.wins_this_move(pos.find_player_threats()));
 
     stats->new_node();
 

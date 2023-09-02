@@ -17,35 +17,6 @@
 static const int INF_SCORE = 10000;
 
 
-static int get_any_move(const Position &pos) {
-    assert(!pos.is_game_over());
-
-    for (int i = 0; i < BOARD_WIDTH; i++) {
-        if (pos.is_move_valid(i)) {
-            return i;
-        }
-    }
-
-    assert(0);
-    return -1;
-}
-
-
-static int get_move_from_mask(const board b) {
-    assert(b != 0);
-
-    for (int i = 0; i < BOARD_WIDTH; i++) {
-        board mask = FIRST_COLUMN << (i * BOARD_HEIGHT_1);
-        if (b & mask) {
-            return i;
-        }
-    }
-
-    assert(0);
-    return -1;
-}
-
-
 Solver::~Solver() {
     // pool.print_pool_stats();
 }
@@ -82,59 +53,21 @@ int Solver::get_best_move(Position &pos) {
 
    // This method uses the results written to the t-table by the negamax function
    // to find the best move. However, the table does not store trival positions which
-   // can be solved by static analysis. For these positions we need find the best
-   // move ourselves.
+   // can be solved by static analysis. For these positions we need to try each move
+   // to find the best move.
 
-   // If neither player will be able to win, moves don't matter anymore.
-   if (!pos.can_player_win() && !pos.can_opponent_win()) {
-       return get_any_move(pos);
-   }
-
-   // If the player can win this move, then end the game.
-   board player_threats = pos.find_player_threats();
-   board player_wins = pos.wins_this_move(player_threats);
-   if (player_wins) {
-       return get_move_from_mask(player_wins);
-   }
-
-   // If the player can only move below the opponents threats, the player will lose.
-   board opponent_threats = pos.find_opponent_threats();
-   board non_losing_moves = pos.find_non_losing_moves(opponent_threats);
-   if (non_losing_moves == 0) {
-       return get_any_move(pos);
-   }
-
-   // Check if the opponent could win next move.
-   board opponent_wins = pos.wins_this_move(opponent_threats);
-   if (opponent_wins) {
-       // If the opponent has multiple threats, then the game is lost.
-       if (opponent_wins & (opponent_wins - 1)) {
-           return get_any_move(pos);
-       }
-
-       // If the opponent has two threats on top of each other, then the game is also lost.
-       if (!(opponent_wins & non_losing_moves)) {
-           return get_any_move(pos);
-       }
-
-       // Otherwise, the opponent has only one threat, and the player must block the threat.
-       else {
-           return get_move_from_mask(opponent_wins);
-       }
-   }
-
-   // Otherwise this is a complex position and will be stored in the table.
+   // Check if the result is stored in the table.
    bool is_mirrored;
-   int best_move, type, value;
-   
    board hash = pos.hash(is_mirrored);
+
+   int best_move, type, value;
    bool lookup_success = table.get(hash, is_mirrored, best_move, type, value);
    if (lookup_success && type == TYPE_EXACT) {
        return best_move;
    }
 
-   // The results are occasionally overrwritten. If so start another search which
-   // will write the best move into the table before returning.
+   // The results in the table are occasionally overrwritten. Try a search which and
+   // see if this stores the result in the table.
    int score = solve_strong(pos);
 
    lookup_success = table.get(hash, is_mirrored, best_move, type, value);
@@ -157,7 +90,7 @@ int Solver::get_best_move(Position &pos) {
    }
 
    // This point should never be reached.
-   std::cout << "Error: could not get a best move. In this position:" << std::endl;
+   std::cout << "Error: could not get a best move in this position:" << std::endl;
    pos.printb();
 
    assert(0);
