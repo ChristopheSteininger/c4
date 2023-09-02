@@ -115,9 +115,17 @@ int Search::negamax(Position &pos, int alpha, int beta, int move_offset) {
         return beta;
     }
 
-    // If the opponent has only one threat, then the player must block the threat.
-    if (opponent_wins) {
-        board before_move = pos.move(opponent_wins);
+    // A move is forced if the opponent could win next turn, or if the player has
+    // only one move which does not lose immediately.
+    board forced_move = opponent_wins;
+    if ((non_losing_moves & (non_losing_moves - 1)) == 0) {
+        assert(opponent_wins == 0 || opponent_wins == non_losing_moves);
+        forced_move = non_losing_moves;
+    }
+
+    // Return the result of the forced move if we have one.
+    if (forced_move) {
+        board before_move = pos.move(forced_move);
         int score = -negamax(pos, -beta, -alpha, move_offset);
         pos.unmove(before_move);
 
