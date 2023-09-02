@@ -56,4 +56,5 @@ int main() {
     printf("    Rewrite rate     = %6.2f%%\n", stats.get_rewrite_rate() * 100);
     printf("    Overwrite rate   = %6.2f%%\n", stats.get_overwrite_rate() * 100);
     printf("Best moves guessed   = %6.2f%%\n", (double) stats.get_num_best_moves_guessed() * 100 / stats.get_num_interior_nodes());
+    printf("Worst moves guessed  = %6.2f%%\n", (double) stats.get_num_worst_moves_guessed() * 100 / stats.get_num_interior_nodes());
 }

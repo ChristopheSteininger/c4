@@ -207,6 +207,9 @@ int Search::negamax(Position &pos, int alpha, int beta, int move_offset) {
     stats->node_type(type);
     if (best_move_index == 0) {
         stats->best_move_guessed();
+    } else if (best_move_index == num_moves - 1) {
+        // Oops.
+        stats->worst_move_guessed();
     }
 
     return value;
