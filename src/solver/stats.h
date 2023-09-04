@@ -9,8 +9,6 @@ extern const int TYPE_LOWER;
 extern const int TYPE_UPPER;
 extern const int TYPE_EXACT;
 
-extern const int TABLE_SIZE;
-
 
 class Stats {
 public:
@@ -31,9 +29,9 @@ public:
     double get_collision_rate() const { return (double) num_lookup_collision / (num_lookup_success + num_lookup_miss + num_lookup_collision); }
 
     // Store stats getters.
+    double get_new_write_rate() const { return (double) num_store_entries / (num_store_entries + num_store_rewrites + num_store_overwrites); }
     double get_rewrite_rate() const { return (double) num_store_rewrites / (num_store_entries + num_store_rewrites + num_store_overwrites); }
     double get_overwrite_rate() const { return (double) num_store_overwrites / (num_store_entries + num_store_rewrites + num_store_overwrites); }
-    double get_density() const { return (double) num_store_entries / TABLE_SIZE; }
 
     // Search stats increments.
     void new_node() { num_nodes++; }

@@ -186,7 +186,7 @@ int main() {
     setlocale(LC_NUMERIC, "");
 
     std::cout << "Using a " << BOARD_WIDTH << " x " << BOARD_HEIGHT << " board, a "
-        << get_table_size() << " table, and " << NUM_THREADS << " threads." << std::endl;
+        << Table::get_table_size() << " table, and " << NUM_THREADS << " threads." << std::endl;
 
     const char *result = all_tests();
 

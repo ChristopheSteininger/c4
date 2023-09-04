@@ -20,7 +20,7 @@ int main() {
     Solver solver;
 
     std::cout << "Using a " << BOARD_WIDTH << " x " << BOARD_HEIGHT << " board, a "
-        << get_table_size() << " table, and " << NUM_THREADS << " threads." << std::endl;
+        << Table::get_table_size() << " table, and " << NUM_THREADS << " threads." << std::endl;
     printf("Solving:\n");
     pos.printb();
 
@@ -52,7 +52,7 @@ int main() {
     printf("Table:\n");
     printf("    Hit rate         = %6.2f%%\n", stats.get_hit_rate() * 100);
     printf("    Collision rate   = %6.2f%%\n", stats.get_collision_rate() * 100);
-    printf("    Density          = %6.2f%%\n", stats.get_density() * 100);
+    printf("    New write rate   = %6.2f%%\n", stats.get_new_write_rate() * 100);
     printf("    Rewrite rate     = %6.2f%%\n", stats.get_rewrite_rate() * 100);
     printf("    Overwrite rate   = %6.2f%%\n", stats.get_overwrite_rate() * 100);
     printf("Best moves guessed   = %6.2f%%\n", (double) stats.get_num_best_moves_guessed() * 100 / stats.get_num_interior_nodes());
