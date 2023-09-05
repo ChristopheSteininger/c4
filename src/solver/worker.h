@@ -36,7 +36,7 @@ public:
     Worker(int id, const Table &parent_table, const std::shared_ptr<SearchResult> result);
     ~Worker();
 
-    void start(const Position &pos, int alpha, int beta, int window, int move_offset);
+    void start(const Position &pos, int alpha, int beta, int window, int step, int move_offset);
     void wait();
     void stop();
 
@@ -72,6 +72,7 @@ private:
     int alpha;
     int beta;
     int window;
+    int step;
     int move_offset;
     // End shared search data.
 

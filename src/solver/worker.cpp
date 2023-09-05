@@ -80,8 +80,12 @@ Worker::~Worker() {
 }
 
 
-void Worker::start(const Position &pos, int alpha, int beta, int window, int move_offset) {
+void Worker::start(const Position &pos, int alpha, int beta, int window, int step, int move_offset) {
     ZoneScoped;
+
+    assert(alpha < beta);
+    assert(step > 0);
+    assert(move_offset >= 0);
 
     mutex.lock();
 
@@ -100,6 +104,7 @@ void Worker::start(const Position &pos, int alpha, int beta, int window, int mov
     this->alpha = alpha;
     this->beta = beta;
     this->window = window;
+    this->step = step;
     this->move_offset = move_offset;
 
     mutex.unlock();
@@ -200,9 +205,9 @@ int Worker::run_search() {
 
         // Increase bounds for the next search.
         if (score <= a) {
-            a--;
+            a = std::max(alpha, a - step);
         } else {
-            b++;
+            b = std::min(beta, b + step);
         }
     }
 }

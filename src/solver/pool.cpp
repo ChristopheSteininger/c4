@@ -50,21 +50,21 @@ int Pool::search(Position &pos, int alpha, int beta) {
 
     // Spread out the workers over the input bounds.
     double window = min;
-    double step = (double) (max - min) / workers.size();
+    double window_step = (double) (max - min) / workers.size();
     for (int i = 0; i < workers.size(); i++) {
         int move_offset
             = (i % 3) * BOARD_WIDTH
             + (i % 5);
 
-        if (step < 1) {
+        if (window_step < 1) {
             move_offset
                 = (i % 2) * BOARD_WIDTH * BOARD_WIDTH
                 + (i % 3) * BOARD_WIDTH
                 + (i % 5);
         }
 
-        workers[i]->start(pos, min, max, (int) window, move_offset);
-        window += step;
+        workers[i]->start(pos, min, max, (int) window, (i % 3) + 1, move_offset);
+        window += window_step;
     }
 
     // Block until any of the workers find the solution.
