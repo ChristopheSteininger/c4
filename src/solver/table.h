@@ -93,7 +93,7 @@ private:
     //  * 8388617    = 64 MB
     //  * 134217757  =  1 GB
     //  * 1073741827 =  8 GB
-    static const int NUM_ENTRIES = 134217757;
+    static const int NUM_ENTRIES = 1073741827;
 
     // Not all bits of the hash are saved, however the hashing will still by unique
     // by the Chinese Remainder Theorem as long as the check below passes.
