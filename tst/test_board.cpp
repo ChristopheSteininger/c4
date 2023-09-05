@@ -1,4 +1,5 @@
-#include <stdio.h>
+#include <cstdio>
+#include <cstdlib>
 
 #include "minunit.h"
 #include "../src/solver/settings.h"
@@ -16,8 +17,8 @@ static int get_random_move(Position &pos) {
 
 
 static board set_bit(int x, int y) {
-    int shift = y + x * BOARD_HEIGHT_1;
-    
+    int shift = y + x * (BOARD_HEIGHT + 1);
+
     return (board) 1 << shift;
 }
 

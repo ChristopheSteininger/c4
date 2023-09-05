@@ -8,31 +8,37 @@
 #include "settings.h"
 
 
-const int BOARD_HEIGHT_1 = BOARD_HEIGHT + 1;
+const int MAX_SCORE = (BOARD_WIDTH * BOARD_HEIGHT + 1) / 2;
+const int MIN_SCORE = -BOARD_WIDTH * BOARD_HEIGHT / 2;
+
+static const int BOARD_HEIGHT_1 = BOARD_HEIGHT + 1;
 static const int BOARD_HEIGHT_2 = BOARD_HEIGHT + 2;
 
-const board FIRST_COLUMN = ((board) 1 << BOARD_HEIGHT) - 1;
+// 1 at each playable position of the first column.
+static const board FIRST_COLUMN = ((board) 1 << BOARD_HEIGHT) - 1;
 
-const board FIRST_COLUMN_1 = ((board) 1 << BOARD_HEIGHT_1) - 1;
+// 1 at the playable position of the first column, plus the first column header.
+static const board FIRST_COLUMN_1 = ((board) 1 << BOARD_HEIGHT_1) - 1;
 
-const board BOTTOM_ROW = (((board) 1 << (BOARD_HEIGHT_1 * BOARD_WIDTH)) - 1)
+// 1 at the bottom of each column.
+static const board BOTTOM_ROW = (((board) 1 << (BOARD_HEIGHT_1 * BOARD_WIDTH)) - 1)
     / ((1 << BOARD_HEIGHT_1) - 1);
 
 // 1 in each column header.
 static const board COLUMN_HEADERS = BOTTOM_ROW << BOARD_HEIGHT;
 
-// 1 in each valid cell.
-const board VALID_CELLS = COLUMN_HEADERS - BOTTOM_ROW;
+// 1 on each playable posiition.
+static const board VALID_CELLS = COLUMN_HEADERS - BOTTOM_ROW;
 
+// 1 on each stone next to an edge in each possible directioin.
 static board border_stones_in_direction(int dir);
 static const board BORDER_0 = border_stones_in_direction(0);
 static const board BORDER_H0 = border_stones_in_direction(BOARD_HEIGHT);
 static const board BORDER_H1 = border_stones_in_direction(BOARD_HEIGHT_1);
 static const board BORDER_H2 = border_stones_in_direction(BOARD_HEIGHT_2);
 
-// These patterns occur at the corners of the board when
-// checking the diagonals. All stones in these positions
-// are dead.
+// These patterns occur at the corners of the board when checking the diagonals.
+// All stones in these positions are dead.
 static board too_short(int dir);
 static const board TOO_SHORT_H0 = too_short(BOARD_HEIGHT);
 static const board TOO_SHORT_H2 = too_short(BOARD_HEIGHT_2);

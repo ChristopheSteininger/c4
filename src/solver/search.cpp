@@ -10,7 +10,6 @@
 #include "order.h"
 
 
-static const int MIN_SCORE = -BOARD_WIDTH * BOARD_HEIGHT / 2;
 static const int INF_SCORE = 10000;
 
 const int SEARCH_STOPPED = -1000;
@@ -138,27 +137,22 @@ int Search::negamax(Position &pos, int alpha, int beta, int move_offset) {
     }
 
     // Check if this state has already been seen.
-    int table_move = -1, lookup_type, lookup_value;
+    int table_move, lookup_type, lookup_value;
+    table.get(hash, is_mirrored, table_move, lookup_type, lookup_value);
+    if (lookup_type == TYPE_EXACT) {
+        return lookup_value;
+    }
 
-    bool lookup_success = table.get(hash, is_mirrored, table_move, lookup_type, lookup_value);
-    lookup_value += MIN_SCORE;
+    else if (lookup_type == TYPE_LOWER) {
+        alpha = std::max(alpha, lookup_value);
+    }
 
-    if (lookup_success) {
-        if (lookup_type == TYPE_EXACT) {
-            return lookup_value;
-        }
+    else if (lookup_type == TYPE_UPPER) {
+        beta = std::min(beta, lookup_value);
+    }
 
-        else if (lookup_type == TYPE_LOWER) {
-            alpha = std::max(alpha, lookup_value);
-        }
-
-        else if (lookup_type == TYPE_UPPER) {
-            beta = std::min(beta, lookup_value);
-        }
-
-        if (alpha >= beta) {
-            return lookup_value;
-        }
+    if (alpha >= beta) {
+        return lookup_value;
     }
 
     // If none of the above checks pass, then this is an internal node and we must
@@ -201,7 +195,7 @@ int Search::negamax(Position &pos, int alpha, int beta, int move_offset) {
 
     // Store the result in the transposition table.
     int type = get_node_type(value, original_alpha, original_beta);
-    table.put(hash, is_mirrored, best_move_col, type, value + -MIN_SCORE);
+    table.put(hash, is_mirrored, best_move_col, type, value);
 
     // Update statistics.
     stats->node_type(type);

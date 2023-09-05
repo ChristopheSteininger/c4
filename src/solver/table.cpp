@@ -13,6 +13,7 @@
 #include "position.h"
 
 
+const int TYPE_MISS = 0;
 const int TYPE_UPPER = 1;
 const int TYPE_LOWER = 2;
 const int TYPE_EXACT = 3;
@@ -82,19 +83,25 @@ bool Table::get(board hash, bool is_mirrored, int &move, int &type, int &score) 
     // If this state has not been seen.
     if (entry.is_empty()) {
         stats->lookup_miss();
+        move = -1;
+        type = TYPE_MISS;
+
         return false;
     }
 
     // If this is a hash collision.
     if (!entry.is_equal(hash)) {
         stats->lookup_collision();
+        move = -1;
+        type = TYPE_MISS;
+
         return false;
     }
 
     // Otherwise reconstruct the data stored against the entry.
     move = entry.get_move();
     type = entry.get_type();
-    score = entry.get_score();
+    score = entry.get_score() + MIN_SCORE;
 
     // If we looked up a mirrored move, mirror the best move as well.
     if (is_mirrored) {
@@ -111,7 +118,7 @@ void Table::put(board hash, bool is_mirrored, int move, int type, int score) {
 
     assert(0 <= move && move <= BOARD_WIDTH);
     assert(type == TYPE_UPPER || type == TYPE_LOWER || type == TYPE_EXACT);
-    assert(0 <= score && score < (1 << 14));
+    assert(MIN_SCORE < score && score < MAX_SCORE);
 
     int index = hash % NUM_ENTRIES;
     Entry current_entry = table[index];
@@ -130,8 +137,8 @@ void Table::put(board hash, bool is_mirrored, int move, int type, int score) {
         stats->store_overwrite();
     }
 
-    // Store
-    table[index] = Entry(hash, move, type, score);
+    // Store.
+    table[index] = Entry(hash, move, type, score - MIN_SCORE);
 }
 
 

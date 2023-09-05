@@ -10,6 +10,7 @@
 #include "stats.h"
 
 
+extern const int TYPE_MISS;
 extern const int TYPE_LOWER;
 extern const int TYPE_UPPER;
 extern const int TYPE_EXACT;

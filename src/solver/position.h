@@ -1,15 +1,14 @@
 #ifndef BOARD_H_
 #define BOARD_H_
 
-#include <stdlib.h>
+#include <cstdint>
+
+#include "settings.h"
+
 
 /**
  * Functions to manipulate the board.
  **/
-
-
-// The height of the board + 1.
-extern const int BOARD_HEIGHT_1;
 
 // A number wide enough to store one bit for each cell on the board and the column headers.
 #if (BOARD_HEIGHT_1 * BOARD_WIDTH > 64)
@@ -17,18 +16,11 @@ typedef __uint128_t board;
 #else
 typedef uint64_t board;
 #endif
+static_assert(BOARD_WIDTH * BOARD_HEIGHT <= 8 * sizeof(board));
 
-// 1 at each playable position of the first column.
-extern const board FIRST_COLUMN;
-
-// 1 at the playable position of the first column, plus the first column header.
-extern const board FIRST_COLUMN_1;
-
-// 1 at the bottom of each column.
-extern const board BOTTOM_ROW;
-
-// 1 on each playable posiition;
-extern const board VALID_CELLS;
+// The score of winning or losing on turn 1.
+extern const int MAX_SCORE;
+extern const int MIN_SCORE;
 
 
 class Position {

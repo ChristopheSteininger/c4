@@ -11,8 +11,6 @@
 
 
 int main() {
-    assert(BOARD_WIDTH * BOARD_HEIGHT_1 < 8 * sizeof(board));
-    
     // Allow thousands separator.
     setlocale(LC_NUMERIC, "");
 
