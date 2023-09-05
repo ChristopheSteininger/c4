@@ -8,9 +8,6 @@
 #include "settings.h"
 
 
-const int MAX_SCORE = (BOARD_WIDTH * BOARD_HEIGHT + 1) / 2;
-const int MIN_SCORE = -BOARD_WIDTH * BOARD_HEIGHT / 2;
-
 static const int BOARD_HEIGHT_1 = BOARD_HEIGHT + 1;
 static const int BOARD_HEIGHT_2 = BOARD_HEIGHT + 2;
 
@@ -340,16 +337,6 @@ bool Position::is_non_losing_move(board non_losing_moves, int col) const {
     board move_mask = FIRST_COLUMN << (BOARD_HEIGHT_1 * col);
 
     return is_move_valid(col) && (move_mask & non_losing_moves);
-}
-
-
-int Position::score_win(int turns) const {
-    return (BOARD_WIDTH * BOARD_HEIGHT - turns - ply + 1) / 2;
-}
-
-
-int Position::score_loss(int turns) const {
-    return -score_win(turns + 1);
 }
 
 

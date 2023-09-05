@@ -2,6 +2,7 @@
 #define BOARD_H_
 
 #include <cstdint>
+#include <algorithm>
 
 #include "settings.h"
 
@@ -18,9 +19,16 @@ typedef uint64_t board;
 #endif
 static_assert(BOARD_WIDTH * BOARD_HEIGHT <= 8 * sizeof(board));
 
-// The score of winning or losing on turn 1.
-extern const int MAX_SCORE;
-extern const int MIN_SCORE;
+
+
+inline static constexpr int score_win_at(const int ply) {
+    // The earliest possible win is on the 7th move.
+    return (BOARD_WIDTH * BOARD_HEIGHT - std::max(7, ply) + 1) / 2;
+}
+
+inline static constexpr int score_loss_at(const int ply) {
+    return -score_win_at(ply + 1);
+}
 
 
 class Position {
@@ -67,8 +75,8 @@ public:
     bool is_non_losing_move(board opponent_threats, int col) const;
 
     // Returns the score if the game were won/lost after the given number of turns.
-    int score_win(int turns = 0) const;
-    int score_loss(int turns = 0) const;
+    inline int score_win(int turns = 0) const { return score_win_at(ply + turns); }
+    inline int score_loss(int turns = 0) const { return score_loss_at(ply + turns); }
 
     // Return a hash guaranteed to be unique to the position.
     board hash(bool &is_mirrored) const;
@@ -80,6 +88,10 @@ public:
     // Only used for testing. Returns true only if every dead stone
     // found cannot impact the rest of the game.
     bool are_dead_stones_valid() const;
+
+    // The score of winning or losing as early as possible.
+    static const int MAX_SCORE = score_win_at(0);
+    static const int MIN_SCORE = score_loss_at(0);
 
 private:
     // The current and next players position.

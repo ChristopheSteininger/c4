@@ -101,7 +101,7 @@ bool Table::get(board hash, bool is_mirrored, int &move, int &type, int &score) 
     // Otherwise reconstruct the data stored against the entry.
     move = entry.get_move();
     type = entry.get_type();
-    score = entry.get_score() + MIN_SCORE;
+    score = entry.get_score() + Position::MIN_SCORE;
 
     // If we looked up a mirrored move, mirror the best move as well.
     if (is_mirrored) {
@@ -118,7 +118,7 @@ void Table::put(board hash, bool is_mirrored, int move, int type, int score) {
 
     assert(0 <= move && move <= BOARD_WIDTH);
     assert(type == TYPE_UPPER || type == TYPE_LOWER || type == TYPE_EXACT);
-    assert(MIN_SCORE < score && score < MAX_SCORE);
+    assert(Position::MIN_SCORE <= score && score <= Position::MAX_SCORE);
 
     int index = hash % NUM_ENTRIES;
     Entry current_entry = table[index];
@@ -138,7 +138,7 @@ void Table::put(board hash, bool is_mirrored, int move, int type, int score) {
     }
 
     // Store.
-    table[index] = Entry(hash, move, type, score - MIN_SCORE);
+    table[index] = Entry(hash, move, type, score - Position::MIN_SCORE);
 }
 
 
