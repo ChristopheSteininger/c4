@@ -52,7 +52,18 @@ int Pool::search(Position &pos, int alpha, int beta) {
     double window = min;
     double step = (double) (max - min) / workers.size();
     for (int i = 0; i < workers.size(); i++) {
-        workers[i]->start(pos, min, max, (int) window, i);
+        int move_offset
+            = (i % 3) * BOARD_WIDTH
+            + (i % 5);
+
+        if (step < 1) {
+            move_offset
+                = (i % 2) * BOARD_WIDTH * BOARD_WIDTH
+                + (i % 3) * BOARD_WIDTH
+                + (i % 5);
+        }
+
+        workers[i]->start(pos, min, max, (int) window, move_offset);
         window += step;
     }
 

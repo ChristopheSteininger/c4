@@ -161,14 +161,14 @@ int Search::negamax(Position &pos, int alpha, int beta, int move_offset) {
     int best_move_index, best_move_col;
 
     int moves[BOARD_WIDTH];
-    int num_moves = order_moves(pos, moves, non_losing_moves, table_move, move_offset);
+    int num_moves = order_moves(pos, moves, non_losing_moves, table_move, move_offset % BOARD_WIDTH);
 
     int i;
     for (i = 0; i < num_moves && alpha < beta; i++) {
         int col = moves[i];
 
         // Table moves do not respect the move offset, so pass it onto the child.
-        int child_move_offset = 0;
+        int child_move_offset = move_offset / BOARD_WIDTH;
         if (table_move != -1 && i == 0) {
             child_move_offset = move_offset;
         }
