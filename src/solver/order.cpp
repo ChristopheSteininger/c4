@@ -80,7 +80,7 @@ int order_moves(Position &pos, int *moves, board non_losing_moves, int table_mov
     std::sort(moves, moves + num_moves,
        [&scores](size_t a, size_t b) {return scores[a] > scores[b];});
 
-    // Rotate any non table moves to help threads de sync.
+    // Rotate any non table moves to help threads desync.
     if (offset != 0) {
         rotate_moves(moves, num_moves, offset, table_move != -1);
     }

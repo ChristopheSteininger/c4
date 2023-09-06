@@ -20,10 +20,8 @@ typedef uint64_t board;
 static_assert(BOARD_WIDTH * BOARD_HEIGHT <= 8 * sizeof(board));
 
 
-
 inline static constexpr int score_win_at(const int ply) {
-    // The earliest possible win is on the 7th move.
-    return (BOARD_WIDTH * BOARD_HEIGHT - std::max(7, ply) + 1) / 2;
+    return (BOARD_WIDTH * BOARD_HEIGHT - ply + 1) / 2;
 }
 
 inline static constexpr int score_loss_at(const int ply) {
@@ -68,6 +66,9 @@ public:
     // Returns a 1 in any cell in which the current playe can move without loosing next turn.
     board find_non_losing_moves(board opponent_threats) const;
 
+    // Removes a single move for a mask of valid moves.
+    board clear_move(board moves_mask, int move) const;
+
     // Returns true only if the current player is allowed to play the given move.
     bool is_move_valid(int col) const;
 
@@ -90,8 +91,9 @@ public:
     bool are_dead_stones_valid() const;
 
     // The score of winning or losing as early as possible.
-    static const int MAX_SCORE = score_win_at(0);
-    static const int MIN_SCORE = score_loss_at(0);
+    // The earliest possible win is on the 7th move.
+    static const int MAX_SCORE = score_win_at(7);
+    static const int MIN_SCORE = score_loss_at(7);
 
 private:
     // The current and next players position.

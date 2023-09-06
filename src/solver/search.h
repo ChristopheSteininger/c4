@@ -16,16 +16,21 @@ class Search {
 public:
     Search(const Table &parent_table, const std::shared_ptr<Stats> stats);
 
-    int negamax(Position &pos, int alpha, int beta, int move_offset);
-
     void start();
     void stop();
+
+    int search(Position &pos, int alpha, int beta, int move_offset);
 
 private:
     Table table;
     std::shared_ptr<Stats> stats;
 
     bool stop_search;
+
+    int negamax(Position &pos, int alpha, int beta, int move_offset);
+
+    bool static_evaluation(Position &pos, int &score);
+    board get_forced_move(Position &pos, board opponent_wins, board non_losing_moves);
 };
 
 

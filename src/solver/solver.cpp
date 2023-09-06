@@ -131,19 +131,3 @@ int Solver::get_num_moves_prediction(Position &pos, int score) const {
         return BOARD_WIDTH * BOARD_HEIGHT;
     }
 }
-
-
-void Solver::print_pv_update(Position &pos, std::vector<int> &prev_pv, std::vector<int> &curr_pv) {
-    curr_pv.clear();
-    get_principal_variation(pos, curr_pv);
-
-    if (curr_pv != prev_pv) {
-        std::cout << "Principal variation is:" << std::endl;
-        for (int move : curr_pv) {
-            std::cout << move << " ";
-        }
-        std::cout << std::endl << std::endl;
-    } else {
-        std::cout << "Principal variation is unchanged." << std::endl;
-    }
-}

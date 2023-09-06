@@ -25,8 +25,6 @@ private:
     Table table;
 
     Pool pool{table};
-
-    void print_pv_update(Position &pos, std::vector<int> &prev_pv, std::vector<int> &curr_pv);
 };
 
 
