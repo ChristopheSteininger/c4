@@ -340,14 +340,6 @@ board Position::find_non_losing_moves(board opponent_threats) const {
 }
 
 
-board Position::clear_move(board moves_mask, int move) const {
-    board mask = FIRST_COLUMN << (move * BOARD_HEIGHT_1);
-    assert(moves_mask & mask);
-
-    return moves_mask & ~mask;
-}
-
-
 bool Position::is_move_valid(int col) const {
     assert(0 <= col && col < BOARD_WIDTH);
 

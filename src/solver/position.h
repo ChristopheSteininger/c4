@@ -67,9 +67,6 @@ public:
     // Returns a 1 in any cell in which the current playe can move without loosing next turn.
     board find_non_losing_moves(board opponent_threats) const;
 
-    // Removes a single move for a mask of valid moves.
-    board clear_move(board moves_mask, int move) const;
-
     // Returns true only if the current player is allowed to play the given move.
     bool is_move_valid(int col) const;
 

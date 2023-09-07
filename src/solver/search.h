@@ -29,7 +29,7 @@ private:
 
     int negamax(Position &pos, int alpha, int beta, int move_offset);
 
-    bool static_evaluation(Position &pos, int &score);
+    bool evaluate(Position &pos, int col, int &static_score, float &dynamic_score);
     board get_forced_move(Position &pos, board opponent_wins, board non_losing_moves);
 };
 

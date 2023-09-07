@@ -28,6 +28,35 @@ static int get_node_type(int value, int alpha, int beta) {
 }
 
 
+static int count_bits(board b) {
+    int result;
+    for (result = 0; b; result++) {
+        b &= b - 1;
+    }
+
+    return result;
+}
+
+
+static void rotate_moves(int *moves, int num_moves, int offset, bool has_table_move) {
+    int *first_move = moves;
+    int num_rotate_moves = num_moves;
+
+    // Don't rotate table moves.
+    if (has_table_move) {
+        first_move++;
+        num_rotate_moves--;
+    }
+
+    if (num_rotate_moves > 1) {
+        std::rotate(
+            first_move,
+            first_move + (offset % num_rotate_moves),
+            first_move + num_rotate_moves);
+    }
+}
+
+
 // Create our own copy of the transposition table. This table will use the same
 // underlying storage as parent_table so this thread can benefit from the work
 // other threads have saved in the table.
@@ -53,7 +82,8 @@ int Search::search(Position &pos, int alpha, int beta, int move_offset) {
     assert(!pos.wins_this_move(pos.find_player_threats()));
 
     int static_score;
-    if (static_evaluation(pos, static_score)) {
+    float dynamic_score;
+    if (evaluate(pos, 0, static_score, dynamic_score)) {
         return static_score;
     }
 
@@ -65,7 +95,8 @@ int Search::negamax(Position &pos, int alpha, int beta, int move_offset) {
     ZoneScoped;
 
 #ifndef NDEBUG
-    int dummy;
+    int dummy_static_score;
+    float dummy_dynamic_score;
 #endif
 
     assert(alpha < beta);
@@ -73,7 +104,7 @@ int Search::negamax(Position &pos, int alpha, int beta, int move_offset) {
     assert(!pos.has_opponent_won());
     assert(!pos.is_draw());
     assert(!pos.wins_this_move(pos.find_player_threats()));
-    assert(!static_evaluation(pos, dummy));
+    assert(!evaluate(pos, -1, dummy_static_score, dummy_dynamic_score));
 
     stats->new_node();
 
@@ -134,27 +165,39 @@ int Search::negamax(Position &pos, int alpha, int beta, int move_offset) {
         return value;
     }
 
-    // Check each move if it can be statically evaluated by only playing forced
-    // moves. These results can be used to tighten search bounds and reduce the
-    // number of moves to be searched.
-    board recursion_moves = non_losing_moves;
+    int num_moves = 0;
+    int moves[BOARD_WIDTH];
+    float scores[BOARD_WIDTH];
+
+    // Next, we will test each move if it can be statically evaluated (i.e. only
+    // playing forced moves will lead to a forced win, loss, or draw). Moves that
+    // are statically evaluated will not be recursed into, and can be used to
+    // tighten search bounds.
+    //
+    // Moves which cannot be statically evaluated will instead be assigned a score
+    // which is a guess of how good the move is. Moves with the highest score will
+    // be searched first.
     for (int col = 0; col < BOARD_WIDTH; col++) {
         if (pos.is_non_losing_move(non_losing_moves, col)) {
             int static_score;
+            float dynamic_score;
 
             board before_move = pos.move(col);
-            bool is_static = static_evaluation(pos, static_score);
+            bool is_static = evaluate(pos, col, static_score, dynamic_score);
             pos.unmove(before_move);
 
             if (is_static) {
-                recursion_moves = pos.clear_move(recursion_moves, col);
-
                 value = std::max(value, -static_score);
                 alpha = std::max(alpha, -static_score);
 
                 if (alpha >= beta) {
                     return alpha;
                 }
+            } else {
+                moves[num_moves] = col;
+                scores[col] = dynamic_score;
+
+                num_moves++;
             }
         }
     }
@@ -167,13 +210,13 @@ int Search::negamax(Position &pos, int alpha, int beta, int move_offset) {
     }
 
     // If every move was statically evaluated, then there is nothing more to do.
-    if (recursion_moves == 0) {
+    if (num_moves == 0) {
         return value;
     }
 
     // If only a single move was not statically evaluated, then play that move and return.
-    if ((recursion_moves & (recursion_moves - 1)) == 0) {
-        board before_move = pos.move(recursion_moves);
+    if (num_moves == 1) {
+        board before_move = pos.move(moves[0]);
         int score = -negamax(pos, -beta, -alpha, move_offset);
         pos.unmove(before_move);
 
@@ -199,13 +242,24 @@ int Search::negamax(Position &pos, int alpha, int beta, int move_offset) {
         return lookup_value;
     }
 
+    // A move from the table always goes first.
+    if (table_move != -1) {
+        scores[table_move] = 1000;
+    }
+
+    // Sort moves according to score, high to low.
+    assert(num_moves > 1);
+    std::sort(moves, moves + num_moves,
+       [&scores](size_t a, size_t b) {return scores[a] > scores[b];});
+
+    // Rotate any non table moves to help threads desync.
+    if (move_offset != 0) {
+        rotate_moves(moves, num_moves, move_offset, table_move != -1);
+    }
+
     // If none of the above checks pass, then this is an internal node and we must
     // evaluate the child nodes to determine the score of this node.
     int best_recursion_value = -INF_SCORE, best_move_index = -1, best_move_col = -1;
-
-    int moves[BOARD_WIDTH];
-    int num_moves = order_moves(pos, moves, recursion_moves, table_move, move_offset % BOARD_WIDTH);
-
     for (int i = 0; i < num_moves && alpha < beta; i++) {
         int col = moves[i];
 
@@ -256,7 +310,7 @@ int Search::negamax(Position &pos, int alpha, int beta, int move_offset) {
 }
 
 
-bool Search::static_evaluation(Position &pos, int &static_score) {
+bool Search::evaluate(Position &pos, int col, int &static_score, float &dynamic_score) {
     if (pos.is_draw()) {
         return 0;
     }
@@ -292,13 +346,25 @@ bool Search::static_evaluation(Position &pos, int &static_score) {
     board forced_move = get_forced_move(pos, opponent_wins, non_losing_moves);
     if (forced_move) {
         board before_move = pos.move(forced_move);
-        bool has_score = static_evaluation(pos, static_score);
+        bool is_static = evaluate(pos, -1, static_score, dynamic_score);
         pos.unmove(before_move);
 
-        if (has_score) {
+        if (is_static) {
             static_score *= -1;
             return true;
         }
+    }
+
+    if (col != -1) {
+        // At this point we know the move is complex and cannot be statically evaluate it
+        // so use a heuristic to guess the value of the move.
+        int num_threats = count_bits(opponent_threats);
+        int num_odd_even_threats = count_bits(pos.find_odd_even_threats(opponent_threats));
+        float center_score = (float) std::min(col, BOARD_WIDTH - col - 1) / BOARD_WIDTH;
+
+        dynamic_score = num_threats
+            + 0.5 * num_odd_even_threats
+            + 0.1 * center_score;
     }
 
     return false;
