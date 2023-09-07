@@ -83,7 +83,7 @@ Worker::~Worker() {
 void Worker::start(const Position &pos, int alpha, int beta, int window, int step, int move_offset) {
     ZoneScoped;
 
-    assert(alpha < beta);
+    assert(alpha <= beta);
     assert(step > 0);
     assert(move_offset >= 0);
 

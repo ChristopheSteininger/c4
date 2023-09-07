@@ -198,6 +198,10 @@ board Position::move(int col) {
 
     assert(is_board_valid());
 
+#ifndef NDEBUG
+    move_history.push_back(col);
+#endif
+
     return before_move;
 }
 
@@ -218,6 +222,15 @@ board Position::move(board mask) {
 
     assert(is_board_valid());
 
+#ifndef NDEBUG
+    for (int col = 0; col < BOARD_WIDTH; col++) {
+        if (mask & (FIRST_COLUMN << (col * BOARD_HEIGHT_1))) {
+            move_history.push_back(col);
+            break;
+        }
+    }
+#endif
+
     return before_move;
 }
 
@@ -229,6 +242,10 @@ void Position::unmove(board before_move) {
     b0 = before_move;
 
     ply--;
+
+#ifndef NDEBUG
+    move_history.pop_back();
+#endif
 
     assert(is_board_valid());
 }
@@ -433,6 +450,16 @@ bool Position::are_dead_stones_valid() const {
         && b0_wins == b0_wins_plus_dead_stones  // Condition #2 for player #1.
         && b1_wins == b1_wins_plus_dead_stones; // Condition #2 for player #2.
 }
+
+
+#ifndef NDEBUG
+void Position::print_move_history() const {
+    for (int i = 0; i < ply; i++) {
+        std::cout << (move_history[i] + 1);
+    }
+    std::cout << std::endl;
+}
+#endif
 
 
 // Private functions

@@ -56,23 +56,26 @@ int Solver::get_best_move(Position &pos) {
    // can be solved by static analysis. For these positions we need to try each move
    // to find the best move.
 
-   // Check if the result is stored in the table.
-   bool is_mirrored;
-   board hash = pos.hash(is_mirrored);
-
-   int best_move, type, value;
-   bool lookup_success = table.get(hash, is_mirrored, best_move, type, value);
-   if (lookup_success && type == TYPE_EXACT) {
-       return best_move;
-   }
-
-   // The results in the table are occasionally overrwritten. Try a search which and
-   // see if this stores the result in the table.
    int score = solve_strong(pos);
 
-   lookup_success = table.get(hash, is_mirrored, best_move, type, value);
+   // Check if the result is stored in the table.
+   bool is_mirrored;
+   int table_move, type, value;
+
+   board hash = pos.hash(is_mirrored);
+   bool lookup_success = table.get(hash, is_mirrored, table_move, type, value);
+
    if (lookup_success && type == TYPE_EXACT) {
-       return best_move;
+       // Validate the move stored in the table is the best move.
+       board before_move = pos.move(table_move);
+       int table_score = -pool.search(pos, -score - 1, -score + 1);
+       pos.unmove(before_move);
+
+        // The table doesn't always store the best move to play. If this is the case,
+        // Try every move until we find the best move.
+        if (table_score == score) {
+            return table_move;
+        }
    }
 
    // If we still have a miss, then try each move until we find a move which
@@ -80,7 +83,7 @@ int Solver::get_best_move(Position &pos) {
    for (int move = 0; move < BOARD_WIDTH; move++) {
        if (pos.is_move_valid(move)) {
            board before_move = pos.move(move);
-           int child_score = -pool.search(pos, -score, -score + 1);
+           int child_score = -pool.search(pos, -score - 1, -score + 1);
            pos.unmove(before_move);
 
            if (child_score == score) {

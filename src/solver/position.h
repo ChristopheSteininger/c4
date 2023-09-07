@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <algorithm>
+#include <vector>
 
 #include "settings.h"
 
@@ -90,6 +91,12 @@ public:
     // found cannot impact the rest of the game.
     bool are_dead_stones_valid() const;
 
+    // Print the list of moves played. Useful for debugging but keeping
+    // track of history degrades performance so only enable for debug builds.
+#ifndef NDEBUG
+    void print_move_history() const;
+#endif
+
     // The score of winning or losing as early as possible.
     // The earliest possible win is on the 7th move.
     static const int MAX_SCORE = score_win_at(7);
@@ -101,6 +108,12 @@ private:
     board b1 = 0;
 
     int ply = 0;
+
+    // The move history is useful for debugging, but has no purpose
+    // in the search, so only enable for debug builds.
+#ifndef NDEBUG
+    std::vector<int> move_history{};
+#endif
 
     // Returns the input board reflected along the middle column.
     board mirror(board hash) const;
