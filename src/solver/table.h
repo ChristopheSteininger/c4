@@ -29,9 +29,8 @@ public:
     Entry(board hash, int move, int type, int score);
 
     inline bool is_empty() const { return data == 0; }
-    inline bool is_equal(board hash) const { return data != 0 && (hash & HASH_MASK) == get_partial_hash(); }
+    inline bool is_equal(board hash) const { return data != 0 && (hash & HASH_MASK) == (data >> HASH_SHIFT); }
 
-    inline uint64_t get_partial_hash() const { return (data >> HASH_SHIFT) & HASH_MASK; }
     inline int get_move() const { return (data >> MOVE_SHIFT) & MOVE_MASK; }
     inline int get_type() const { return (data >> TYPE_SHIFT) & TYPE_MASK; }
     inline int get_score() const { return (data >> SCORE_SHIFT) & SCORE_MASK; }
@@ -45,7 +44,7 @@ private:
     // 10 - 13: Move
     //  8 -  9: Type
     //  0 -  7: Score
-    uint64_t data;
+    uint64_t data{0};
 
     // The constants below define where information is packed into each 64 bit entry.
     static const uint64_t HASH_MASK = ((uint64_t) 1 << HASH_BITS) - 1;

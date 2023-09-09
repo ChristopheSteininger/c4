@@ -7,7 +7,6 @@
 #include "settings.h"
 #include "position.h"
 #include "table.h"
-#include "order.h"
 
 
 static const int INF_SCORE = 10000;
@@ -57,12 +56,32 @@ static void rotate_moves(int *moves, int num_moves, int offset, bool has_table_m
 }
 
 
+static void sort_moves(int *moves, int num_moves, float *scores, int  offset, int table_move) {
+    assert(num_moves > 1);
+
+    // A move from the table always goes first.
+    if (table_move != -1) {
+        scores[table_move] = 1000;
+    }
+
+    // Sort moves according to score, high to low.
+    std::sort(moves, moves + num_moves,
+       [&scores](size_t a, size_t b) {return scores[a] > scores[b];});
+
+    // Rotate any non table moves to help threads desync.
+    if (offset != 0) {
+        rotate_moves(moves, num_moves, offset, table_move != -1);
+    }
+}
+
+
 // Create our own copy of the transposition table. This table will use the same
 // underlying storage as parent_table so this thread can benefit from the work
 // other threads have saved in the table.
 Search::Search(const Table &parent_table, const std::shared_ptr<Stats> stats)
     : table(parent_table, stats), stats(stats) {
 }
+
 
 void Search::start() {
     stop_search = false;
@@ -127,16 +146,10 @@ int Search::negamax(Position &pos, int alpha, int beta, int move_offset) {
     if (!pos.can_player_win()) {
         beta = std::min(beta, 0);
     }
-    if (alpha >= beta) {
-        return 0;
-    }
 
-    // At this point we know it is not possible to win or lose in the next two turns,
-    // so tighten bounds.
+    // This function will never be called on a position that can be statically evaluated, so we
+    // know it is not possible to win or lose in the next two turns, so tighten bounds.
     alpha = std::max(alpha, pos.score_loss(2));
-    if (alpha >= beta) {
-        return alpha;
-    }
     beta = std::min(beta, pos.score_win(2));
     if (alpha >= beta) {
         return beta;
@@ -242,20 +255,8 @@ int Search::negamax(Position &pos, int alpha, int beta, int move_offset) {
         return lookup_value;
     }
 
-    // A move from the table always goes first.
-    if (table_move != -1) {
-        scores[table_move] = 1000;
-    }
-
-    // Sort moves according to score, high to low.
-    assert(num_moves > 1);
-    std::sort(moves, moves + num_moves,
-       [&scores](size_t a, size_t b) {return scores[a] > scores[b];});
-
-    // Rotate any non table moves to help threads desync.
-    if (move_offset != 0) {
-        rotate_moves(moves, num_moves, move_offset, table_move != -1);
-    }
+    // Sort moves according to score.
+    sort_moves(moves, num_moves, scores, move_offset, table_move);
 
     // If none of the above checks pass, then this is an internal node and we must
     // evaluate the child nodes to determine the score of this node.
@@ -311,6 +312,8 @@ int Search::negamax(Position &pos, int alpha, int beta, int move_offset) {
 
 
 bool Search::evaluate(Position &pos, int col, int &static_score, float &dynamic_score) {
+    ZoneScoped;
+
     if (pos.is_draw()) {
         return 0;
     }
@@ -356,7 +359,7 @@ bool Search::evaluate(Position &pos, int col, int &static_score, float &dynamic_
     }
 
     if (col != -1) {
-        // At this point we know the move is complex and cannot be statically evaluate it
+        // At this point we know the move is complex and cannot be statically evaluated
         // so use a heuristic to guess the value of the move.
         int num_threats = count_bits(opponent_threats);
         int num_odd_even_threats = count_bits(pos.find_odd_even_threats(opponent_threats));
@@ -372,15 +375,15 @@ bool Search::evaluate(Position &pos, int col, int &static_score, float &dynamic_
 
 
 board Search::get_forced_move(Position &pos, board opponent_wins, board non_losing_moves) {
-    // A move is forced if the opponent could win next turn, or if the player has
-    // only one move which does not lose immediately.
+    // A move is forced if the opponent could win next turn.
     if (opponent_wins) {
-        // assert(opponent_wins == non_losing_moves);
+        assert((opponent_wins & (opponent_wins - 1)) == 0);
+        assert((opponent_wins & non_losing_moves) == opponent_wins);
         return opponent_wins;
     }
 
+    // A move is also forced if the player has only one move which does not lose immediately.
     if ((non_losing_moves & (non_losing_moves - 1)) == 0) {
-        assert(opponent_wins == 0 || opponent_wins == non_losing_moves);
         return non_losing_moves;
     }
 

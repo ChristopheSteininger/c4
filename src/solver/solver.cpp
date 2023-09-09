@@ -11,7 +11,6 @@
 #include "settings.h"
 #include "position.h"
 #include "table.h"
-#include "order.h"
 
 
 static const int INF_SCORE = 10000;
