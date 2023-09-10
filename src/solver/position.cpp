@@ -324,6 +324,23 @@ board Position::find_odd_even_threats(board threats) const {
 }
 
 
+board Position::find_next_turn_threats(board threats) const {
+    board valid_moves = ((b0 | b1) + BOTTOM_ROW) & VALID_CELLS;
+    board next_valid_moves = valid_moves << 1;
+
+    return threats & next_valid_moves;
+}
+
+
+board Position::find_next_next_turn_threats(board threats) const {
+    board valid_moves = ((b0 | b1) + BOTTOM_ROW) & VALID_CELLS;
+    board next_valid_moves = (valid_moves << 1) & VALID_CELLS;
+    board next_next_valid_moves = next_valid_moves << 1;
+
+    return threats & next_next_valid_moves;
+}
+
+
 board Position::wins_this_move(board threats) const {
     board next_valid_moves = (b0 | b1) + BOTTOM_ROW;
 

@@ -362,11 +362,14 @@ bool Search::evaluate(Position &pos, int col, int &static_score, float &dynamic_
         // At this point we know the move is complex and cannot be statically evaluated
         // so use a heuristic to guess the value of the move.
         int num_threats = count_bits(opponent_threats);
-        int num_odd_even_threats = count_bits(pos.find_odd_even_threats(opponent_threats));
+        int num_next_threats = count_bits(pos.find_next_turn_threats(opponent_threats));
+        int num_next_next_threats = count_bits(pos.find_next_next_turn_threats(opponent_threats));
         float center_score = (float) std::min(col, BOARD_WIDTH - col - 1) / BOARD_WIDTH;
 
-        dynamic_score = num_threats
-            + 0.5 * num_odd_even_threats
+        dynamic_score
+            = 1.0 * num_next_threats
+            + 0.5 * num_next_next_threats
+            + 0.3 * num_threats
             + 0.1 * center_score;
     }
 

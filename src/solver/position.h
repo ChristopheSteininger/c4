@@ -61,6 +61,9 @@ public:
     board find_opponent_threats() const;
     board find_odd_even_threats(board threats) const;
 
+    board find_next_turn_threats(board threats) const;
+    board find_next_next_turn_threats(board threats) const;
+
     // Returns a 1 in any cell in which either player can win this move.
     board wins_this_move(board threats) const;
 
