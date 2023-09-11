@@ -315,7 +315,8 @@ bool Search::evaluate(Position &pos, int col, int &static_score, float &dynamic_
     ZoneScoped;
 
     if (pos.is_draw()) {
-        return 0;
+        static_score = 0;
+        return true;
     }
 
     // Find the opponents threats, and any moves directly below a threat.
