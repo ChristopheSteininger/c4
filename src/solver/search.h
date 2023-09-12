@@ -11,6 +11,27 @@
 extern const int SEARCH_STOPPED;
 
 
+struct Node {
+    Position pos;
+
+    bool did_lookup;
+    int table_move;
+    board hash;
+    bool is_mirrored;
+
+    float dynamic_score;
+
+    Node() {}
+
+    Node(const Position &pos) {
+        this->pos = Position(pos);
+
+        this->did_lookup = false;
+        this->table_move = -1;
+    }
+};
+
+
 // A single threaded search.
 class Search {
 public:
@@ -27,9 +48,9 @@ private:
 
     bool stop_search;
 
-    int negamax(Position &pos, int alpha, int beta, int move_offset);
+    int negamax(Node &node, int alpha, int beta, int move_offset);
 
-    bool evaluate(Position &pos, int col, int &static_score, float &dynamic_score);
+    bool static_search(Node &node, int col, int &alpha, int &beta);
     board get_forced_move(Position &pos, board opponent_wins, board non_losing_moves);
 };
 

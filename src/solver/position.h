@@ -80,6 +80,9 @@ public:
     inline int score_win(int turns = 0) const { return score_win_at(ply + turns); }
     inline int score_loss(int turns = 0) const { return score_loss_at(ply + turns); }
 
+    inline int get_ply() const { return ply; }
+    inline bool is_same_player(const Position &other) const { return (ply & 1) == (other.ply & 1); }
+
     // Return a hash guaranteed to be unique to the position.
     board hash(bool &is_mirrored) const;
 

@@ -70,7 +70,7 @@ void Table::prefetch(board hash) {
     // void __builtin_prefetch(const void *addr, int rw=0, int locality=3)
     // rw       = read/write flag. 0 for read, 1 for write & read/write.
     // locality = persistance in cache.
-    __builtin_prefetch(table.get() + index, 1, 2);
+    __builtin_prefetch(table.get() + index, 1, 3);
 }
 
 
