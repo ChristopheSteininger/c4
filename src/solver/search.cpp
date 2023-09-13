@@ -120,7 +120,7 @@ int Search::search(Position &pos, int alpha, int beta, int move_offset) {
     assert(!pos.wins_this_move(pos.find_player_threats()));
 
     Node child(pos);
-    if (static_search(child, -1, alpha, beta)) {
+    if (static_search(child, -1, alpha, beta) || alpha >= beta) {
         return alpha;
     }
 

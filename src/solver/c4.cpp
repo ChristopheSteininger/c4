@@ -23,7 +23,7 @@ int main() {
     pos.printb();
 
     auto start_time = std::chrono::high_resolution_clock::now();
-    int score = solver.solve_strong(pos, true);
+    int score = solver.solve_strong(pos);
     auto run_time = std::chrono::high_resolution_clock::now() - start_time;
 
     long long run_time_ms = std::chrono::duration_cast<std::chrono::milliseconds>(run_time).count();

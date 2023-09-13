@@ -10,8 +10,8 @@
 class Solver {
 public:
     ~Solver();
-    int solve_weak(Position &pos, bool verbose = false);
-    int solve_strong(Position &pos, bool verbose = false);
+    int solve_weak(Position &pos);
+    int solve_strong(Position &pos);
 
     int get_best_move(Position &pos);
     int get_principal_variation(Position &pos, std::vector<int> &moves);

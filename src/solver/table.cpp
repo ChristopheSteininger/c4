@@ -36,7 +36,7 @@ Entry::Entry(board hash, int move, int type, int score) {
 
 
 Table::Table() {
-    this->table = std::shared_ptr<Entry>(new Entry[NUM_ENTRIES], std::default_delete<Entry[]>());
+    this->table = std::shared_ptr<Entry>(new Entry[NUM_TABLE_ENTRIES], std::default_delete<Entry[]>());
     this->stats = std::make_shared<Stats>();
 
     TracyAlloc(table.get(), NUM_ENTRIES * sizeof(Entry));
@@ -58,14 +58,14 @@ Table::~Table() {
 
 void Table::clear() {
     Entry empty;
-    std::fill(table.get(), table.get() + NUM_ENTRIES, empty);
+    std::fill(table.get(), table.get() + NUM_TABLE_ENTRIES, empty);
 }
 
 
 void Table::prefetch(board hash) {
     ZoneScoped;
 
-    int index = hash % NUM_ENTRIES;
+    int index = hash % NUM_TABLE_ENTRIES;
 
     // void __builtin_prefetch(const void *addr, int rw=0, int locality=3)
     // rw       = read/write flag. 0 for read, 1 for write & read/write.
@@ -77,7 +77,7 @@ void Table::prefetch(board hash) {
 bool Table::get(board hash, bool is_mirrored, int &move, int &type, int &score) {
     ZoneScoped;
 
-    int index = hash % NUM_ENTRIES;
+    int index = hash % NUM_TABLE_ENTRIES;
     Entry entry = table[index];
 
     // If this state has not been seen.
@@ -120,7 +120,7 @@ void Table::put(board hash, bool is_mirrored, int move, int type, int score) {
     assert(type == TYPE_UPPER || type == TYPE_LOWER || type == TYPE_EXACT);
     assert(Position::MIN_SCORE <= score && score <= Position::MAX_SCORE);
 
-    int index = hash % NUM_ENTRIES;
+    int index = hash % NUM_TABLE_ENTRIES;
     Entry current_entry = table[index];
 
     // Move needs to be mirrored as well if we are storing the mirrored position.
@@ -146,7 +146,7 @@ std::string Table::get_table_size() {
     std::stringstream result;
     result << std::fixed << std::setprecision(2);
 
-    long bytes = NUM_ENTRIES * sizeof(Entry);
+    long bytes = NUM_TABLE_ENTRIES * sizeof(Entry);
     double kb = bytes / 1024.0;
     double mb = kb / 1024.0;
     double gb = mb / 1024.0;

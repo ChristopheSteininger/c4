@@ -35,8 +35,6 @@ public:
     inline int get_type() const { return (data >> TYPE_SHIFT) & TYPE_MASK; }
     inline int get_score() const { return (data >> SCORE_SHIFT) & SCORE_MASK; }
 
-    static const int HASH_BITS = 44;
-
 private:
     // An entry contains the following information packed in 64 bits.
     //    bits: data
@@ -47,17 +45,22 @@ private:
     uint64_t data{0};
 
     // The constants below define where information is packed into each 64 bit entry.
-    static const uint64_t HASH_MASK = ((uint64_t) 1 << HASH_BITS) - 1;
-    static const int HASH_SHIFT = 20;
+    static constexpr int HASH_BITS = 44;
+    static constexpr uint64_t HASH_MASK = ((uint64_t) 1 << HASH_BITS) - 1;
+    static constexpr int HASH_SHIFT = 20;
 
-    static const int MOVE_MASK = (1 << 4) - 1;
-    static const int MOVE_SHIFT = 10;
+    static constexpr int MOVE_MASK = (1 << 4) - 1;
+    static constexpr int MOVE_SHIFT = 10;
 
-    static const int TYPE_MASK = (1 << 2) - 1;
-    static const int TYPE_SHIFT = 8;
+    static constexpr int TYPE_MASK = (1 << 2) - 1;
+    static constexpr int TYPE_SHIFT = 8;
 
-    static const int SCORE_MASK = (1 << 8) - 1;
-    static const int SCORE_SHIFT = 0;
+    static constexpr int SCORE_MASK = (1 << 8) - 1;
+    static constexpr int SCORE_SHIFT = 0;
+
+    // Not all bits of the hash are saved, however the hashing will still by unique
+    // by the Chinese Remainder Theorem as long as the check below passes.
+    static_assert(const_log2(NUM_TABLE_ENTRIES) + HASH_BITS > (BOARD_HEIGHT + 1) * BOARD_WIDTH);
 };
 
 
@@ -83,20 +86,6 @@ private:
 
     // Stats are only shared with other objects on the same thread.
     std::shared_ptr<Stats> stats;
-
-    // This table uses the Chinese Remainer Theorem to reduce the number of bits per entry.
-    // For this to work, the size of the table must be odd. Use a prime number for fewer collisions.
-    // Some example prime numbers:
-    //  * 131101     =  1 MB
-    //  * 1048583    =  8 MB
-    //  * 8388617    = 64 MB
-    //  * 134217757  =  1 GB
-    //  * 1073741827 =  8 GB
-    static const int NUM_ENTRIES = 1073741827;
-
-    // Not all bits of the hash are saved, however the hashing will still by unique
-    // by the Chinese Remainder Theorem as long as the check below passes.
-    static_assert(const_log2(NUM_ENTRIES) + Entry::HASH_BITS > (BOARD_HEIGHT + 1) * BOARD_WIDTH);
 };
 
 

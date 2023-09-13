@@ -8,37 +8,53 @@
 #include "settings.h"
 
 
-static const int BOARD_HEIGHT_1 = BOARD_HEIGHT + 1;
-static const int BOARD_HEIGHT_2 = BOARD_HEIGHT + 2;
+static constexpr int BOARD_HEIGHT_1 = BOARD_HEIGHT + 1;
+static constexpr int BOARD_HEIGHT_2 = BOARD_HEIGHT + 2;
 
 // 1 at each playable position of the first column.
-static const board FIRST_COLUMN = ((board) 1 << BOARD_HEIGHT) - 1;
+static constexpr board FIRST_COLUMN = ((board) 1 << BOARD_HEIGHT) - 1;
 
 // 1 at the playable position of the first column, plus the first column header.
-static const board FIRST_COLUMN_1 = ((board) 1 << BOARD_HEIGHT_1) - 1;
+static constexpr board FIRST_COLUMN_1 = ((board) 1 << BOARD_HEIGHT_1) - 1;
 
 // 1 at the bottom of each column.
-static const board BOTTOM_ROW = (((board) 1 << (BOARD_HEIGHT_1 * BOARD_WIDTH)) - 1)
+static constexpr board BOTTOM_ROW = (((board) 1 << (BOARD_HEIGHT_1 * BOARD_WIDTH)) - 1)
     / ((1 << BOARD_HEIGHT_1) - 1);
 
 // 1 in each column header.
-static const board COLUMN_HEADERS = BOTTOM_ROW << BOARD_HEIGHT;
+static constexpr board COLUMN_HEADERS = BOTTOM_ROW << BOARD_HEIGHT;
 
 // 1 on each playable posiition.
-static const board VALID_CELLS = COLUMN_HEADERS - BOTTOM_ROW;
+static constexpr board VALID_CELLS = COLUMN_HEADERS - BOTTOM_ROW;
 
 // 1 on each stone next to an edge in each possible directioin.
-static board border_stones_in_direction(int dir);
-static const board BORDER_0 = border_stones_in_direction(0);
-static const board BORDER_H0 = border_stones_in_direction(BOARD_HEIGHT);
-static const board BORDER_H1 = border_stones_in_direction(BOARD_HEIGHT_1);
-static const board BORDER_H2 = border_stones_in_direction(BOARD_HEIGHT_2);
+static constexpr board border_stones_in_direction(const int dir) {
+    board stones_right_of_border = (VALID_CELLS << dir) & VALID_CELLS;
+    board stones_left_of_border = (VALID_CELLS >> dir) & VALID_CELLS;
+
+    board center_stones = stones_right_of_border & stones_left_of_border;
+
+    return ~center_stones;
+}
+static constexpr board BORDER_1 = border_stones_in_direction(1);
+static constexpr board BORDER_H0 = border_stones_in_direction(BOARD_HEIGHT);
+static constexpr board BORDER_H1 = border_stones_in_direction(BOARD_HEIGHT_1);
+static constexpr board BORDER_H2 = border_stones_in_direction(BOARD_HEIGHT_2);
 
 // These patterns occur at the corners of the board when checking the diagonals.
 // All stones in these positions are dead.
-static board too_short(int dir);
-static const board TOO_SHORT_H0 = too_short(BOARD_HEIGHT);
-static const board TOO_SHORT_H2 = too_short(BOARD_HEIGHT_2);
+constexpr board too_short(const int dir) {
+    board pairs = (VALID_CELLS >> dir) & VALID_CELLS;
+    board triples = (pairs >> dir) & VALID_CELLS;
+    board quads = (triples >> dir) & VALID_CELLS;
+
+    board quads_shifted = quads | (quads << dir);
+    board possible_wins = quads_shifted | (quads_shifted << 2 * dir);
+    
+    return VALID_CELLS & ~possible_wins;
+}
+static constexpr board TOO_SHORT_H0 = too_short(BOARD_HEIGHT);
+static constexpr board TOO_SHORT_H2 = too_short(BOARD_HEIGHT_2);
 
 
 // Helper methods.
@@ -60,28 +76,6 @@ static board find_threats(const board b) {
         | find_threats_in_direction(b, BOARD_HEIGHT)
         | find_threats_in_direction(b, BOARD_HEIGHT_1)
         | find_threats_in_direction(b, BOARD_HEIGHT_2);
-}
-
-
-static board too_short(const int dir) {
-    board pairs = (VALID_CELLS >> dir) & VALID_CELLS;
-    board triples = (pairs >> dir) & VALID_CELLS;
-    board quads = (triples >> dir) & VALID_CELLS;
-
-    board quads_shifted = quads | (quads << dir);
-    board possible_wins = quads_shifted | (quads_shifted << 2 * dir);
-    
-    return VALID_CELLS & ~possible_wins;
-}
-
-
-static board border_stones_in_direction(const int dir) {
-    board stones_right_of_border = (VALID_CELLS << dir) & VALID_CELLS;
-    board stones_left_of_border = (VALID_CELLS >> dir) & VALID_CELLS;
-
-    board center_stones = stones_right_of_border & stones_left_of_border;
-
-    return ~center_stones;
 }
 
 
@@ -475,7 +469,7 @@ void Position::print_move_history() const {
 
 
 board Position::find_dead_stones() const {
-    return dead_stones_in_direction(b0, b1, 1, BORDER_0)
+    return dead_stones_in_direction(b0, b1, 1, BORDER_1)
         & (dead_stones_in_direction(b0, b1, BOARD_HEIGHT, BORDER_H0) | TOO_SHORT_H0)
         & dead_stones_in_direction(b0, b1, BOARD_HEIGHT_1, BORDER_H1)
         & (dead_stones_in_direction(b0, b1, BOARD_HEIGHT_2, BORDER_H2) | TOO_SHORT_H2);

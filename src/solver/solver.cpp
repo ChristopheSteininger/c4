@@ -21,7 +21,7 @@ Solver::~Solver() {
 }
 
 
-int Solver::solve_weak(Position &pos, bool verbose) {
+int Solver::solve_weak(Position &pos) {
     ZoneScoped;
 
     int result = pool.search(pos, -1, 1);
@@ -36,7 +36,7 @@ int Solver::solve_weak(Position &pos, bool verbose) {
 }
 
 
-int Solver::solve_strong(Position &pos, bool verbose) {
+int Solver::solve_strong(Position &pos) {
     ZoneScoped;
 
     return pool.search(pos, -INF_SCORE, INF_SCORE);
