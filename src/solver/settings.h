@@ -25,8 +25,8 @@ inline constexpr int NUM_TABLE_ENTRIES = 1073741827;
 
 
 // At depths higher than this value, the search will do a transposition table
-// lookup for each child in hopes of tightening bounds or finding a cut off.
-inline constexpr int ENHANCED_TABLE_CUTOFF_PLIES = BOARD_WIDTH * BOARD_HEIGHT - 15;
+// lookup for each child in hope of tightening bounds or finding a cut off.
+inline constexpr int ENHANCED_TABLE_CUTOFF_PLIES = BOARD_WIDTH * BOARD_HEIGHT - 12;
 
 
 #endif

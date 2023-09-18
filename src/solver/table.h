@@ -45,9 +45,9 @@ private:
     uint64_t data{0};
 
     // The constants below define where information is packed into each 64 bit entry.
-    static constexpr int HASH_BITS = 44;
+    static constexpr int HASH_BITS = 50;
     static constexpr uint64_t HASH_MASK = ((uint64_t) 1 << HASH_BITS) - 1;
-    static constexpr int HASH_SHIFT = 20;
+    static constexpr int HASH_SHIFT = 14;
 
     static constexpr int MOVE_MASK = (1 << 4) - 1;
     static constexpr int MOVE_SHIFT = 10;

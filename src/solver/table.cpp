@@ -39,7 +39,7 @@ Table::Table() {
     this->table = std::shared_ptr<Entry>(new Entry[NUM_TABLE_ENTRIES], std::default_delete<Entry[]>());
     this->stats = std::make_shared<Stats>();
 
-    TracyAlloc(table.get(), NUM_ENTRIES * sizeof(Entry));
+    TracyAlloc(table.get(), NUM_TABLE_ENTRIES * sizeof(Entry));
 
     clear();
 }

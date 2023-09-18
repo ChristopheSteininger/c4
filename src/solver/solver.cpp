@@ -13,7 +13,7 @@
 #include "table.h"
 
 
-static const int INF_SCORE = 10000;
+static constexpr int INF_SCORE = 10000;
 
 
 Solver::~Solver() {
