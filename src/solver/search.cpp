@@ -329,7 +329,7 @@ bool Search::static_search(Node &node, int col, int &alpha, int &beta) {
     // If the player can only move below the opponents threats, the player will lose.
     if (non_losing_moves == 0) {
         alpha = node.pos.score_loss();
-        beta = node.pos.score_loss();
+        beta = alpha;
         return true;
     }
 
@@ -339,14 +339,14 @@ bool Search::static_search(Node &node, int col, int &alpha, int &beta) {
         // If the opponent has multiple threats, then the game is lost.
         if (opponent_wins & (opponent_wins - 1)) {
             alpha = node.pos.score_loss();
-            beta = node.pos.score_loss();
+            beta = alpha;
             return true;
         }
 
         // If the opponent has two threats on top of each other, then the game is also lost.
         if (!(opponent_wins & non_losing_moves)) {
             alpha = node.pos.score_loss();
-            beta = node.pos.score_loss();
+            beta = alpha;
             return true;
         }
     }
@@ -356,6 +356,12 @@ bool Search::static_search(Node &node, int col, int &alpha, int &beta) {
     beta = std::min(beta, node.pos.score_win(2));
     if (alpha >= beta) {
         return true;
+    }
+
+    board useful_threats;
+    if (col != -1) {
+        board player_threats = node.pos.find_player_threats();
+        useful_threats = node.pos.find_useful_threats(opponent_threats, player_threats);
     }
 
     // Check if we have a forced move and if so, statically evaluate it.
@@ -401,7 +407,7 @@ bool Search::static_search(Node &node, int col, int &alpha, int &beta) {
     // At this point we know the move is complex and cannot be statically evaluated
     // so use a heuristic to guess the value of the move.
     if (col != -1) {
-        node.dynamic_score = heuristic(node.pos, opponent_threats, col);
+        node.dynamic_score = heuristic(node.pos, useful_threats, col);
     }
 
     return false;

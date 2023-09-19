@@ -64,6 +64,10 @@ public:
     board find_next_turn_threats(board threats) const;
     board find_next_next_turn_threats(board threats) const;
 
+    // A threat above an opponent's threat is useless and will never win the game.
+    inline board find_useful_threats(board player_threats, board opponent_threats) const
+        { return player_threats & ~(opponent_threats << 1); }
+
     // Returns a 1 in any cell in which either player can win this move.
     board wins_this_move(board threats) const;
 
