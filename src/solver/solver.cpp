@@ -13,9 +13,6 @@
 #include "table.h"
 
 
-static constexpr int INF_SCORE = 10000;
-
-
 Solver::~Solver() {
     // pool.print_pool_stats();
 }
@@ -39,7 +36,7 @@ int Solver::solve_weak(Position &pos) {
 int Solver::solve_strong(Position &pos) {
     ZoneScoped;
 
-    return pool.search(pos, -INF_SCORE, INF_SCORE);
+    return pool.search(pos, Position::MIN_SCORE, Position::MAX_SCORE);
 }
 
 

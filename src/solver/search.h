@@ -8,7 +8,7 @@
 
 
 // Search returning this value means another thread stopped the search.
-extern const int SEARCH_STOPPED;
+constexpr int SEARCH_STOPPED = -1000;
 
 
 struct Node {

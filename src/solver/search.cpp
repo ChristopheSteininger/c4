@@ -9,9 +9,7 @@
 #include "table.h"
 
 
-constexpr int INF_SCORE = 10000;
-
-constexpr int SEARCH_STOPPED = -1000;
+static constexpr int INF_SCORE = 10000;
 
 
 static int get_node_type(int value, int alpha, int beta) {
@@ -285,6 +283,7 @@ int Search::negamax(Node &node, int alpha, int beta, int move_offset) {
     assert(best_move_col != -1);
     assert(best_move_index != -1);
     assert(alpha >= value);
+    assert(value > -INF_SCORE);
 
     // Store the result in the transposition table.
     int type = get_node_type(value, original_alpha, original_beta);

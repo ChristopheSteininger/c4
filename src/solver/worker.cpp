@@ -24,17 +24,18 @@ void SearchResult::reset() {
 bool SearchResult::notify_result(int score) {
     std::unique_lock<std::mutex> lock(mutex);
 
-    if (!found.load()) {
-        this->score = score;
-        found.store(true);
-
-        lock.unlock();
-        cond.notify_all();
-
-        return true;
+    // Do nothing if another thread already found the solution.
+    if (found.load()) {
+        return false;
     }
 
-    return false;
+    this->score = score;
+    found.store(true);
+
+    lock.unlock();
+    cond.notify_all();
+
+    return true;
 }
 
 
@@ -168,7 +169,7 @@ void Worker::work() {
             is_searching = false;
 
             // Tell the main thread we've solved the position.
-            if (score != SEARCH_STOPPED) {
+            if (abs(score) != -SEARCH_STOPPED) {
                 bool was_first = result->notify_result(score);
 
                 if (was_first) {
