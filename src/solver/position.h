@@ -8,17 +8,24 @@
 #include "settings.h"
 
 
-/**
- * Functions to manipulate the board.
- **/
+static constexpr bool use_128bit = (BOARD_HEIGHT + 1) * BOARD_WIDTH > 64;
 
 // A number wide enough to store one bit for each cell on the board and the column headers.
-#if (BOARD_HEIGHT_1 * BOARD_WIDTH > 64)
-typedef __uint128_t board;
-#else
-typedef uint64_t board;
-#endif
-static_assert(BOARD_WIDTH * BOARD_HEIGHT <= 8 * sizeof(board));
+using board = std::conditional_t<use_128bit, __uint128_t, uint64_t>;
+static_assert(BOARD_WIDTH * (BOARD_HEIGHT + 1) <= 8 * sizeof(board));
+
+
+// Represents a single direction in which a player can win.
+enum class Direction {
+    VERTICAL          = 1,
+    HORIZONTAL        = BOARD_HEIGHT + 1,
+
+    // From top left to bottom right.
+    NEGATIVE_DIAGONAL = BOARD_HEIGHT,
+
+    // From bottom left to top right.
+    POSITIVE_DIAGONAL = BOARD_HEIGHT + 2
+};
 
 
 inline static constexpr int score_win_at(const int ply) {

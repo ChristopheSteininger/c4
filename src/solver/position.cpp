@@ -8,18 +8,28 @@
 #include "settings.h"
 
 
+static constexpr board set_ones(int n) {
+    // If n is equal to the number of bits in board, then 1 << n would overflow,
+    // so handle seperately here.
+    if (n == 8 * sizeof(board)) {
+        return ~((board) 0);
+    }
+
+    return ((board) 1 << n) - 1;
+}
+
+
 static constexpr int BOARD_HEIGHT_1 = BOARD_HEIGHT + 1;
-static constexpr int BOARD_HEIGHT_2 = BOARD_HEIGHT + 2;
 
 // 1 at each playable position of the first column.
-static constexpr board FIRST_COLUMN = ((board) 1 << BOARD_HEIGHT) - 1;
+static constexpr board FIRST_COLUMN = set_ones(BOARD_HEIGHT);
 
 // 1 at the playable position of the first column, plus the first column header.
-static constexpr board FIRST_COLUMN_1 = ((board) 1 << BOARD_HEIGHT_1) - 1;
+static constexpr board FIRST_COLUMN_1 = set_ones(BOARD_HEIGHT_1);
 
 // 1 at the bottom of each column.
-static constexpr board BOTTOM_ROW = (((board) 1 << (BOARD_HEIGHT_1 * BOARD_WIDTH)) - 1)
-    / ((1 << BOARD_HEIGHT_1) - 1);
+static constexpr board BOTTOM_ROW = set_ones(BOARD_HEIGHT_1 * BOARD_WIDTH)
+    / set_ones(BOARD_HEIGHT_1);
 
 // 1 in each column header.
 static constexpr board COLUMN_HEADERS = BOTTOM_ROW << BOARD_HEIGHT;
@@ -27,60 +37,68 @@ static constexpr board COLUMN_HEADERS = BOTTOM_ROW << BOARD_HEIGHT;
 // 1 on each playable posiition.
 static constexpr board VALID_CELLS = COLUMN_HEADERS - BOTTOM_ROW;
 
-// 1 on each stone next to an edge in each possible directioin.
-static constexpr board border_stones_in_direction(const int dir) {
-    board stones_right_of_border = (VALID_CELLS << dir) & VALID_CELLS;
-    board stones_left_of_border = (VALID_CELLS >> dir) & VALID_CELLS;
+// 1 on each stone next to an edge in each possible direction.
+static constexpr board border_stones_in_direction(const Direction dir) {
+    int shift = static_cast<int>(dir);
+
+    board stones_right_of_border = (VALID_CELLS << shift) & VALID_CELLS;
+    board stones_left_of_border = (VALID_CELLS >> shift) & VALID_CELLS;
 
     board center_stones = stones_right_of_border & stones_left_of_border;
 
     return ~center_stones;
 }
-static constexpr board BORDER_1 = border_stones_in_direction(1);
-static constexpr board BORDER_H0 = border_stones_in_direction(BOARD_HEIGHT);
-static constexpr board BORDER_H1 = border_stones_in_direction(BOARD_HEIGHT_1);
-static constexpr board BORDER_H2 = border_stones_in_direction(BOARD_HEIGHT_2);
+static constexpr board BORDER_VERTICAL          = border_stones_in_direction(Direction::VERTICAL);
+static constexpr board BORDER_HORIZONTAL        = border_stones_in_direction(Direction::HORIZONTAL);
+static constexpr board BORDER_NEGATIVE_DIAGONAL = border_stones_in_direction(Direction::NEGATIVE_DIAGONAL);
+static constexpr board BORDER_POSITIVE_DIAGONAL = border_stones_in_direction(Direction::POSITIVE_DIAGONAL);
 
 // These patterns occur at the corners of the board when checking the diagonals.
 // All stones in these positions are dead.
-constexpr board too_short(const int dir) {
-    board pairs = (VALID_CELLS >> dir) & VALID_CELLS;
-    board triples = (pairs >> dir) & VALID_CELLS;
-    board quads = (triples >> dir) & VALID_CELLS;
+static constexpr board too_short(const Direction dir) {
+    int shift = static_cast<int>(dir);
 
-    board quads_shifted = quads | (quads << dir);
-    board possible_wins = quads_shifted | (quads_shifted << 2 * dir);
+    board pairs = (VALID_CELLS >> shift) & VALID_CELLS;
+    board triples = (pairs >> shift) & VALID_CELLS;
+    board quads = (triples >> shift) & VALID_CELLS;
+
+    board quads_shifted = quads | (quads << shift);
+    board possible_wins = quads_shifted | (quads_shifted << 2 * shift);
     
     return VALID_CELLS & ~possible_wins;
 }
-static constexpr board TOO_SHORT_H0 = too_short(BOARD_HEIGHT);
-static constexpr board TOO_SHORT_H2 = too_short(BOARD_HEIGHT_2);
+static constexpr board TOO_SHORT_NEGATIVE_DIAGONAL = too_short(Direction::NEGATIVE_DIAGONAL);
+static constexpr board TOO_SHORT_POSITIVE_DIAGONAL = too_short(Direction::POSITIVE_DIAGONAL);
 
 
 // Helper methods.
 
 
-static board find_threats_in_direction(const board b, const int dir) {
-    board doubles = b & (b << dir);
-    board triples = doubles & (doubles << dir);
-    
-    return ((b >> dir) & (doubles << dir))
-        | ((b << dir) & (doubles >> 2 * dir))
-        | (triples << dir)
-        | (triples >> 3 * dir);
+static board find_threats_in_direction(const board b, const Direction dir) {
+    int shift = static_cast<int>(dir);
+
+    board doubles = b & (b << shift);
+    board triples = doubles & (doubles << shift);
+
+    return ((b >> shift) & (doubles << shift))
+        | ((b << shift) & (doubles >> 2 * shift))
+        | (triples << shift)
+        | (triples >> 3 * shift);
 }
 
 
 static board find_threats(const board b) {
-    return find_threats_in_direction(b, 1)
-        | find_threats_in_direction(b, BOARD_HEIGHT)
-        | find_threats_in_direction(b, BOARD_HEIGHT_1)
-        | find_threats_in_direction(b, BOARD_HEIGHT_2);
+    return find_threats_in_direction(b, Direction::VERTICAL)
+        | find_threats_in_direction(b, Direction::HORIZONTAL)
+        | find_threats_in_direction(b, Direction::NEGATIVE_DIAGONAL)
+        | find_threats_in_direction(b, Direction::POSITIVE_DIAGONAL);
 }
 
 
-static board dead_stones_in_direction(board b0, board b1, int dir, board border) {
+static board dead_stones_in_direction(const board b0, const board b1, const Direction dir, const board border) {
     ZoneScoped;
+
+    int shift = static_cast<int>(dir);
 
     board played_positions = b0 | b1;
     board empty_positions = VALID_CELLS & ~played_positions;
@@ -98,21 +116,21 @@ static board dead_stones_in_direction(board b0, board b1, int dir, board border)
     // Detect the patterns #. and .#
     //                     ^       ^
     board uncovered
-        = ((empty_positions >> dir) & played_positions)
-        | ((empty_positions << dir) & played_positions);
+        = ((empty_positions >> shift) & played_positions)
+        | ((empty_positions << shift) & played_positions);
     
     // Detect the patterns ##. and .##
     //                     ^         ^
     board covered_by_1
-        = ((uncovered >> dir) & played_positions)
-        | ((uncovered << dir) & played_positions);
+        = ((uncovered >> shift) & played_positions)
+        | ((uncovered << shift) & played_positions);
 
     // Detect the patterns #XX. and .XX#
     //                     ^           ^
-    board pairs = ((b0 >> dir) & b0) | ((b1 >> dir) & b1);
+    board pairs = ((b0 >> shift) & b0) | ((b1 >> shift) & b1);
     board covered_by_pair
-        = ((covered_by_1 >> dir) & (pairs >> dir))
-        | ((covered_by_1 << dir) & (pairs << 2 * dir));
+        = ((covered_by_1 >> shift) & (pairs >> shift))
+        | ((covered_by_1 << shift) & (pairs << 2 * shift));
     
     // Use the previous patterns to find all stones covered by
     // enough other stones that we know these are dead stones.
@@ -124,51 +142,54 @@ static board dead_stones_in_direction(board b0, board b1, int dir, board border)
     // Detect the patterns O_X and X_O
     //                      ^       ^
     board between
-        = ((b0 >> dir) & (b1 << dir))
-        | ((b1 >> dir) & (b0 << dir));
+        = ((b0 >> shift) & (b1 << shift))
+        | ((b1 >> shift) & (b0 << shift));
 
     // Detect the patterns |#X_O and O_X#|
     //                      ^           ^
     board pinned
         = border
         & played_positions
-        & ((between >> 2 * dir) | (between << 2 * dir));
+        & ((between >> 2 * shift) | (between << 2 * shift));
 
     return covered_stones | pinned;
 }
 
 
-static board find_winning_stones_in_direction(const board b, const int dir) {
-    board pairs = b & (b << 2 * dir);
-    board quads = pairs & (pairs << dir);
+static board find_winning_stones_in_direction(const board b, const Direction dir) {
+    int shift = static_cast<int>(dir);
 
-    board winning_pairs = quads | (quads >> dir);
+    board pairs = b & (b << 2 * shift);
+    board quads = pairs & (pairs << shift);
 
-    return winning_pairs | (winning_pairs >> 2 * dir);
+    board winning_pairs = quads | (quads >> shift);
+
+    return winning_pairs | (winning_pairs >> 2 * shift);
 }
 
 
 // Returns a 1 in any cell which is part of a 4 in a row.
 static board find_winning_stones(const board b) {
-    return find_winning_stones_in_direction(b, 1)
-        | find_winning_stones_in_direction(b, BOARD_HEIGHT)
-        | find_winning_stones_in_direction(b, BOARD_HEIGHT_1)
-        | find_winning_stones_in_direction(b, BOARD_HEIGHT_2);
+    return find_winning_stones_in_direction(b, Direction::VERTICAL)
+        | find_winning_stones_in_direction(b, Direction::HORIZONTAL)
+        | find_winning_stones_in_direction(b, Direction::NEGATIVE_DIAGONAL)
+        | find_winning_stones_in_direction(b, Direction::POSITIVE_DIAGONAL);
 }
 
 
-static board has_won_in_direction(const board b, const int dir) {
-    board pairs = b & (b << 2 * dir);
-    
-    return pairs & (pairs << dir);
+static board has_won_in_direction(const board b, const Direction dir) {
+    int shift = static_cast<int>(dir);
+
+    board pairs = b & (b << 2 * shift);
+    return pairs & (pairs << shift);
 }
 
 
 static board has_won(const board b) {
-    return has_won_in_direction(b, 1)
-        | has_won_in_direction(b, BOARD_HEIGHT)
-        | has_won_in_direction(b, BOARD_HEIGHT_1)
-        | has_won_in_direction(b, BOARD_HEIGHT_2);
+    return has_won_in_direction(b, Direction::VERTICAL)
+        | has_won_in_direction(b, Direction::HORIZONTAL)
+        | has_won_in_direction(b, Direction::NEGATIVE_DIAGONAL)
+        | has_won_in_direction(b, Direction::POSITIVE_DIAGONAL);
 }
 
 
@@ -469,10 +490,10 @@ void Position::print_move_history() const {
 
 
 board Position::find_dead_stones() const {
-    return dead_stones_in_direction(b0, b1, 1, BORDER_1)
-        & (dead_stones_in_direction(b0, b1, BOARD_HEIGHT, BORDER_H0) | TOO_SHORT_H0)
-        & dead_stones_in_direction(b0, b1, BOARD_HEIGHT_1, BORDER_H1)
-        & (dead_stones_in_direction(b0, b1, BOARD_HEIGHT_2, BORDER_H2) | TOO_SHORT_H2);
+    return dead_stones_in_direction(b0, b1, Direction::VERTICAL, BORDER_VERTICAL)
+        & (dead_stones_in_direction(b0, b1, Direction::NEGATIVE_DIAGONAL, BORDER_NEGATIVE_DIAGONAL) | TOO_SHORT_NEGATIVE_DIAGONAL)
+        & dead_stones_in_direction(b0, b1, Direction::HORIZONTAL, BORDER_HORIZONTAL)
+        & (dead_stones_in_direction(b0, b1, Direction::POSITIVE_DIAGONAL, BORDER_POSITIVE_DIAGONAL) | TOO_SHORT_POSITIVE_DIAGONAL);
 }
 
 
