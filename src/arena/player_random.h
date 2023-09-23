@@ -3,17 +3,15 @@
 
 #include <random>
 
+#include "../solver/position.h"
 #include "player.h"
 
-#include "../solver/position.h"
-
-
 class PlayerRandom : public Player {
-public:
+   public:
     PlayerRandom();
     int move(Position &pos) override;
 
-private:
+   private:
     std::mt19937 gen;
     std::uniform_int_distribution<> dis;
 };

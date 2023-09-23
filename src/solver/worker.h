@@ -1,28 +1,26 @@
 #ifndef WORKER_H_
 #define WORKER_H_
 
-
-#include <thread>
-#include <memory>
-#include <mutex>
-#include <condition_variable>
 #include <atomic>
 #include <chrono>
+#include <condition_variable>
+#include <memory>
+#include <mutex>
+#include <thread>
 
 #include "Tracy.hpp"
-
+#include "position.h"
 #include "search.h"
 #include "stats.h"
 
-
 // A thread safe wrapper for the result of a search.
 class SearchResult {
-public:
+   public:
     void reset();
     bool notify_result(int score);
     int wait_for_result();
 
-private:
+   private:
     int score{SEARCH_STOPPED};
     std::atomic<bool> found{false};
 
@@ -30,9 +28,8 @@ private:
     std::condition_variable cond;
 };
 
-
 class Worker {
-public:
+   public:
     Worker(int id, const Table &parent_table, const std::shared_ptr<SearchResult> result);
     ~Worker();
 
@@ -43,7 +40,7 @@ public:
     void print_thread_stats();
     const Stats *get_stats() const { return stats.get(); }
 
-private:
+   private:
     int id;
     std::thread thread;
 
@@ -65,8 +62,8 @@ private:
     std::mutex mutex;
     std::condition_variable cond;
 
-    bool is_searching { false };
-    bool is_exiting { false };
+    bool is_searching{false};
+    bool is_exiting{false};
 
     Position pos;
     int alpha;
@@ -84,6 +81,5 @@ private:
     void work();
     int run_search();
 };
-
 
 #endif

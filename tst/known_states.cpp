@@ -1,30 +1,28 @@
+#include "known_states.h"
+
 #include <stdio.h>
 #include <string.h>
-#include <vector>
+
 #include <chrono>
+#include <vector>
 
-#include "Tracy.hpp"
-
-#include "known_states.h"
-#include "minunit.h"
-#include "../src/solver/settings.h"
 #include "../src/solver/position.h"
+#include "../src/solver/settings.h"
 #include "../src/solver/solver.h"
 #include "../src/solver/table.h"
-
+#include "Tracy.hpp"
+#include "minunit.h"
 
 struct test_data {
     Position pos;
     int expected;
 };
 
-
 enum TestType {
     WEAK,
     STRONG,
     SELF_PLAY,
 };
-
 
 int sign(int x) {
     if (x < 0) {
@@ -38,7 +36,6 @@ int sign(int x) {
     return 0;
 }
 
-
 struct test_data read_line(char *line) {
     Position pos = Position();
 
@@ -50,21 +47,17 @@ struct test_data read_line(char *line) {
 
     int expected = atoi(line + i);
 
-    struct test_data result = {
-        .pos = pos,
-        .expected = expected
-    };
+    struct test_data result = {.pos = pos, .expected = expected};
 
     return result;
 }
-
 
 bool weak_test(Solver &solver, struct test_data test_data) {
     ZoneScoped;
 
     int actual = solver.solve_weak(test_data.pos);
     int expected = sign(test_data.expected);
-    
+
     if (expected != actual) {
         printf("\nThe position below has a weak score %d, but got %d.\n", expected, actual);
         test_data.pos.printb();
@@ -74,22 +67,19 @@ bool weak_test(Solver &solver, struct test_data test_data) {
     return true;
 }
 
-
 bool strong_test(Solver &solver, struct test_data test_data) {
     ZoneScoped;
 
     int actual = solver.solve_strong(test_data.pos);
-    
+
     if (test_data.expected != actual) {
-        printf("\nThe position below has a strong score %d, but got %d.\n",
-            test_data.expected, actual);
+        printf("\nThe position below has a strong score %d, but got %d.\n", test_data.expected, actual);
         test_data.pos.printb();
 
         return false;
     }
     return true;
 }
-
 
 // Tests that if playing a game, the game proceeds as expected. The results of
 // solve_strong(), get_num_moves_prediction(), and get_principal_variation()
@@ -107,7 +97,7 @@ bool self_play_test(Solver &solver, struct test_data test_data) {
     // The length of the PV must match the number of expected moves.
     if (expected_num_moves != num_pv_moves + pos.num_moves()) {
         printf("PV length does not match expected num moves. Expected num moves was %d but got %d from PV.\n",
-            expected_num_moves, num_pv_moves + pos.num_moves());
+               expected_num_moves, num_pv_moves + pos.num_moves());
         pos.printb();
 
         return false;
@@ -131,7 +121,7 @@ bool self_play_test(Solver &solver, struct test_data test_data) {
         if (score != expected_score) {
             printf("Solver changed score during play. Expected %d but got %d.\n", expected_score, score);
             pos.printb();
-            
+
             return false;
         }
 
@@ -141,24 +131,24 @@ bool self_play_test(Solver &solver, struct test_data test_data) {
 
     // Fail if the game ended earlier or later than predicted.
     if (expected_num_moves != pos.num_moves()) {
-        printf("Game ended on unexpected move. Expected move count was %d but got %d.\n", expected_num_moves, pos.num_moves());
+        printf("Game ended on unexpected move. Expected move count was %d but got %d.\n", expected_num_moves,
+               pos.num_moves());
         pos.printb();
-        
+
         return false;
     }
 
     // Fail if the game ended earlier or later than predicted.
     if (expected_num_moves != moves_played + test_data.pos.num_moves()) {
-        printf("Game ended on unexpected move. Expected move count was %d but moved %d times.\n",
-            expected_num_moves, moves_played + test_data.pos.num_moves());
+        printf("Game ended on unexpected move. Expected move count was %d but moved %d times.\n", expected_num_moves,
+               moves_played + test_data.pos.num_moves());
         pos.printb();
-        
+
         return false;
     }
 
     return true;
 }
-
 
 bool run_test(Solver &solver, struct test_data test_data, TestType type) {
     switch (type) {
@@ -175,7 +165,6 @@ bool run_test(Solver &solver, struct test_data test_data, TestType type) {
     printf("Unknown test type.\n");
     return false;
 }
-
 
 bool test_with_file(const char *filename, TestType type) {
     ZoneScoped;
@@ -210,14 +199,13 @@ bool test_with_file(const char *filename, TestType type) {
 
         // Increment before we print the update.
         num_tests++;
-        printf("\r\t%-30s %-15s %'15.0f %'15.0f %14.1f%% %'15.2f %'15d",
-            filename,
-            (type == 0) ? "Weak" : (type == 1) ? "Strong" : "Self Play",
-            (double) stats.get_num_nodes() / num_tests,
-            (double) stats.get_num_nodes() / total_run_time_ms,
-            (double) stats.get_num_best_moves_guessed() * 100 / stats.get_num_interior_nodes(),
-            (double) total_run_time_ms / 1000,
-            num_tests);
+        printf("\r\t%-30s %-15s %'15.0f %'15.0f %14.1f%% %'15.2f %'15d", filename,
+               (type == 0)   ? "Weak"
+               : (type == 1) ? "Strong"
+                             : "Self Play",
+               (double)stats.get_num_nodes() / num_tests, (double)stats.get_num_nodes() / total_run_time_ms,
+               (double)stats.get_num_best_moves_guessed() * 100 / stats.get_num_interior_nodes(),
+               (double)total_run_time_ms / 1000, num_tests);
         fflush(stdout);
     }
 
@@ -227,22 +215,17 @@ bool test_with_file(const char *filename, TestType type) {
     return true;
 }
 
-
 const char *all_known_states_tests() {
     mu_assert("Board must be 7 wide.", BOARD_WIDTH == 7);
     mu_assert("Board must be 6 high.", BOARD_HEIGHT == 6);
 
     printf("Running known state tests . . .\n");
-    printf("\t%-30s %-15s %15s %15s %15s %15s %15s\n", "Test", "Type", "Mean nodes", "Nodes per ms",
-        "Guess rate", "Time (s)", "Trials");
+    printf("\t%-30s %-15s %15s %15s %15s %15s %15s\n", "Test", "Type", "Mean nodes", "Nodes per ms", "Guess rate",
+           "Time (s)", "Trials");
 
     const char *test_files[] = {
-        "tst/data/endgame_L1.txt",
-        "tst/data/midgame_L1.txt",
-        "tst/data/midgame_L2.txt",
-        "tst/data/opening_L1.txt",
-        "tst/data/opening_L2.txt",
-        "tst/data/opening_L3.txt",
+        "tst/data/endgame_L1.txt", "tst/data/midgame_L1.txt", "tst/data/midgame_L2.txt",
+        "tst/data/opening_L1.txt", "tst/data/opening_L2.txt", "tst/data/opening_L3.txt",
     };
 
     for (int i = 0; i < 6; i++) {

@@ -1,17 +1,16 @@
 #ifndef ARENA_H_
 #define ARENA_H_
 
-#include "player.h"
 #include "../solver/position.h"
-
+#include "player.h"
 
 class Arena {
-public:
+   public:
     Arena(Player *, Player *);
 
     void play(int);
 
-private:
+   private:
     Player *p0;
     Player *p1;
 
@@ -23,6 +22,5 @@ private:
 
     int play_game(Position &pos, Player *cur, Player *next);
 };
-
 
 #endif

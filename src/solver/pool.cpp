@@ -1,12 +1,12 @@
-#include <cassert>
-#include <algorithm>
-#include <vector>
-#include <cstdio>
-
 #include "pool.h"
-#include "table.h"
-#include "settings.h"
 
+#include <algorithm>
+#include <cassert>
+#include <cstdio>
+#include <vector>
+
+#include "settings.h"
+#include "table.h"
 
 Pool::Pool(const Table &parent_table) {
     result = std::make_shared<SearchResult>();
@@ -16,13 +16,11 @@ Pool::Pool(const Table &parent_table) {
     }
 }
 
-
 Pool::~Pool() {
     // Ensure each worker is idle so the threads can be joined.
     stop_all();
     wait_all();
 }
-
 
 int Pool::search(Position &pos, int alpha, int beta) {
     // Check if the game is already over before launching the full search.
@@ -50,16 +48,12 @@ int Pool::search(Position &pos, int alpha, int beta) {
 
     // Spread out the workers over the input bounds.
     double window = min;
-    double window_step = (double) (max - min) / workers.size();
+    double window_step = (double)(max - min) / workers.size();
     for (int i = 0; i < workers.size(); i++) {
-        int move_offset = (window_step < 1)
-            ? (i % 2) * BOARD_WIDTH * BOARD_WIDTH
-                + (i % 3) * BOARD_WIDTH
-                + (i % 5)
-            : (i % 3) * BOARD_WIDTH
-                + (i % 5);
+        int move_offset = (window_step < 1) ? (i % 2) * BOARD_WIDTH * BOARD_WIDTH + (i % 3) * BOARD_WIDTH + (i % 5)
+                                            : (i % 3) * BOARD_WIDTH + (i % 5);
 
-        workers[i]->start(pos, min, max, (int) window, (i % 3) + 1, move_offset);
+        workers[i]->start(pos, min, max, (int)window, (i % 3) + 1, move_offset);
         window += window_step;
     }
 
@@ -75,7 +69,6 @@ int Pool::search(Position &pos, int alpha, int beta) {
     return score;
 }
 
-
 void Pool::print_pool_stats() const {
     printf("%-5s %10s %10s\n", "ID", "Active", "First");
     for (const std::unique_ptr<Worker> &worker : workers) {
@@ -83,20 +76,17 @@ void Pool::print_pool_stats() const {
     }
 }
 
-
 void Pool::wait_all() {
     for (const std::unique_ptr<Worker> &worker : workers) {
         worker->wait();
     }
 }
 
-
 void Pool::stop_all() {
     for (const std::unique_ptr<Worker> &worker : workers) {
         worker->stop();
     }
 }
-
 
 void Pool::merge_stats() {
     for (const std::unique_ptr<Worker> &worker : workers) {

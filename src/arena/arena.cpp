@@ -1,14 +1,12 @@
-#include <iostream>
-#include <cassert>
-
 #include "arena.h"
 
+#include <cassert>
+#include <iostream>
 
 Arena::Arena(Player *p0, Player *p1) {
     this->p0 = p0;
     this->p1 = p1;
 }
-
 
 void Arena::play(int games) {
     for (int i = 0; i < games; i++) {
@@ -18,7 +16,7 @@ void Arena::play(int games) {
         pos.move(3);
         pos.move(3);
         pos.move(3);
-        
+
         int result = play_game(pos, p0, p1);
 
         total_games++;
@@ -32,21 +30,15 @@ void Arena::play(int games) {
             assert(0);
         }
 
-        printf("\r\tPlayer 1: Win rate = %3.1f%% (%5d), loss rate = %3.1f%% (%5d), draw rate = %3.1f%% (%5d), games = %5d",
-            p0_wins * 100.0 / total_games,
-            p0_wins,
-            p1_wins * 100.0 / total_games,
-            p1_wins,
-            draws * 100.0 / total_games,
-            draws,
-            total_games
-        );
+        printf(
+            "\r\tPlayer 1: Win rate = %3.1f%% (%5d), loss rate = %3.1f%% (%5d), draw rate = %3.1f%% (%5d), games = %5d",
+            p0_wins * 100.0 / total_games, p0_wins, p1_wins * 100.0 / total_games, p1_wins, draws * 100.0 / total_games,
+            draws, total_games);
         fflush(stdout);
     }
 
     std::cout << std::endl;
 }
-
 
 int Arena::play_game(Position &pos, Player *cur, Player *next) {
     int col = cur->move(pos);

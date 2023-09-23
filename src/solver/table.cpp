@@ -1,39 +1,29 @@
-#include <stdexcept>
-#include <cassert>
+#include "table.h"
+
 #include <algorithm>
+#include <cassert>
 #include <cmath>
-#include <sstream>
 #include <iomanip>
 #include <memory>
+#include <sstream>
+#include <stdexcept>
 
 #include "Tracy.hpp"
-
-#include "table.h"
-#include "settings.h"
 #include "position.h"
-
+#include "settings.h"
 
 const int TYPE_MISS = 0;
 const int TYPE_UPPER = 1;
 const int TYPE_LOWER = 2;
 const int TYPE_EXACT = 3;
 
-
-Entry::Entry() {
-    data = 0;
-}
-
+Entry::Entry() { data = 0; }
 
 Entry::Entry(board hash, int move, int type, int score) {
     // Only the partial hash needs to be stored. This is equivalent to
     // hash % 2^HASH_BITS.
-    data
-        = (hash << HASH_SHIFT)
-        | (move << MOVE_SHIFT)
-        | (type << TYPE_SHIFT)
-        | (score << SCORE_SHIFT);
+    data = (hash << HASH_SHIFT) | (move << MOVE_SHIFT) | (type << TYPE_SHIFT) | (score << SCORE_SHIFT);
 }
-
 
 Table::Table() {
     this->table = std::shared_ptr<Entry>(new Entry[NUM_TABLE_ENTRIES], std::default_delete<Entry[]>());
@@ -44,23 +34,17 @@ Table::Table() {
     clear();
 }
 
-
 Table::Table(const Table &parent, const std::shared_ptr<Stats> stats) {
     this->table = parent.table;
     this->stats = stats;
 }
 
-
-Table::~Table() {
-    TracyFree(table.get());
-}
-
+Table::~Table() { TracyFree(table.get()); }
 
 void Table::clear() {
     Entry empty;
     std::fill(table.get(), table.get() + NUM_TABLE_ENTRIES, empty);
 }
-
 
 void Table::prefetch(board hash) {
     ZoneScoped;
@@ -72,7 +56,6 @@ void Table::prefetch(board hash) {
     // locality = persistance in cache.
     __builtin_prefetch(table.get() + index, 1, 3);
 }
-
 
 bool Table::get(board hash, bool is_mirrored, int &move, int &type, int &score) {
     ZoneScoped;
@@ -112,7 +95,6 @@ bool Table::get(board hash, bool is_mirrored, int &move, int &type, int &score) 
     return true;
 }
 
-
 void Table::put(board hash, bool is_mirrored, int move, int type, int score) {
     ZoneScoped;
 
@@ -141,7 +123,6 @@ void Table::put(board hash, bool is_mirrored, int move, int type, int score) {
     table[index] = Entry(hash, move, type, score - Position::MIN_SCORE);
 }
 
-
 std::string Table::get_table_size() {
     std::stringstream result;
     result << std::fixed << std::setprecision(2);
@@ -160,6 +141,6 @@ std::string Table::get_table_size() {
     } else {
         result << gb << " GB";
     }
-    
+
     return result.str();
 }

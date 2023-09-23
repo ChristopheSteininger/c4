@@ -4,8 +4,8 @@
 #include "../solver/position.h"
 
 class Player {
-public:
-    virtual ~Player() {};
+   public:
+    virtual ~Player(){};
 
     virtual int move(Position &pos) = 0;
 };

@@ -1,16 +1,14 @@
-#include <cassert>
+#include "search.h"
+
 #include <algorithm>
+#include <cassert>
 
 #include "Tracy.hpp"
-
-#include "search.h"
-#include "settings.h"
 #include "position.h"
+#include "settings.h"
 #include "table.h"
 
-
 static constexpr int INF_SCORE = 10000;
-
 
 static int get_node_type(int value, int alpha, int beta) {
     if (value <= alpha) {
@@ -24,7 +22,6 @@ static int get_node_type(int value, int alpha, int beta) {
     return TYPE_EXACT;
 }
 
-
 static int count_bits(board b) {
     int result;
     for (result = 0; b; result++) {
@@ -33,7 +30,6 @@ static int count_bits(board b) {
 
     return result;
 }
-
 
 static void rotate_moves(int *moves, int num_moves, int offset, bool has_table_move) {
     int *first_move = moves;
@@ -46,15 +42,11 @@ static void rotate_moves(int *moves, int num_moves, int offset, bool has_table_m
     }
 
     if (num_rotate_moves > 1) {
-        std::rotate(
-            first_move,
-            first_move + (offset % num_rotate_moves),
-            first_move + num_rotate_moves);
+        std::rotate(first_move, first_move + (offset % num_rotate_moves), first_move + num_rotate_moves);
     }
 }
 
-
-static void sort_moves(Node *children, int num_moves, int *moves, int  offset, int table_move) {
+static void sort_moves(Node *children, int num_moves, int *moves, int offset, int table_move) {
     assert(num_moves > 0);
 
     // A move from the table always goes first.
@@ -64,7 +56,7 @@ static void sort_moves(Node *children, int num_moves, int *moves, int  offset, i
 
     // Sort moves according to score, high to low.
     std::sort(moves, moves + num_moves,
-       [&children](int a, int b) { return children[a].dynamic_score > children[b].dynamic_score; });
+              [&children](int a, int b) { return children[a].dynamic_score > children[b].dynamic_score; });
 
     // Rotate any non table moves to help threads desync.
     if (offset != 0) {
@@ -72,43 +64,29 @@ static void sort_moves(Node *children, int num_moves, int *moves, int  offset, i
     }
 }
 
-
 static float heuristic(Position &pos, board threats, int col) {
     int num_threats = count_bits(threats);
     int num_next_threats = count_bits(pos.find_next_turn_threats(threats));
     int num_next_next_threats = count_bits(pos.find_next_next_turn_threats(threats));
-    float center_score = (float) std::min(col, BOARD_WIDTH - col - 1) / BOARD_WIDTH;
+    float center_score = (float)std::min(col, BOARD_WIDTH - col - 1) / BOARD_WIDTH;
 
-    return 1.0 * num_next_threats
-        + 0.5 * num_next_next_threats
-        + 0.3 * num_threats
-        + 0.1 * center_score;
+    return 1.0 * num_next_threats + 0.5 * num_next_next_threats + 0.3 * num_threats + 0.1 * center_score;
 }
-
 
 inline static void invert(int &alpha, int &beta) {
     alpha = -alpha;
     beta = -beta;
 }
 
-
 // Create our own copy of the transposition table. This table will use the same
 // underlying storage as parent_table so this thread can benefit from the work
 // other threads have saved in the table.
 Search::Search(const Table &parent_table, const std::shared_ptr<Stats> stats)
-    : table(parent_table, stats), stats(stats) {
-}
+    : table(parent_table, stats), stats(stats) {}
 
+void Search::start() { stop_search = false; }
 
-void Search::start() {
-    stop_search = false;
-}
-
-
-void Search::stop() {
-    stop_search = true;
-}
-
+void Search::stop() { stop_search = true; }
 
 int Search::search(Position &pos, int alpha, int beta, int move_offset) {
     assert(alpha < beta);
@@ -128,7 +106,6 @@ int Search::search(Position &pos, int alpha, int beta, int move_offset) {
         return -negamax(child, -beta, -alpha, move_offset);
     }
 }
-
 
 int Search::negamax(Node &node, int alpha, int beta, int move_offset) {
     ZoneScoped;
@@ -261,8 +238,8 @@ int Search::negamax(Node &node, int alpha, int beta, int move_offset) {
         }
 
         int child_score = node.pos.is_same_player(children[col].pos)
-            ? negamax(children[col], alpha, beta, child_move_offset)
-            : -negamax(children[col], -beta, -alpha, child_move_offset);
+                              ? negamax(children[col], alpha, beta, child_move_offset)
+                              : -negamax(children[col], -beta, -alpha, child_move_offset);
 
         // If the child aborted the search, propagate the signal upwards.
         if (abs(child_score) == -SEARCH_STOPPED) {
@@ -300,7 +277,6 @@ int Search::negamax(Node &node, int alpha, int beta, int move_offset) {
 
     return value;
 }
-
 
 bool Search::static_search(Node &node, int col, int &alpha, int &beta) {
     ZoneScoped;
@@ -411,7 +387,6 @@ bool Search::static_search(Node &node, int col, int &alpha, int &beta) {
 
     return false;
 }
-
 
 board Search::get_forced_move(Position &pos, board opponent_wins, board non_losing_moves) {
     // A move is forced if the opponent could win next turn.

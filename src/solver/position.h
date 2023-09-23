@@ -1,12 +1,11 @@
 #ifndef BOARD_H_
 #define BOARD_H_
 
-#include <cstdint>
 #include <algorithm>
+#include <cstdint>
 #include <vector>
 
 #include "settings.h"
-
 
 static constexpr bool use_128bit = (BOARD_HEIGHT + 1) * BOARD_WIDTH > 64;
 
@@ -14,11 +13,10 @@ static constexpr bool use_128bit = (BOARD_HEIGHT + 1) * BOARD_WIDTH > 64;
 using board = std::conditional_t<use_128bit, __uint128_t, uint64_t>;
 static_assert(BOARD_WIDTH * (BOARD_HEIGHT + 1) <= 8 * sizeof(board));
 
-
 // Represents a single direction in which a player can win.
 enum class Direction {
-    VERTICAL          = 1,
-    HORIZONTAL        = BOARD_HEIGHT + 1,
+    VERTICAL = 1,
+    HORIZONTAL = BOARD_HEIGHT + 1,
 
     // From top left to bottom right.
     NEGATIVE_DIAGONAL = BOARD_HEIGHT,
@@ -27,18 +25,12 @@ enum class Direction {
     POSITIVE_DIAGONAL = BOARD_HEIGHT + 2
 };
 
+inline static constexpr int score_win_at(const int ply) { return (BOARD_WIDTH * BOARD_HEIGHT - ply + 1) / 2; }
 
-inline static constexpr int score_win_at(const int ply) {
-    return (BOARD_WIDTH * BOARD_HEIGHT - ply + 1) / 2;
-}
-
-inline static constexpr int score_loss_at(const int ply) {
-    return -score_win_at(ply + 1);
-}
-
+inline static constexpr int score_loss_at(const int ply) { return -score_win_at(ply + 1); }
 
 class Position {
-public:
+   public:
     // Returns the first board after a move on top of the given column.
     board move(int col);
 
@@ -72,8 +64,9 @@ public:
     board find_next_next_turn_threats(board threats) const;
 
     // A threat above an opponent's threat is useless and will never win the game.
-    inline board find_useful_threats(board player_threats, board opponent_threats) const
-        { return player_threats & ~(opponent_threats << 1); }
+    inline board find_useful_threats(board player_threats, board opponent_threats) const {
+        return player_threats & ~(opponent_threats << 1);
+    }
 
     // Returns a 1 in any cell in which either player can win this move.
     board wins_this_move(board threats) const;
@@ -116,7 +109,7 @@ public:
     static constexpr int MAX_SCORE = score_win_at(7);
     static constexpr int MIN_SCORE = score_loss_at(7);
 
-private:
+   private:
     // The current and next players position.
     board b0 = 0;
     board b1 = 0;
@@ -138,6 +131,5 @@ private:
     // Returns true only if the board has valid column headers.
     bool is_board_valid() const;
 };
-
 
 #endif

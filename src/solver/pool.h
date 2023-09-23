@@ -1,18 +1,16 @@
 #ifndef POOL_H_
 #define POOL_H_
 
-
+#include <memory>
 #include <thread>
 #include <vector>
-#include <memory>
 
-#include "worker.h"
 #include "position.h"
 #include "table.h"
-
+#include "worker.h"
 
 class Pool {
-public:
+   public:
     Pool(const Table &parent_table);
     ~Pool();
 
@@ -21,7 +19,7 @@ public:
     const Stats &get_merged_stats() const { return merged_stats; };
     void print_pool_stats() const;
 
-private:
+   private:
     std::vector<std::unique_ptr<Worker>> workers;
     std::shared_ptr<SearchResult> result{};
 
@@ -31,6 +29,5 @@ private:
     void stop_all();
     void merge_stats();
 };
-
 
 #endif

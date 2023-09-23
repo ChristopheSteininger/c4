@@ -1,17 +1,15 @@
 #ifndef PLAYER_SOLVER_H_
 #define PLAYER_SOLVER_H_
 
+#include "../solver/position.h"
+#include "../solver/solver.h"
 #include "player.h"
 
-#include "../solver/solver.h"
-#include "../solver/position.h"
-
-
 class PlayerSolver : public Player {
-public:
+   public:
     int move(Position &pos) override;
 
-private:
+   private:
     Solver solver = Solver();
 };
 

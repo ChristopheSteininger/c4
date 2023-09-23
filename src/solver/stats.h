@@ -1,17 +1,14 @@
 #ifndef STATS_H_
 #define STATS_H_
 
-
 #include <cassert>
-
 
 extern const int TYPE_LOWER;
 extern const int TYPE_UPPER;
 extern const int TYPE_EXACT;
 
-
 class Stats {
-public:
+   public:
     void merge(const Stats &other);
     void reset();
 
@@ -25,13 +22,23 @@ public:
     unsigned long get_num_interior_nodes() const { return num_exact_nodes + num_lower_nodes + num_upper_nodes; }
 
     // Lookup stats getters.
-    double get_hit_rate() const { return (double) num_lookup_success / (num_lookup_success + num_lookup_miss + num_lookup_collision); }
-    double get_collision_rate() const { return (double) num_lookup_collision / (num_lookup_success + num_lookup_miss + num_lookup_collision); }
+    double get_hit_rate() const {
+        return (double)num_lookup_success / (num_lookup_success + num_lookup_miss + num_lookup_collision);
+    }
+    double get_collision_rate() const {
+        return (double)num_lookup_collision / (num_lookup_success + num_lookup_miss + num_lookup_collision);
+    }
 
     // Store stats getters.
-    double get_new_write_rate() const { return (double) num_store_entries / (num_store_entries + num_store_rewrites + num_store_overwrites); }
-    double get_rewrite_rate() const { return (double) num_store_rewrites / (num_store_entries + num_store_rewrites + num_store_overwrites); }
-    double get_overwrite_rate() const { return (double) num_store_overwrites / (num_store_entries + num_store_rewrites + num_store_overwrites); }
+    double get_new_write_rate() const {
+        return (double)num_store_entries / (num_store_entries + num_store_rewrites + num_store_overwrites);
+    }
+    double get_rewrite_rate() const {
+        return (double)num_store_rewrites / (num_store_entries + num_store_rewrites + num_store_overwrites);
+    }
+    double get_overwrite_rate() const {
+        return (double)num_store_overwrites / (num_store_entries + num_store_rewrites + num_store_overwrites);
+    }
 
     // Search stats increments.
     void new_node() { num_nodes++; }
@@ -59,7 +66,7 @@ public:
     void store_overwrite() { num_store_overwrites++; }
     void store_rewrite() { num_store_rewrites++; }
 
-private:
+   private:
     // Search stats.
     unsigned long num_nodes = 0;
     unsigned long num_exact_nodes = 0;
@@ -78,6 +85,5 @@ private:
     unsigned long num_store_overwrites = 0;
     unsigned long num_store_rewrites = 0;
 };
-
 
 #endif

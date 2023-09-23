@@ -1,15 +1,12 @@
 #ifndef SEARCH_H_
 #define SEARCH_H_
 
-
 #include "position.h"
-#include "table.h"
 #include "stats.h"
-
+#include "table.h"
 
 // Search returning this value means another thread stopped the search.
 constexpr int SEARCH_STOPPED = -1000;
-
 
 struct Node {
     Position pos;
@@ -31,10 +28,9 @@ struct Node {
     }
 };
 
-
 // A single threaded search.
 class Search {
-public:
+   public:
     Search(const Table &parent_table, const std::shared_ptr<Stats> stats);
 
     void start();
@@ -42,7 +38,7 @@ public:
 
     int search(Position &pos, int alpha, int beta, int move_offset);
 
-private:
+   private:
     Table table;
     std::shared_ptr<Stats> stats;
 
@@ -53,6 +49,5 @@ private:
     bool static_search(Node &node, int col, int &alpha, int &beta);
     board get_forced_move(Position &pos, board opponent_wins, board non_losing_moves);
 };
-
 
 #endif

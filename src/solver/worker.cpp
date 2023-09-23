@@ -1,17 +1,17 @@
-#include <thread>
-#include <memory>
-#include <mutex>
-#include <condition_variable>
-#include <atomic>
-#include <cassert>
-#include <string>
-#include <chrono>
-#include <cstdio>
-
-#include "Tracy.hpp"
-
 #include "worker.h"
 
+#include <atomic>
+#include <cassert>
+#include <chrono>
+#include <condition_variable>
+#include <cstdio>
+#include <memory>
+#include <mutex>
+#include <string>
+#include <thread>
+
+#include "Tracy.hpp"
+#include "position.h"
 
 void SearchResult::reset() {
     std::unique_lock<std::mutex> lock(mutex);
@@ -19,7 +19,6 @@ void SearchResult::reset() {
     score = SEARCH_STOPPED;
     found.store(false);
 }
-
 
 bool SearchResult::notify_result(int score) {
     std::unique_lock<std::mutex> lock(mutex);
@@ -38,7 +37,6 @@ bool SearchResult::notify_result(int score) {
     return true;
 }
 
-
 int SearchResult::wait_for_result() {
     ZoneScoped;
 
@@ -52,7 +50,6 @@ int SearchResult::wait_for_result() {
     return score;
 }
 
-
 Worker::Worker(int id, const Table &parent_table, std::shared_ptr<SearchResult> result) {
     this->id = id;
     this->result = result;
@@ -62,7 +59,6 @@ Worker::Worker(int id, const Table &parent_table, std::shared_ptr<SearchResult> 
     // Start the thread, which will go to sleep until a position is submitted.
     this->thread = std::thread(&Worker::work, this);
 }
-
 
 Worker::~Worker() {
     mutex.lock();
@@ -79,7 +75,6 @@ Worker::~Worker() {
         thread.join();
     }
 }
-
 
 void Worker::start(const Position &pos, int alpha, int beta, int window, int step, int move_offset) {
     ZoneScoped;
@@ -112,7 +107,6 @@ void Worker::start(const Position &pos, int alpha, int beta, int window, int ste
     cond.notify_one();
 }
 
-
 void Worker::wait() {
     ZoneScoped;
 
@@ -125,7 +119,6 @@ void Worker::wait() {
     }
 }
 
-
 void Worker::stop() {
     ZoneScoped;
 
@@ -133,7 +126,6 @@ void Worker::stop() {
         search->stop();
     }
 }
-
 
 void Worker::print_thread_stats() {
     auto now = std::chrono::high_resolution_clock::now();
@@ -143,10 +135,8 @@ void Worker::print_thread_stats() {
 
     double utilisation = active_time_us.count() * 100.0 / total_time_us.count();
 
-    printf("%-5d %'9.2f%% %'10d\n",
-        id, utilisation, solutions_found);
+    printf("%-5d %'9.2f%% %'10d\n", id, utilisation, solutions_found);
 }
-
 
 void Worker::work() {
     ZoneScoped;
@@ -182,7 +172,6 @@ void Worker::work() {
     }
 }
 
-
 int Worker::run_search() {
     ZoneScoped;
 
@@ -198,9 +187,7 @@ int Worker::run_search() {
 
         // If the result is within the bounds, then the result is exact and we can exit.
         // Or if the true score is outside [alpha, beta] return the score.
-        if ((a < score && score < b)
-                || (score <= a && a <= alpha)
-                || (score >= b && b >= beta)) {
+        if ((a < score && score < b) || (score <= a && a <= alpha) || (score >= b && b >= beta)) {
             return score;
         }
 

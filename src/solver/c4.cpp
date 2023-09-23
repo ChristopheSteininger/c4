@@ -1,14 +1,14 @@
 #include <assert.h>
-#include <iostream>
-#include <stdio.h>
 #include <locale.h>
-#include <chrono>
+#include <stdio.h>
 
-#include "settings.h"
+#include <chrono>
+#include <iostream>
+
 #include "position.h"
+#include "settings.h"
 #include "solver.h"
 #include "table.h"
-
 
 int main() {
     // Allow thousands separator.
@@ -17,8 +17,8 @@ int main() {
     Position pos;
     Solver solver;
 
-    std::cout << "Using a " << BOARD_WIDTH << " x " << BOARD_HEIGHT << " board, a "
-        << Table::get_table_size() << " table, and " << NUM_THREADS << " threads." << std::endl;
+    std::cout << "Using a " << BOARD_WIDTH << " x " << BOARD_HEIGHT << " board, a " << Table::get_table_size()
+              << " table, and " << NUM_THREADS << " threads." << std::endl;
     printf("Solving:\n");
     pos.printb();
 
@@ -41,7 +41,7 @@ int main() {
 
     printf("\n");
     printf("Time to solve        = %'.2f s\n", run_time_ms / 1000.0);
-    printf("Nodes per ms         = %'.0f\n", stats.get_num_nodes() / (double) run_time_ms);
+    printf("Nodes per ms         = %'.0f\n", stats.get_num_nodes() / (double)run_time_ms);
     printf("Nodes:\n");
     printf("    Exact            = %'lu\n", stats.get_num_exact_nodes());
     printf("    Lower            = %'lu\n", stats.get_num_lower_nodes());
@@ -53,6 +53,8 @@ int main() {
     printf("    New write rate   = %6.2f%%\n", stats.get_new_write_rate() * 100);
     printf("    Rewrite rate     = %6.2f%%\n", stats.get_rewrite_rate() * 100);
     printf("    Overwrite rate   = %6.2f%%\n", stats.get_overwrite_rate() * 100);
-    printf("Best moves guessed   = %6.2f%%\n", (double) stats.get_num_best_moves_guessed() * 100 / stats.get_num_interior_nodes());
-    printf("Worst moves guessed  = %6.2f%%\n", (double) stats.get_num_worst_moves_guessed() * 100 / stats.get_num_interior_nodes());
+    printf("Best moves guessed   = %6.2f%%\n",
+           (double)stats.get_num_best_moves_guessed() * 100 / stats.get_num_interior_nodes());
+    printf("Worst moves guessed  = %6.2f%%\n",
+           (double)stats.get_num_worst_moves_guessed() * 100 / stats.get_num_interior_nodes());
 }
