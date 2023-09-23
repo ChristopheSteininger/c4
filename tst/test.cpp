@@ -5,6 +5,7 @@
 #include "../src/solver/position.h"
 #include "../src/solver/settings.h"
 #include "../src/solver/table.h"
+#include "../src/solver/types.h"
 #include "known_states.h"
 #include "minunit.h"
 #include "test_board.h"
@@ -23,7 +24,7 @@ const char *test_table_lookup_returns_stored_results() {
             pos1.move(x);
 
             board hash = pos1.hash(is_mirrored);
-            table.put(hash, is_mirrored, x, (counter % 3) + 1, (counter % 3));
+            table.put(hash, is_mirrored, x, static_cast<NodeType>((counter % 3) + 1), (counter % 3));
             counter++;
         }
     }
@@ -31,7 +32,8 @@ const char *test_table_lookup_returns_stored_results() {
     Position pos2 = Position();
     counter = 0;
 
-    int move, type, value;
+    NodeType type;
+    int move, value;
 
     for (int y = 0; y < BOARD_HEIGHT - 1; y++) {
         for (int x = 0; x < BOARD_WIDTH; x++) {
@@ -42,7 +44,7 @@ const char *test_table_lookup_returns_stored_results() {
 
             mu_assert("table lookup in mock game.", success);
             mu_assert("move lookup in mock game.", move == x);
-            mu_assert("type lookup in mock game.", type == (counter % 3) + 1);
+            mu_assert("type lookup in mock game.", type == static_cast<NodeType>((counter % 3) + 1));
             mu_assert("value lookup in mock game.", value == (counter % 3));
 
             counter++;

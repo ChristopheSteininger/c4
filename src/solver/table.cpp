@@ -12,17 +12,18 @@
 #include "position.h"
 #include "settings.h"
 
-const int TYPE_MISS = 0;
-const int TYPE_UPPER = 1;
-const int TYPE_LOWER = 2;
-const int TYPE_EXACT = 3;
-
 Entry::Entry() { data = 0; }
 
-Entry::Entry(board hash, int move, int type, int score) {
+Entry::Entry(board hash, int move, NodeType type, int score) {
     // Only the partial hash needs to be stored. This is equivalent to
     // hash % 2^HASH_BITS.
-    data = (hash << HASH_SHIFT) | (move << MOVE_SHIFT) | (type << TYPE_SHIFT) | (score << SCORE_SHIFT);
+    // clang-format off
+    data
+        = (hash << HASH_SHIFT)
+        | (move << MOVE_SHIFT)
+        | (static_cast<int>(type) << TYPE_SHIFT)
+        | (score << SCORE_SHIFT);
+    // clang-format on
 }
 
 Table::Table() {
@@ -57,7 +58,7 @@ void Table::prefetch(board hash) {
     __builtin_prefetch(table.get() + index, 1, 3);
 }
 
-bool Table::get(board hash, bool is_mirrored, int &move, int &type, int &score) {
+bool Table::get(board hash, bool is_mirrored, int &move, NodeType &type, int &score) {
     ZoneScoped;
 
     int index = hash % NUM_TABLE_ENTRIES;
@@ -67,7 +68,7 @@ bool Table::get(board hash, bool is_mirrored, int &move, int &type, int &score) 
     if (entry.is_empty()) {
         stats->lookup_miss();
         move = -1;
-        type = TYPE_MISS;
+        type = NodeType::MISS;
 
         return false;
     }
@@ -76,7 +77,7 @@ bool Table::get(board hash, bool is_mirrored, int &move, int &type, int &score) 
     if (!entry.is_equal(hash)) {
         stats->lookup_collision();
         move = -1;
-        type = TYPE_MISS;
+        type = NodeType::MISS;
 
         return false;
     }
@@ -95,11 +96,10 @@ bool Table::get(board hash, bool is_mirrored, int &move, int &type, int &score) 
     return true;
 }
 
-void Table::put(board hash, bool is_mirrored, int move, int type, int score) {
+void Table::put(board hash, bool is_mirrored, int move, NodeType type, int score) {
     ZoneScoped;
 
     assert(0 <= move && move <= BOARD_WIDTH);
-    assert(type == TYPE_UPPER || type == TYPE_LOWER || type == TYPE_EXACT);
     assert(Position::MIN_SCORE <= score && score <= Position::MAX_SCORE);
 
     int index = hash % NUM_TABLE_ENTRIES;

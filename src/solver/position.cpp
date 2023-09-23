@@ -7,6 +7,18 @@
 #include "Tracy.hpp"
 #include "settings.h"
 
+// Represents a single direction in which a player can win.
+enum class Direction {
+    VERTICAL = 1,
+    HORIZONTAL = BOARD_HEIGHT + 1,
+
+    // From top left to bottom right.
+    NEGATIVE_DIAGONAL = BOARD_HEIGHT,
+
+    // From bottom left to top right.
+    POSITIVE_DIAGONAL = BOARD_HEIGHT + 2
+};
+
 static constexpr board set_ones(int n) {
     // If n is equal to the number of bits in board, then 1 << n would overflow,
     // so handle seperately here.
@@ -412,14 +424,14 @@ bool Position::are_dead_stones_valid() const {
            && b1_wins == b1_wins_plus_dead_stones;  // Condition #2 for player #2.
 }
 
-#ifndef NDEBUG
 void Position::print_move_history() const {
+#ifndef NDEBUG
     for (int i = 0; i < ply; i++) {
         std::cout << (move_history[i] + 1);
     }
     std::cout << std::endl;
-}
 #endif
+}
 
 // Private functions
 

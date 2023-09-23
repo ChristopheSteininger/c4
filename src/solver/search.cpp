@@ -10,16 +10,16 @@
 
 static constexpr int INF_SCORE = 10000;
 
-static int get_node_type(int value, int alpha, int beta) {
+static NodeType get_node_type(int value, int alpha, int beta) {
     if (value <= alpha) {
-        return TYPE_UPPER;
+        return NodeType::UPPER;
     }
 
     if (value >= beta) {
-        return TYPE_LOWER;
+        return NodeType::LOWER;
     }
 
-    return TYPE_EXACT;
+    return NodeType::EXACT;
 }
 
 static int count_bits(board b) {
@@ -208,15 +208,26 @@ int Search::negamax(Node &node, int alpha, int beta, int move_offset) {
 
     // Check if this state has already been seen.
     if (!node.did_lookup) {
-        int lookup_type, lookup_value;
+        NodeType lookup_type;
+        int lookup_value;
         table.get(node.hash, node.is_mirrored, node.table_move, lookup_type, lookup_value);
-        if (lookup_type == TYPE_EXACT) {
-            return lookup_value;
-        } else if (lookup_type == TYPE_LOWER) {
-            alpha = std::max(alpha, lookup_value);
-        } else if (lookup_type == TYPE_UPPER) {
-            beta = std::min(beta, lookup_value);
+
+        switch (lookup_type) {
+            case NodeType::MISS:
+                break;
+
+            case NodeType::EXACT:
+                return lookup_value;
+
+            case NodeType::LOWER:
+                alpha = std::max(alpha, lookup_value);
+                break;
+
+            case NodeType::UPPER:
+                beta = std::min(beta, lookup_value);
+                break;
         }
+
         if (alpha >= beta) {
             return lookup_value;
         }
@@ -263,7 +274,7 @@ int Search::negamax(Node &node, int alpha, int beta, int move_offset) {
     assert(value > -INF_SCORE);
 
     // Store the result in the transposition table.
-    int type = get_node_type(value, original_alpha, original_beta);
+    NodeType type = get_node_type(value, original_alpha, original_beta);
     table.put(node.hash, node.is_mirrored, best_move_col, type, value);
 
     // Update statistics.
@@ -359,23 +370,32 @@ bool Search::static_search(Node &node, int col, int &alpha, int &beta) {
         node.hash = node.pos.hash(node.is_mirrored);
 
         // Check if this state has already been seen.
-        int table_move, lookup_type, lookup_value;
-        bool lookup_success = table.get(node.hash, node.is_mirrored, table_move, lookup_type, lookup_value);
-        if (lookup_success) {
-            if (lookup_type == TYPE_EXACT) {
+        NodeType lookup_type;
+        int table_move, lookup_value;
+        table.get(node.hash, node.is_mirrored, table_move, lookup_type, lookup_value);
+
+        switch (lookup_type) {
+            case NodeType::MISS:
+                break;
+
+            case NodeType::EXACT:
                 alpha = lookup_value;
                 beta = lookup_value;
                 return true;
-            } else if (lookup_type == TYPE_LOWER) {
-                alpha = std::max(alpha, lookup_value);
-            } else if (lookup_type == TYPE_UPPER) {
-                beta = std::min(beta, lookup_value);
-            }
-            if (alpha >= beta) {
-                return true;
-            }
 
-            node.table_move = table_move;
+            case NodeType::LOWER:
+                node.table_move = table_move;
+                alpha = std::max(alpha, lookup_value);
+                break;
+
+            case NodeType::UPPER:
+                node.table_move = table_move;
+                beta = std::min(beta, lookup_value);
+                break;
+        }
+
+        if (alpha >= beta) {
+            return true;
         }
     }
 

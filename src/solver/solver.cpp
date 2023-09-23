@@ -52,12 +52,13 @@ int Solver::get_best_move(Position &pos) {
 
     // Check if the result is stored in the table.
     bool is_mirrored;
-    int table_move, type, value;
+    NodeType type;
+    int table_move, value;
 
     board hash = pos.hash(is_mirrored);
     bool lookup_success = table.get(hash, is_mirrored, table_move, type, value);
 
-    if (lookup_success && type == TYPE_EXACT) {
+    if (lookup_success && type == NodeType::EXACT) {
         // Validate the move stored in the table is the best move.
         board before_move = pos.move(table_move);
         int table_score = -pool.search(pos, -score - 1, -score + 1);

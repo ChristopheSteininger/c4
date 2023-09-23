@@ -7,24 +7,20 @@
 #include "position.h"
 #include "settings.h"
 #include "stats.h"
-
-extern const int TYPE_MISS;
-extern const int TYPE_LOWER;
-extern const int TYPE_UPPER;
-extern const int TYPE_EXACT;
+#include "types.h"
 
 constexpr int const_log2(const int n) { return (n <= 1) ? 0 : 1 + const_log2(n / 2); }
 
 class Entry {
    public:
     Entry();
-    Entry(board hash, int move, int type, int score);
+    Entry(board hash, int move, NodeType type, int score);
 
     inline bool is_empty() const { return data == 0; }
     inline bool is_equal(board hash) const { return data != 0 && (hash & HASH_MASK) == (data >> HASH_SHIFT); }
 
     inline int get_move() const { return (data >> MOVE_SHIFT) & MOVE_MASK; }
-    inline int get_type() const { return (data >> TYPE_SHIFT) & TYPE_MASK; }
+    inline NodeType get_type() const { return static_cast<NodeType>((data >> TYPE_SHIFT) & TYPE_MASK); }
     inline int get_score() const { return (data >> SCORE_SHIFT) & SCORE_MASK; }
 
    private:
@@ -66,8 +62,8 @@ class Table {
     void clear();
 
     void prefetch(board hash);
-    bool get(board hash, bool is_mirrored, int &move, int &type, int &value);
-    void put(board hash, bool is_mirrored, int move, int type, int value);
+    bool get(board hash, bool is_mirrored, int &move, NodeType &type, int &value);
+    void put(board hash, bool is_mirrored, int move, NodeType type, int value);
 
     static std::string get_table_size();
 

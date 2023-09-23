@@ -1,29 +1,10 @@
 #ifndef BOARD_H_
 #define BOARD_H_
 
-#include <algorithm>
-#include <cstdint>
 #include <vector>
 
+#include "types.h"
 #include "settings.h"
-
-static constexpr bool use_128bit = (BOARD_HEIGHT + 1) * BOARD_WIDTH > 64;
-
-// A number wide enough to store one bit for each cell on the board and the column headers.
-using board = std::conditional_t<use_128bit, __uint128_t, uint64_t>;
-static_assert(BOARD_WIDTH * (BOARD_HEIGHT + 1) <= 8 * sizeof(board));
-
-// Represents a single direction in which a player can win.
-enum class Direction {
-    VERTICAL = 1,
-    HORIZONTAL = BOARD_HEIGHT + 1,
-
-    // From top left to bottom right.
-    NEGATIVE_DIAGONAL = BOARD_HEIGHT,
-
-    // From bottom left to top right.
-    POSITIVE_DIAGONAL = BOARD_HEIGHT + 2
-};
 
 inline static constexpr int score_win_at(const int ply) { return (BOARD_WIDTH * BOARD_HEIGHT - ply + 1) / 2; }
 
@@ -100,9 +81,7 @@ class Position {
 
     // Print the list of moves played. Useful for debugging but keeping
     // track of history degrades performance so only enable for debug builds.
-#ifndef NDEBUG
     void print_move_history() const;
-#endif
 
     // The score of winning or losing as early as possible.
     // The earliest possible win is on the 7th move.

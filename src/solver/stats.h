@@ -3,9 +3,7 @@
 
 #include <cassert>
 
-extern const int TYPE_LOWER;
-extern const int TYPE_UPPER;
-extern const int TYPE_EXACT;
+#include "types.h"
 
 class Stats {
    public:
@@ -42,15 +40,22 @@ class Stats {
 
     // Search stats increments.
     void new_node() { num_nodes++; }
-    void node_type(int type) {
-        if (type == TYPE_EXACT) {
-            num_exact_nodes++;
-        } else if (type == TYPE_LOWER) {
-            num_lower_nodes++;
-        } else if (type == TYPE_UPPER) {
-            num_upper_nodes++;
-        } else {
-            assert(0);
+    void node_type(NodeType type) {
+        switch (type) {
+            case NodeType::EXACT:
+                num_exact_nodes++;
+                break;
+
+            case NodeType::LOWER:
+                num_lower_nodes++;
+                break;
+
+            case NodeType::UPPER:
+                num_upper_nodes++;
+                break;
+
+            default:
+                assert(0);
         }
     }
     void best_move_guessed() { num_best_moves_guessed++; }
@@ -68,22 +73,22 @@ class Stats {
 
    private:
     // Search stats.
-    unsigned long num_nodes = 0;
-    unsigned long num_exact_nodes = 0;
-    unsigned long num_lower_nodes = 0;
-    unsigned long num_upper_nodes = 0;
-    unsigned long num_best_moves_guessed = 0;
-    unsigned long num_worst_moves_guessed = 0;
+    unsigned long num_nodes{0};
+    unsigned long num_exact_nodes{0};
+    unsigned long num_lower_nodes{0};
+    unsigned long num_upper_nodes{0};
+    unsigned long num_best_moves_guessed{0};
+    unsigned long num_worst_moves_guessed{0};
 
     // Lookup stats.
-    unsigned long num_lookup_success = 0;
-    unsigned long num_lookup_collision = 0;
-    unsigned long num_lookup_miss = 0;
+    unsigned long num_lookup_success{0};
+    unsigned long num_lookup_collision{0};
+    unsigned long num_lookup_miss{0};
 
     // Store stats.
-    unsigned long num_store_entries = 0;
-    unsigned long num_store_overwrites = 0;
-    unsigned long num_store_rewrites = 0;
+    unsigned long num_store_entries{0};
+    unsigned long num_store_overwrites{0};
+    unsigned long num_store_rewrites{0};
 };
 
 #endif
