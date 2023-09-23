@@ -208,28 +208,26 @@ int Search::negamax(Node &node, int alpha, int beta, int move_offset) {
 
     // Check if this state has already been seen.
     if (!node.did_lookup) {
-        NodeType lookup_type;
-        int lookup_value;
-        table.get(node.hash, node.is_mirrored, node.table_move, lookup_type, lookup_value);
+        Entry entry = table.get(node.hash);
 
-        switch (lookup_type) {
+        switch (entry.get_type()) {
             case NodeType::MISS:
                 break;
 
             case NodeType::EXACT:
-                return lookup_value;
+                return entry.get_score();
 
             case NodeType::LOWER:
-                alpha = std::max(alpha, lookup_value);
+                alpha = std::max(alpha, entry.get_score());
                 break;
 
             case NodeType::UPPER:
-                beta = std::min(beta, lookup_value);
+                beta = std::min(beta, entry.get_score());
                 break;
         }
 
         if (alpha >= beta) {
-            return lookup_value;
+            return entry.get_score();
         }
     }
 
@@ -370,27 +368,25 @@ bool Search::static_search(Node &node, int col, int &alpha, int &beta) {
         node.hash = node.pos.hash(node.is_mirrored);
 
         // Check if this state has already been seen.
-        NodeType lookup_type;
-        int table_move, lookup_value;
-        table.get(node.hash, node.is_mirrored, table_move, lookup_type, lookup_value);
+        Entry entry = table.get(node.hash);
 
-        switch (lookup_type) {
+        switch (entry.get_type()) {
             case NodeType::MISS:
                 break;
 
             case NodeType::EXACT:
-                alpha = lookup_value;
-                beta = lookup_value;
+                alpha = entry.get_score();
+                beta = alpha;
                 return true;
 
             case NodeType::LOWER:
-                node.table_move = table_move;
-                alpha = std::max(alpha, lookup_value);
+                node.table_move = entry.get_move(node.is_mirrored);
+                alpha = std::max(alpha, entry.get_score());
                 break;
 
             case NodeType::UPPER:
-                node.table_move = table_move;
-                beta = std::min(beta, lookup_value);
+                node.table_move = entry.get_move(node.is_mirrored);
+                beta = std::min(beta, entry.get_score());
                 break;
         }
 

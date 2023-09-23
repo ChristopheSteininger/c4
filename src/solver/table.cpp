@@ -15,15 +15,42 @@
 Entry::Entry() { data = 0; }
 
 Entry::Entry(board hash, int move, NodeType type, int score) {
-    // Only the partial hash needs to be stored. This is equivalent to
+    int int_type = static_cast<int>(type);
+
+    // Shift so we don't store negative numbers in the table.
+    int shifted_score = score - Position::MIN_SCORE;
+
+    // Only the partial hash needs to be stored. This is equivalent to:
     // hash % 2^HASH_BITS.
     // clang-format off
     data
-        = (hash << HASH_SHIFT)
+        = (hash << HASH_SHIFT)  
         | (move << MOVE_SHIFT)
-        | (static_cast<int>(type) << TYPE_SHIFT)
-        | (score << SCORE_SHIFT);
+        | (int_type << TYPE_SHIFT)
+        | (shifted_score << SCORE_SHIFT);
     // clang-format on
+}
+
+int Entry::get_move(bool is_mirrored) const {
+    int bits = (data >> MOVE_SHIFT) & MOVE_MASK;
+
+    // The position may have been mirrored for the table lookup,
+    // so mirror the best move if necessary.
+    return (is_mirrored) ? BOARD_WIDTH - bits - 1 : bits;
+}
+
+NodeType Entry::get_type() const {
+    int bits = (data >> TYPE_SHIFT) & TYPE_MASK;
+
+    return static_cast<NodeType>(bits);
+}
+
+int Entry::get_score() const {
+    int bits = (data >> SCORE_SHIFT) & SCORE_MASK;
+
+    // We don't store negative numbers in the table, so scores
+    // are shifted by the minimum possible score.
+    return bits + Position::MIN_SCORE;
 }
 
 Table::Table() {
@@ -58,7 +85,7 @@ void Table::prefetch(board hash) {
     __builtin_prefetch(table.get() + index, 1, 3);
 }
 
-bool Table::get(board hash, bool is_mirrored, int &move, NodeType &type, int &score) {
+Entry Table::get(board hash) {
     ZoneScoped;
 
     int index = hash % NUM_TABLE_ENTRIES;
@@ -67,33 +94,18 @@ bool Table::get(board hash, bool is_mirrored, int &move, NodeType &type, int &sc
     // If this state has not been seen.
     if (entry.is_empty()) {
         stats->lookup_miss();
-        move = -1;
-        type = NodeType::MISS;
-
-        return false;
+        return Entry();
     }
 
     // If this is a hash collision.
     if (!entry.is_equal(hash)) {
         stats->lookup_collision();
-        move = -1;
-        type = NodeType::MISS;
-
-        return false;
+        return Entry();
     }
 
-    // Otherwise reconstruct the data stored against the entry.
-    move = entry.get_move();
-    type = entry.get_type();
-    score = entry.get_score() + Position::MIN_SCORE;
-
-    // If we looked up a mirrored move, mirror the best move as well.
-    if (is_mirrored) {
-        move = BOARD_WIDTH - move - 1;
-    }
-
+    // Otherwise we have a hit.
     stats->lookup_success();
-    return true;
+    return entry;
 }
 
 void Table::put(board hash, bool is_mirrored, int move, NodeType type, int score) {
@@ -120,7 +132,7 @@ void Table::put(board hash, bool is_mirrored, int move, NodeType type, int score
     }
 
     // Store.
-    table[index] = Entry(hash, move, type, score - Position::MIN_SCORE);
+    table[index] = Entry(hash, move, type, score);
 }
 
 std::string Table::get_table_size() {

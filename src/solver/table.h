@@ -19,9 +19,9 @@ class Entry {
     inline bool is_empty() const { return data == 0; }
     inline bool is_equal(board hash) const { return data != 0 && (hash & HASH_MASK) == (data >> HASH_SHIFT); }
 
-    inline int get_move() const { return (data >> MOVE_SHIFT) & MOVE_MASK; }
-    inline NodeType get_type() const { return static_cast<NodeType>((data >> TYPE_SHIFT) & TYPE_MASK); }
-    inline int get_score() const { return (data >> SCORE_SHIFT) & SCORE_MASK; }
+    int get_move(bool is_mirrored) const;
+    NodeType get_type() const;
+    int get_score() const;
 
    private:
     // An entry contains the following information packed in 64 bits.
@@ -62,7 +62,7 @@ class Table {
     void clear();
 
     void prefetch(board hash);
-    bool get(board hash, bool is_mirrored, int &move, NodeType &type, int &value);
+    Entry get(board hash);
     void put(board hash, bool is_mirrored, int move, NodeType type, int value);
 
     static std::string get_table_size();

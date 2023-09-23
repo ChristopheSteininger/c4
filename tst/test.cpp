@@ -32,20 +32,16 @@ const char *test_table_lookup_returns_stored_results() {
     Position pos2 = Position();
     counter = 0;
 
-    NodeType type;
-    int move, value;
-
     for (int y = 0; y < BOARD_HEIGHT - 1; y++) {
         for (int x = 0; x < BOARD_WIDTH; x++) {
             pos2.move(x);
 
             board hash = pos2.hash(is_mirrored);
-            int success = table.get(hash, is_mirrored, move, type, value);
+            Entry entry = table.get(hash);
 
-            mu_assert("table lookup in mock game.", success);
-            mu_assert("move lookup in mock game.", move == x);
-            mu_assert("type lookup in mock game.", type == static_cast<NodeType>((counter % 3) + 1));
-            mu_assert("value lookup in mock game.", value == (counter % 3));
+            mu_assert("move lookup in mock game.", entry.get_move(is_mirrored) == x);
+            mu_assert("type lookup in mock game.", entry.get_type() == static_cast<NodeType>((counter % 3) + 1));
+            mu_assert("value lookup in mock game.", entry.get_score() == (counter % 3));
 
             counter++;
         }
