@@ -3,8 +3,8 @@
 
 #include <vector>
 
-#include "types.h"
 #include "settings.h"
+#include "types.h"
 
 inline static constexpr int score_win_at(const int ply) { return (BOARD_WIDTH * BOARD_HEIGHT - ply + 1) / 2; }
 
@@ -39,7 +39,6 @@ class Position {
     // even if the threat cannot be played this turn.
     board find_player_threats() const;
     board find_opponent_threats() const;
-    board find_odd_even_threats(board threats) const;
 
     board find_next_turn_threats(board threats) const;
     board find_next_next_turn_threats(board threats) const;

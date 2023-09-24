@@ -291,14 +291,6 @@ board Position::find_opponent_threats() const {
     return find_threats(b1) & ~b0 & VALID_CELLS;
 }
 
-board Position::find_odd_even_threats(board threats) const {
-    if (ply & 1) {
-        return 0;
-    } else {
-        return (threats & BOTTOM_ROW) | (threats & (BOTTOM_ROW << 2)) | (threats & (BOTTOM_ROW << 4));
-    }
-}
-
 board Position::find_next_turn_threats(board threats) const {
     board valid_moves = ((b0 | b1) + BOTTOM_ROW) & VALID_CELLS;
     board next_valid_moves = valid_moves << 1;

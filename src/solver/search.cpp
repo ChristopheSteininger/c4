@@ -70,7 +70,12 @@ static float heuristic(Position &pos, board threats, int col) {
     int num_next_next_threats = count_bits(pos.find_next_next_turn_threats(threats));
     float center_score = (float)std::min(col, BOARD_WIDTH - col - 1) / BOARD_WIDTH;
 
-    return 1.0 * num_next_threats + 0.5 * num_next_next_threats + 0.3 * num_threats + 0.1 * center_score;
+    // clang-format off
+    return 1.0 * num_next_threats
+        + 0.5 * num_next_next_threats
+        + 0.3 * num_threats
+        + 0.1 * center_score;
+    // clang-format on
 }
 
 inline static void invert(int &alpha, int &beta) {
