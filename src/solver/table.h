@@ -20,8 +20,8 @@ class Entry {
     inline bool is_equal(board hash) const { return data != 0 && (hash & HASH_MASK) == (data >> HASH_SHIFT); }
 
     int get_move(bool is_mirrored) const;
-    NodeType get_type() const;
     int get_score() const;
+    NodeType get_type() const;
 
    private:
     // An entry contains the following information packed in 64 bits.

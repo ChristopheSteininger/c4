@@ -50,8 +50,14 @@ int Pool::search(Position &pos, int alpha, int beta) {
     double window = min;
     double window_step = (double)(max - min) / workers.size();
     for (int i = 0; i < workers.size(); i++) {
-        int move_offset = (window_step < 1) ? (i % 2) * BOARD_WIDTH * BOARD_WIDTH + (i % 3) * BOARD_WIDTH + (i % 5)
-                                            : (i % 3) * BOARD_WIDTH + (i % 5);
+        // clang-format off
+        int move_offset = (window_step < 1)
+            ? (i % 2) * BOARD_WIDTH * BOARD_WIDTH
+                + (i % 3) * BOARD_WIDTH
+                + (i % 5)
+            : (i % 3) * BOARD_WIDTH
+                + (i % 5);
+        // clang-format on
 
         workers[i]->start(pos, min, max, (int)window, (i % 3) + 1, move_offset);
         window += window_step;

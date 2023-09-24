@@ -171,7 +171,6 @@ int Search::negamax(Node &node, int alpha, int beta, int move_offset) {
     // Moves which cannot be statically evaluated will instead be assigned a score
     // which is a guess of how good the move is. Moves with the highest score will
     // be searched first.
-    int b = -INF_SCORE;
     for (int col = 0; col < BOARD_WIDTH; col++) {
         if (node.pos.is_non_losing_move(non_losing_moves, col)) {
             children[col] = Node(node.pos);
@@ -185,7 +184,6 @@ int Search::negamax(Node &node, int alpha, int beta, int move_offset) {
 
             alpha = std::max(alpha, child_alpha);
             value = std::max(value, child_alpha);
-            b = std::max(b, child_beta);
 
             if (alpha >= beta) {
                 return alpha;
@@ -201,7 +199,6 @@ int Search::negamax(Node &node, int alpha, int beta, int move_offset) {
     // At this point we know it is not possible to win in the next four turns, so tighten
     // bounds further.
     beta = std::min(beta, node.pos.score_win(4));
-    beta = std::min(beta, b);
     if (alpha >= beta) {
         return beta;
     }

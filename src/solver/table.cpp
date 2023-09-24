@@ -39,18 +39,18 @@ int Entry::get_move(bool is_mirrored) const {
     return (is_mirrored) ? BOARD_WIDTH - bits - 1 : bits;
 }
 
-NodeType Entry::get_type() const {
-    int bits = (data >> TYPE_SHIFT) & TYPE_MASK;
-
-    return static_cast<NodeType>(bits);
-}
-
 int Entry::get_score() const {
     int bits = (data >> SCORE_SHIFT) & SCORE_MASK;
 
     // We don't store negative numbers in the table, so scores
     // are shifted by the minimum possible score.
     return bits + Position::MIN_SCORE;
+}
+
+NodeType Entry::get_type() const {
+    int bits = (data >> TYPE_SHIFT) & TYPE_MASK;
+
+    return static_cast<NodeType>(bits);
 }
 
 Table::Table() {
@@ -112,6 +112,7 @@ void Table::put(board hash, bool is_mirrored, int move, NodeType type, int score
     ZoneScoped;
 
     assert(0 <= move && move <= BOARD_WIDTH);
+    assert(type == NodeType::EXACT || type == NodeType::LOWER || type == NodeType::UPPER);
     assert(Position::MIN_SCORE <= score && score <= Position::MAX_SCORE);
 
     int index = hash % NUM_TABLE_ENTRIES;
