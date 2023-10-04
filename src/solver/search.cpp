@@ -78,11 +78,6 @@ static float heuristic(Position &pos, board threats, int col) {
     // clang-format on
 }
 
-inline static void invert(int &alpha, int &beta) {
-    alpha = -alpha;
-    beta = -beta;
-}
-
 // Create our own copy of the transposition table. This table will use the same
 // underlying storage as parent_table so this thread can benefit from the work
 // other threads have saved in the table.
@@ -101,8 +96,11 @@ int Search::search(Position &pos, int alpha, int beta, int move_offset) {
     assert(!pos.wins_this_move(pos.find_player_threats()));
 
     Node child(pos);
-    if (static_search(child, -1, alpha, beta) || alpha >= beta) {
-        return alpha;
+    bool is_static = false;
+
+    int child_score = static_search(child, -1, alpha, beta, is_static);
+    if (is_static) {
+        return child_score;
     }
 
     if (pos.is_same_player(child.pos)) {
@@ -173,14 +171,11 @@ int Search::negamax(Node &node, int alpha, int beta, int move_offset) {
     // be searched first.
     for (int col = 0; col < BOARD_WIDTH; col++) {
         if (node.pos.is_non_losing_move(non_losing_moves, col)) {
-            children[col] = Node(node.pos);
-            int child_alpha = alpha;
-            int child_beta = beta;
+            bool is_static = false;
 
-            invert(child_alpha, child_beta);
+            children[col] = Node(node.pos);
             children[col].pos.move(col);
-            bool is_static = static_search(children[col], col, child_beta, child_alpha);
-            invert(child_alpha, child_beta);
+            int child_alpha = -static_search(children[col], col, -beta, -alpha, is_static);
 
             alpha = std::max(alpha, child_alpha);
             value = std::max(value, child_alpha);
@@ -248,6 +243,8 @@ int Search::negamax(Node &node, int alpha, int beta, int move_offset) {
             child_move_offset = move_offset;
         }
 
+        // The children of this node can be more than one move deeper if static
+        // evalulation found and played forced moves.
         int child_score = node.pos.is_same_player(children[col].pos)
                               ? negamax(children[col], alpha, beta, child_move_offset)
                               : -negamax(children[col], -beta, -alpha, child_move_offset);
@@ -289,10 +286,11 @@ int Search::negamax(Node &node, int alpha, int beta, int move_offset) {
     return value;
 }
 
-bool Search::static_search(Node &node, int col, int &alpha, int &beta) {
+int Search::static_search(Node &node, int col, int alpha, int beta, bool &is_static) {
     ZoneScoped;
 
     assert(alpha < beta);
+    assert(!is_static);
     assert(!node.pos.has_player_won());
     assert(!node.pos.has_opponent_won());
     assert(!node.pos.is_draw());
@@ -303,6 +301,7 @@ bool Search::static_search(Node &node, int col, int &alpha, int &beta) {
     if (!node.pos.can_player_win()) {
         beta = std::min(beta, 0);
         if (alpha >= beta) {
+            is_static = true;
             return beta;
         }
     }
@@ -314,9 +313,8 @@ bool Search::static_search(Node &node, int col, int &alpha, int &beta) {
 
     // If the player can only move below the opponents threats, the player will lose.
     if (non_losing_moves == 0) {
-        alpha = node.pos.score_loss();
-        beta = alpha;
-        return true;
+        is_static = true;
+        return node.pos.score_loss();
     }
 
     // Check if the opponent could win next move.
@@ -324,16 +322,14 @@ bool Search::static_search(Node &node, int col, int &alpha, int &beta) {
     if (opponent_wins) {
         // If the opponent has multiple threats, then the game is lost.
         if (opponent_wins & (opponent_wins - 1)) {
-            alpha = node.pos.score_loss();
-            beta = alpha;
-            return true;
+            is_static = true;
+            return node.pos.score_loss();
         }
 
         // If the opponent has two threats on top of each other, then the game is also lost.
         if (!(opponent_wins & non_losing_moves)) {
-            alpha = node.pos.score_loss();
-            beta = alpha;
-            return true;
+            is_static = true;
+            return node.pos.score_loss();
         }
     }
 
@@ -341,7 +337,8 @@ bool Search::static_search(Node &node, int col, int &alpha, int &beta) {
     alpha = std::max(alpha, node.pos.score_loss(2));
     beta = std::min(beta, node.pos.score_win(2));
     if (alpha >= beta) {
-        return true;
+        is_static = true;
+        return alpha;
     }
 
     board useful_threats;
@@ -353,14 +350,14 @@ bool Search::static_search(Node &node, int col, int &alpha, int &beta) {
     // Check if we have a forced move and if so, statically evaluate it.
     board forced_move = get_forced_move(node.pos, opponent_wins, non_losing_moves);
     if (forced_move) {
-        invert(alpha, beta);
         node.pos.move(forced_move);
-        bool is_static = static_search(node, -1, beta, alpha);
-        invert(alpha, beta);
+        int child_score = -static_search(node, -1, -beta, -alpha, is_static);
 
         if (is_static) {
-            return true;
+            return child_score;
         }
+
+        alpha = std::max(alpha, child_score);
     }
 
     // If we do not have a forced move then this position cannot be statically evaluated.
@@ -377,9 +374,8 @@ bool Search::static_search(Node &node, int col, int &alpha, int &beta) {
                 break;
 
             case NodeType::EXACT:
-                alpha = entry.get_score();
-                beta = alpha;
-                return true;
+                is_static = true;
+                return entry.get_score();
 
             case NodeType::LOWER:
                 node.table_move = entry.get_move(node.is_mirrored);
@@ -393,7 +389,8 @@ bool Search::static_search(Node &node, int col, int &alpha, int &beta) {
         }
 
         if (alpha >= beta) {
-            return true;
+            is_static = true;
+            return entry.get_score();
         }
     }
 
@@ -403,7 +400,7 @@ bool Search::static_search(Node &node, int col, int &alpha, int &beta) {
         node.dynamic_score = heuristic(node.pos, useful_threats, col);
     }
 
-    return false;
+    return INF_SCORE;
 }
 
 board Search::get_forced_move(Position &pos, board opponent_wins, board non_losing_moves) {
