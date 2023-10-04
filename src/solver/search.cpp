@@ -114,9 +114,7 @@ int Search::negamax(Node &node, int alpha, int beta, int move_offset) {
     ZoneScoped;
 
     assert(alpha < beta);
-    assert(!node.pos.has_player_won());
-    assert(!node.pos.has_opponent_won());
-    assert(!node.pos.is_draw());
+    assert(!node.pos.is_game_over());
     assert(!node.pos.wins_this_move(node.pos.find_player_threats()));
 
     stats->new_node();
@@ -250,7 +248,7 @@ int Search::negamax(Node &node, int alpha, int beta, int move_offset) {
                               : -negamax(children[col], -beta, -alpha, child_move_offset);
 
         // If the child aborted the search, propagate the signal upwards.
-        if (abs(child_score) == -SEARCH_STOPPED) {
+        if (abs(child_score) == SEARCH_STOPPED) {
             return SEARCH_STOPPED;
         }
 
@@ -291,9 +289,7 @@ int Search::static_search(Node &node, int col, int alpha, int beta, bool &is_sta
 
     assert(alpha < beta);
     assert(!is_static);
-    assert(!node.pos.has_player_won());
-    assert(!node.pos.has_opponent_won());
-    assert(!node.pos.is_draw());
+    assert(!node.pos.is_game_over());
     assert(!node.pos.wins_this_move(node.pos.find_player_threats()));
 
     // If there are too few empty spaces left on the board for the player to win, then the best

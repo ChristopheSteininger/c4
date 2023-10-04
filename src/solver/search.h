@@ -6,7 +6,7 @@
 #include "table.h"
 
 // Search returning this value means another thread stopped the search.
-constexpr int SEARCH_STOPPED = -1000;
+constexpr int SEARCH_STOPPED = 1000;
 
 struct Node {
     Position pos;

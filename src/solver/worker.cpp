@@ -159,7 +159,7 @@ void Worker::work() {
             is_searching = false;
 
             // Tell the main thread we've solved the position.
-            if (abs(score) != -SEARCH_STOPPED) {
+            if (abs(score) != SEARCH_STOPPED) {
                 bool was_first = result->notify_result(score);
 
                 if (was_first) {
