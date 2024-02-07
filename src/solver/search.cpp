@@ -255,11 +255,11 @@ int Search::negamax(Node &node, int alpha, int beta, int move_offset) {
         if (child_score > best_recursion_value) {
             best_move_index = i;
             best_move_col = col;
-        }
+            best_recursion_value = child_score;
 
-        value = std::max(value, child_score);
-        alpha = std::max(alpha, child_score);
-        best_recursion_value = std::max(best_recursion_value, child_score);
+            value = std::max(value, child_score);
+            alpha = std::max(alpha, child_score);
+        }
     }
 
     assert(best_recursion_value != -INF_SCORE);
@@ -296,6 +296,7 @@ int Search::static_search(Node &node, int col, int alpha, int beta, bool &is_sta
     // score possible is a draw.
     if (!node.pos.can_player_win()) {
         beta = std::min(beta, 0);
+
         if (alpha >= beta) {
             is_static = true;
             return beta;
@@ -316,14 +317,10 @@ int Search::static_search(Node &node, int col, int alpha, int beta, bool &is_sta
     // Check if the opponent could win next move.
     board opponent_wins = node.pos.wins_this_move(opponent_threats);
     if (opponent_wins) {
-        // If the opponent has multiple threats, then the game is lost.
-        if (opponent_wins & (opponent_wins - 1)) {
-            is_static = true;
-            return node.pos.score_loss();
-        }
-
-        // If the opponent has two threats on top of each other, then the game is also lost.
-        if (!(opponent_wins & non_losing_moves)) {
+        // The game is lost if:
+        //  * The opponent has multiple threats
+        //  * Or, the opponent has two threats on top of each other
+        if (opponent_wins & (opponent_wins - 1) || !(opponent_wins & non_losing_moves)) {
             is_static = true;
             return node.pos.score_loss();
         }

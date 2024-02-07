@@ -46,7 +46,7 @@ class Entry {
     static constexpr int SCORE_MASK = (1 << 8) - 1;
     static constexpr int SCORE_SHIFT = 0;
 
-    // Not all bits of the hash are saved, however the hashing will still by unique
+    // Not all bits of the hash are saved, however the hashing will still be unique
     // by the Chinese Remainder Theorem as long as the check below passes.
     static_assert(const_log2(NUM_TABLE_ENTRIES) + HASH_BITS > (BOARD_HEIGHT + 1) * BOARD_WIDTH);
 };
