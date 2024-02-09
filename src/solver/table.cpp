@@ -6,7 +6,10 @@
 #include <iomanip>
 #include <memory>
 #include <sstream>
+#include <cstdint>
 #include <stdexcept>
+#include <xmmintrin.h>
+#include <mmintrin.h>
 
 #include "Tracy.hpp"
 #include "position.h"
@@ -79,10 +82,14 @@ void Table::prefetch(board hash) {
 
     int index = hash % NUM_TABLE_ENTRIES;
 
+#if defined(_MSC_VER)
+    _mm_prefetch((const char *) (table.get() + index), _MM_HINT_T0);
+#else
     // void __builtin_prefetch(const void *addr, int rw=0, int locality=3)
     // rw       = read/write flag. 0 for read, 1 for write & read/write.
     // locality = persistance in cache.
     __builtin_prefetch(table.get() + index, 1, 3);
+#endif
 }
 
 Entry Table::get(board hash) {
@@ -140,7 +147,7 @@ std::string Table::get_table_size() {
     std::stringstream result;
     result << std::fixed << std::setprecision(2);
 
-    long bytes = NUM_TABLE_ENTRIES * sizeof(Entry);
+    uint64_t bytes = NUM_TABLE_ENTRIES * sizeof(Entry);
     double kb = bytes / 1024.0;
     double mb = kb / 1024.0;
     double gb = mb / 1024.0;

@@ -1,6 +1,8 @@
 .vscode/c_cpp_properties.json
 .vscode/settings.json
+.vs/
 obj/
+out/
 c4
 arena
 test
