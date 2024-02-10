@@ -71,10 +71,10 @@ static float heuristic(Position &pos, board threats, int col) {
     float center_score = (float)std::min(col, BOARD_WIDTH - col - 1) / BOARD_WIDTH;
 
     // clang-format off
-    return 1.0 * num_next_threats
-        + 0.5 * num_next_next_threats
-        + 0.3 * num_threats
-        + 0.1 * center_score;
+    return 1.0f * num_next_threats
+        + 0.5f * num_next_next_threats
+        + 0.3f * num_threats
+        + 0.1f * center_score;
     // clang-format on
 }
 
@@ -334,14 +334,14 @@ int Search::static_search(Node &node, int col, int alpha, int beta, bool &is_sta
         return alpha;
     }
 
-    board useful_threats;
+    board useful_threats = 0;
     if (col != -1) {
         board player_threats = node.pos.find_player_threats();
         useful_threats = node.pos.find_useful_threats(opponent_threats, player_threats);
     }
 
     // Check if we have a forced move and if so, statically evaluate it.
-    board forced_move = get_forced_move(node.pos, opponent_wins, non_losing_moves);
+    board forced_move = get_forced_move(opponent_wins, non_losing_moves);
     if (forced_move) {
         node.pos.move(forced_move);
         int child_score = -static_search(node, -1, -beta, -alpha, is_static);
@@ -396,7 +396,7 @@ int Search::static_search(Node &node, int col, int alpha, int beta, bool &is_sta
     return INF_SCORE;
 }
 
-board Search::get_forced_move(Position &pos, board opponent_wins, board non_losing_moves) {
+board Search::get_forced_move(board opponent_wins, board non_losing_moves) {
     // A move is forced if the opponent could win next turn.
     if (opponent_wins) {
         assert((opponent_wins & (opponent_wins - 1)) == 0);

@@ -1,17 +1,23 @@
-﻿cmake_minimum_required(VERSION 3.14)
+﻿cmake_minimum_required(VERSION 3.21)
 project(c4 VERSION 1.0 LANGUAGES CXX)
 
-# Compiler settings
+# C++20
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-add_compile_options(-Wall)
+
+
+# Compiler settings
+if (MSVC)
+	# MSVC generates many useless warnings with -Wall.
+	add_compile_options(/W4)
+else()
+	add_compile_options(-Wall)
+endif()
 include_directories(tracy/public tracy/public/tracy)
 
-# Source directories
-set(SRC_DIR "${CMAKE_SOURCE_DIR}/src")
-set(TST_DIR "${CMAKE_SOURCE_DIR}/tst")
-file(GLOB_RECURSE SRCS "${SRC_DIR}/*.cpp")
-file(GLOB TSTS "${TST_DIR}/*.cpp")
+# Find source files.
+file(GLOB_RECURSE SRCS "${CMAKE_SOURCE_DIR}/src/*.cpp")
+file(GLOB_RECURSE TSTS "${CMAKE_SOURCE_DIR}/tst/*.cpp")
 
 # Tracy client special case
 add_library(tracy OBJECT tracy/public/TracyClient.cpp)

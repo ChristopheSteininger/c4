@@ -47,7 +47,7 @@ class Search {
     int negamax(Node &node, int alpha, int beta, int move_offset);
 
     int static_search(Node &node, int col, int alpha, int beta, bool &is_static);
-    board get_forced_move(Position &pos, board opponent_wins, board non_losing_moves);
+    board get_forced_move(board opponent_wins, board non_losing_moves);
 };
 
 #endif

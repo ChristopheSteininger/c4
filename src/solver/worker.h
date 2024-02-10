@@ -17,7 +17,7 @@
 class SearchResult {
    public:
     void reset();
-    bool notify_result(int score);
+    bool notify_result(int result);
     int wait_for_result();
 
    private:
@@ -33,7 +33,7 @@ class Worker {
     Worker(int id, const Table &parent_table, const std::shared_ptr<SearchResult> result);
     ~Worker();
 
-    void start(const Position &pos, int alpha, int beta, int window, int step, int move_offset);
+    void start(const Position &new_pos, int new_alpha, int new_beta, int new_window, int new_step, int new_move_offset);
     void wait();
     void stop();
 

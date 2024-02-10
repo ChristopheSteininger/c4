@@ -20,7 +20,7 @@ void SearchResult::reset() {
     found.store(false);
 }
 
-bool SearchResult::notify_result(int score) {
+bool SearchResult::notify_result(int result) {
     std::unique_lock<std::mutex> lock(mutex);
 
     // Do nothing if another thread already found the solution.
@@ -28,7 +28,7 @@ bool SearchResult::notify_result(int score) {
         return false;
     }
 
-    this->score = score;
+    this->score = result;
     found.store(true);
 
     lock.unlock();
@@ -76,12 +76,13 @@ Worker::~Worker() {
     }
 }
 
-void Worker::start(const Position &pos, int alpha, int beta, int window, int step, int move_offset) {
+void Worker::start(const Position &new_pos, int new_alpha, int new_beta,
+        int new_window, int new_step, int new_move_offset) {
     ZoneScoped;
 
-    assert(alpha <= beta);
-    assert(step > 0);
-    assert(move_offset >= 0);
+    assert(new_alpha <= new_beta);
+    assert(new_step > 0);
+    assert(new_move_offset >= 0);
 
     mutex.lock();
 
@@ -90,18 +91,18 @@ void Worker::start(const Position &pos, int alpha, int beta, int window, int ste
     assert(!is_searching);
     assert(!is_exiting);
 
+    // Position is not thread safe, so we must make our own copy.
+    pos = Position(new_pos);
+    alpha = new_alpha;
+    beta = new_beta;
+    window = new_window;
+    step = new_step;
+    move_offset = new_move_offset;
+
     // Tells the thread to start searching the given position as soon
     // as we wake it up.
-    this->is_searching = true;
-    this->search->start();
-
-    // Position is not thread safe, so we must make our own copy.
-    this->pos = Position(pos);
-    this->alpha = alpha;
-    this->beta = beta;
-    this->window = window;
-    this->step = step;
-    this->move_offset = move_offset;
+    is_searching = true;
+    search->start();
 
     mutex.unlock();
     cond.notify_one();
@@ -135,7 +136,7 @@ void Worker::print_thread_stats() {
 
     double utilisation = active_time_us.count() * 100.0 / total_time_us.count();
 
-    printf("%-5d %'9.2f%% %'10d\n", id, utilisation, solutions_found);
+    printf("%-5d %9.2f%% %10d\n", id, utilisation, solutions_found);
 }
 
 void Worker::work() {

@@ -105,7 +105,7 @@ int Solver::get_principal_variation(Position &pos, std::vector<int> &moves) {
         pv.move(best_move);
     }
 
-    return moves.size();
+    return static_cast<int>(moves.size());
 }
 
 int Solver::get_num_moves_prediction(Position &pos, int score) const {
