@@ -5,10 +5,10 @@
 #include <chrono>
 #include <iostream>
 
-#include "position.h"
-#include "settings.h"
-#include "solver.h"
-#include "table.h"
+#include "solver/position.h"
+#include "solver/settings.h"
+#include "solver/solver.h"
+#include "solver/table.h"
 
 std::string pretty_print_score(Solver &solver, Position &pos, int score) {
     std::stringstream result;
@@ -42,10 +42,10 @@ int main() {
     long long run_time_ms = std::chrono::duration_cast<std::chrono::milliseconds>(run_time).count();
     const Stats stats = solver.get_merged_stats();
 
-    std::cout << "Score is " << score << pretty_print_score(solver, pos, score) << std::endl;
-
     std::cout.imbue(std::locale(""));
     std::cout << std::fixed << std::setprecision(2) << std::endl
+              << "Score is " << score << pretty_print_score(solver, pos, score) << std::endl
+              << std::endl
               << "Time to solve        = " << run_time_ms / 1000.0 << " s" << std::endl
               << "Nodes per ms         = " << stats.get_num_nodes() / (double)run_time_ms << std::endl
               << "Nodes:" << std::endl

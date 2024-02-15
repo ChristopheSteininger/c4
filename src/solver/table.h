@@ -49,6 +49,9 @@ class Entry {
     // Not all bits of the hash are saved, however the hashing will still be unique
     // by the Chinese Remainder Theorem as long as the check below passes.
     static_assert(const_log2(NUM_TABLE_ENTRIES) + HASH_BITS > (BOARD_HEIGHT + 1) * BOARD_WIDTH);
+
+    // The number of entries must be odd otherwise CRT does not apply.
+    static_assert(NUM_TABLE_ENTRIES % 2 == 1);
 };
 
 class Table {

@@ -7,7 +7,7 @@
 inline constexpr int BOARD_WIDTH = 7;
 inline constexpr int BOARD_HEIGHT = 6;
 
-inline constexpr int NUM_THREADS = 8;
+inline constexpr int NUM_THREADS = 4;
 
 // The transposition table uses the Chinese Remainer Theorem to reduce the number of bits per entry.
 // For this to work, the size of the table must be odd. Use a prime number for fewer collisions.

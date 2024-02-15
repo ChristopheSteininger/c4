@@ -1,9 +1,10 @@
 #include "known_states.h"
 
-#include <stdio.h>
-#include <string.h>
-
 #include <chrono>
+#include <filesystem>
+#include <fstream>
+#include <iostream>
+#include <string>
 #include <vector>
 
 #include "../src/solver/position.h"
@@ -12,6 +13,8 @@
 #include "../src/solver/table.h"
 #include "Tracy.hpp"
 #include "minunit.h"
+
+namespace fs = std::filesystem;
 
 struct test_data {
     Position pos;
@@ -36,16 +39,16 @@ int sign(int x) {
     return 0;
 }
 
-struct test_data read_line(char *line) {
+struct test_data read_line(std::string &line) {
     Position pos = Position();
 
     // Reconstruct the board.
     int i = 0;
-    for (; '1' <= line[i] && line[i] <= '7'; i++) {
-        pos.move(line[i] - '1');
+    for (; '1' <= line.at(i) && line.at(i) <= '7'; i++) {
+        pos.move(line.at(i) - '1');
     }
 
-    int expected = atoi(line + i);
+    int expected = std::stoi(line.substr(i));
 
     struct test_data result = {.pos = pos, .expected = expected};
 
@@ -59,11 +62,13 @@ bool weak_test(Solver &solver, struct test_data test_data) {
     int expected = sign(test_data.expected);
 
     if (expected != actual) {
-        printf("\nThe position below has a weak score %d, but got %d.\n", expected, actual);
+        std::cout << std::endl
+                  << "The position below has a weak score " << expected << ", but got " << actual << std::endl;
         test_data.pos.printb();
 
         return false;
     }
+
     return true;
 }
 
@@ -73,7 +78,9 @@ bool strong_test(Solver &solver, struct test_data test_data) {
     int actual = solver.solve_strong(test_data.pos);
 
     if (test_data.expected != actual) {
-        printf("\nThe position below has a strong score %d, but got %d.\n", test_data.expected, actual);
+        std::cout << std::endl
+                  << "The position below has a weak score " << test_data.expected << ", but got " << actual
+                  << std::endl;
         test_data.pos.printb();
 
         return false;
@@ -96,8 +103,8 @@ bool self_play_test(Solver &solver, struct test_data test_data) {
 
     // The length of the PV must match the number of expected moves.
     if (expected_num_moves != num_pv_moves + pos.num_moves()) {
-        printf("PV length does not match expected num moves. Expected num moves was %d but got %d from PV.\n",
-               expected_num_moves, num_pv_moves + pos.num_moves());
+        std::cout << "PV length does not match expected num moves. Expected num moves was " << expected_num_moves
+                  << " but got " << num_pv_moves + pos.num_moves() << " from PV." << std::endl;
         pos.printb();
 
         return false;
@@ -111,7 +118,7 @@ bool self_play_test(Solver &solver, struct test_data test_data) {
 
         // Fail if the solver outputted an invalid move.
         if (!pos.is_move_valid(move)) {
-            printf("Solver gave an invalid move %d.\n", move);
+            std::cout << "Solver gave an invalid move " << move << "." << std::endl;
             pos.printb();
 
             return false;
@@ -119,7 +126,8 @@ bool self_play_test(Solver &solver, struct test_data test_data) {
 
         // Fail if the solver changed score while playing.
         if (score != expected_score) {
-            printf("Solver changed score during play. Expected %d but got %d.\n", expected_score, score);
+            std::cout << "Solver changed score during play. Expected " << expected_score << " but got " << score << "."
+                      << std::endl;
             pos.printb();
 
             return false;
@@ -129,19 +137,19 @@ bool self_play_test(Solver &solver, struct test_data test_data) {
         expected_score = -expected_score;
     }
 
-    // Fail if the game ended earlier or later than predicted.
+    // Fail if the move counter does not match the prediction at the start of the game.
     if (expected_num_moves != pos.num_moves()) {
-        printf("Game ended on unexpected move. Expected move count was %d but got %d.\n", expected_num_moves,
-               pos.num_moves());
+        std::cout << "Game ended with unexpected move count. Expected move count was " << expected_num_moves
+                  << " but got " << pos.num_moves() << "." << std::endl;
         pos.printb();
 
         return false;
     }
 
-    // Fail if the game ended earlier or later than predicted.
+    // Fail if number of moves played does not match the prediction.
     if (expected_num_moves != moves_played + test_data.pos.num_moves()) {
-        printf("Game ended on unexpected move. Expected move count was %d but moved %d times.\n", expected_num_moves,
-               moves_played + test_data.pos.num_moves());
+        std::cout << "Game ended after unexpected number of moves. Expected " << expected_num_moves << " moves but got "
+                  << moves_played + test_data.pos.num_moves() << " moves." << std::endl;
         pos.printb();
 
         return false;
@@ -162,16 +170,31 @@ bool run_test(Solver &solver, struct test_data test_data, TestType type) {
             return self_play_test(solver, test_data);
     }
 
-    printf("Unknown test type.\n");
+    std::cout << "Unknown test type." << std::endl;
     return false;
 }
 
-bool test_with_file(const char *filename, TestType type) {
+std::string get_type_name(TestType type) {
+    switch (type) {
+        case TestType::WEAK:
+            return "Weak";
+
+        case TestType::STRONG:
+            return "Strong";
+
+        case TestType::SELF_PLAY:
+            return "Self Play";
+    }
+
+    return "Unknown test type.";
+}
+
+bool test_with_file(const fs::path &file, TestType type) {
     ZoneScoped;
 
-    FILE *data_file = fopen(filename, "r");
-    if (!data_file) {
-        printf("Could not open the file.\n");
+    std::ifstream data_file(file);
+    if (!data_file.is_open()) {
+        std::cout << "Could not open the file: " << file.string() << std::endl;
         return false;
     }
 
@@ -179,8 +202,9 @@ bool test_with_file(const char *filename, TestType type) {
 
     std::chrono::steady_clock::duration total_run_time{};
 
-    char line[100];
-    for (int num_tests = 0; fgets(line, sizeof(line), data_file) != NULL;) {
+    std::string line;
+    int num_tests = 0;
+    while (std::getline(data_file, line)) {
         // Read the test data.
         struct test_data test_data = read_line(line);
 
@@ -190,7 +214,6 @@ bool test_with_file(const char *filename, TestType type) {
         total_run_time += std::chrono::high_resolution_clock::now() - start_time;
 
         if (!result) {
-            fclose(data_file);
             return false;
         }
 
@@ -199,41 +222,58 @@ bool test_with_file(const char *filename, TestType type) {
 
         // Increment before we print the update.
         num_tests++;
-        printf("\r\t%-30s %-15s %'15.0f %'15.0f %14.1f%% %'15.2f %'15d", filename,
-               (type == 0)   ? "Weak"
-               : (type == 1) ? "Strong"
-                             : "Self Play",
-               (double)stats.get_num_nodes() / num_tests, (double)stats.get_num_nodes() / total_run_time_ms,
-               (double)stats.get_num_best_moves_guessed() * 100 / stats.get_num_interior_nodes(),
-               (double)total_run_time_ms / 1000, num_tests);
-        fflush(stdout);
+
+        double mean_nodes = (double)stats.get_num_nodes() / num_tests;
+        double nodes_per_ms = (double)stats.get_num_nodes() / total_run_time_ms;
+        double guess_rate = (double)stats.get_num_best_moves_guessed() * 100 / stats.get_num_interior_nodes();
+        double time_sec = (double)total_run_time_ms / 1000;
+
+        // clang-format off
+        std::cout.imbue(std::locale(""));
+        std::cout << "\r\t" << std::fixed << std::left
+                  << std::setw(30) << file.string()
+                  << std::setw(15) << get_type_name(type)
+                  << std::setw(15) << std::setprecision(0) << std::right << mean_nodes
+                  << std::setw(15) << std::setprecision(0) << nodes_per_ms
+                  << std::setw(14) << std::setprecision(1) << guess_rate << "%"
+                  << std::setw(15) << std::setprecision(2) << time_sec
+                  << std::setw(15) << num_tests
+                  << std::flush;
+        // clang-format on
     }
 
-    printf("\n");
+    std::cout << std::endl;
 
-    fclose(data_file);
     return true;
 }
 
 const char *all_known_states_tests() {
-    mu_assert("Board must be 7 wide.", BOARD_WIDTH == 7);
-    mu_assert("Board must be 6 high.", BOARD_HEIGHT == 6);
+    static_assert(BOARD_WIDTH == 7, "Board must be 7 wide.");
+    static_assert(BOARD_HEIGHT == 6, "Board must be 6 high.");
 
-    printf("Running known state tests . . .\n");
-    printf("\t%-30s %-15s %15s %15s %15s %15s %15s\n", "Test", "Type", "Mean nodes", "Nodes per ms", "Guess rate",
-           "Time (s)", "Trials");
+    // clang-format off
+    std::cout << "Running known state tests . . ." << std::endl;
+    std::cout << '\t' << std::left << std::setw(30) << "Test"
+              << std::setw(15) << "Type"
+              << std::right << std::setw(15) << "Mean nodes"
+              << std::setw(15) << "Nodes per ms"
+              << std::setw(15) << "Guess rate"
+              << std::setw(15) << "Time (s)" << std::setw(15) << "Trials"
+              << std::endl;
+    // clang-format on
 
-    const char *test_files[] = {
-        "tst/data/endgame_L1.txt", "tst/data/midgame_L1.txt", "tst/data/midgame_L2.txt",
-        "tst/data/opening_L1.txt", "tst/data/opening_L2.txt", "tst/data/opening_L3.txt",
+    std::vector<fs::path> test_files = {
+        fs::path::path("tst") / "data" / "endgame_L1.txt", fs::path::path("tst") / "data" / "midgame_L1.txt",
+        fs::path::path("tst") / "data" / "midgame_L2.txt", fs::path::path("tst") / "data" / "opening_L1.txt",
+        fs::path::path("tst") / "data" / "opening_L2.txt", fs::path::path("tst") / "data" / "opening_L3.txt",
     };
 
-    for (int i = 0; i < 6; i++) {
-        mu_assert("Known state test failed.", test_with_file(test_files[i], WEAK));
-        mu_assert("Known state test failed.", test_with_file(test_files[i], STRONG));
-        mu_assert("Known state test failed.", test_with_file(test_files[i], SELF_PLAY));
+    for (fs::path file : test_files) {
+        mu_assert("Known state test failed.", test_with_file(file, WEAK));
+        mu_assert("Known state test failed.", test_with_file(file, STRONG));
+        mu_assert("Known state test failed.", test_with_file(file, SELF_PLAY));
 
-        printf("\n");
+        std::cout << std::endl;
     }
 
     return 0;

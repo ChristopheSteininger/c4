@@ -152,8 +152,8 @@ const char *test_hash_state_returns_equal_hash_for_states_with_dead_stones() {
 }
 
 const char *all_tests() {
-    mu_assert("Board must be at least 7 wide.", BOARD_WIDTH >= 7);
-    mu_assert("Board must be at least 6 high.", BOARD_HEIGHT >= 6);
+    static_assert(BOARD_WIDTH >= 7, "Board must be at least 7 wide.");
+    static_assert(BOARD_HEIGHT >= 6, "Board must be at least 6 high.");
 
     printf("Running unit tests . . .\n");
 
