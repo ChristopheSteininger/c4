@@ -19,7 +19,8 @@ inline constexpr int NUM_THREADS = 4;
 //  * 8388617    = 64 MB
 //  * 134217757  =  1 GB
 //  * 1073741827 =  8 GB
-inline constexpr int NUM_TABLE_ENTRIES = 1073741827;
+//  * 4294967311 = 32 GB
+inline constexpr uint64_t NUM_TABLE_ENTRIES = 1073741827;
 
 // At depths higher than this value, the search will do a transposition table
 // lookup for each child in hope of tightening bounds or finding a cut off.
