@@ -9,7 +9,7 @@
 #include "stats.h"
 #include "types.h"
 
-constexpr int const_log2(const int n) { return (n <= 1) ? 0 : 1 + const_log2(n / 2); }
+constexpr uint64_t const_log2(const uint64_t n) { return (n <= 1) ? 0 : 1 + const_log2(n / 2); }
 
 class Entry {
    public:

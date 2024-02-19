@@ -3,10 +3,10 @@
 #include <algorithm>
 #include <cassert>
 #include <cmath>
+#include <cstdint>
 #include <iomanip>
 #include <memory>
 #include <sstream>
-#include <cstdint>
 #include <stdexcept>
 
 #include "Tracy.hpp"
@@ -14,8 +14,8 @@
 #include "settings.h"
 
 #ifdef _MSC_VER
-#include <xmmintrin.h>
 #include <mmintrin.h>
+#include <xmmintrin.h>
 #endif
 
 Entry::Entry() { data = 0; }
@@ -86,7 +86,7 @@ void Table::prefetch(board hash) {
     int index = hash % NUM_TABLE_ENTRIES;
 
 #if defined(_MSC_VER)
-    _mm_prefetch((const char *) (table.get() + index), _MM_HINT_T0);
+    _mm_prefetch((const char *)(table.get() + index), _MM_HINT_T0);
 #else
     // void __builtin_prefetch(const void *addr, int rw=0, int locality=3)
     // rw       = read/write flag. 0 for read, 1 for write & read/write.
@@ -98,7 +98,7 @@ void Table::prefetch(board hash) {
 Entry Table::get(board hash) {
     ZoneScoped;
 
-    int index = hash % NUM_TABLE_ENTRIES;
+    uint64_t index = hash % NUM_TABLE_ENTRIES;
     Entry entry = table[index];
 
     // If this state has not been seen.
@@ -125,7 +125,7 @@ void Table::put(board hash, bool is_mirrored, int move, NodeType type, int score
     assert(type == NodeType::EXACT || type == NodeType::LOWER || type == NodeType::UPPER);
     assert(Position::MIN_SCORE <= score && score <= Position::MAX_SCORE);
 
-    int index = hash % NUM_TABLE_ENTRIES;
+    uint64_t index = hash % NUM_TABLE_ENTRIES;
     Entry current_entry = table[index];
 
     // Move needs to be mirrored as well if we are storing the mirrored position.

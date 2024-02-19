@@ -1,6 +1,8 @@
 #ifndef SETTINGS_H_
 #define SETTINGS_H_
 
+#include <cstdint>
+
 // Defines settings which can be tuned for the target machine and target problem.
 // In rough order of importance.
 
