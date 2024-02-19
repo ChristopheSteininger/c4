@@ -48,8 +48,7 @@
             "inherits": "default",
             "description": "Optimised build configuration",
             "cacheVariables": {
-              "MODE": "OPTIMISE",
-              "CMAKE_BUILD_TYPE": "Release"
+              "MODE": "OPTIMISE"
             }
           },
           {
@@ -57,8 +56,7 @@
             "inherits": "default",
             "description": "Profile build configuration",
             "cacheVariables": {
-              "MODE": "PROFILE",
-              "CMAKE_BUILD_TYPE": "Release"
+              "MODE": "PROFILE"
             }
           },
           {
@@ -66,8 +64,7 @@
             "inherits": "default",
             "description": "Debug build configuration",
             "cacheVariables": {
-              "MODE": "DEBUG",
-              "CMAKE_BUILD_TYPE": "Debug"
+              "MODE": "DEBUG"
             }
           }
     ],
