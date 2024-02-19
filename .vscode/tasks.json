@@ -3,10 +3,13 @@
         {
             "label": "Build Tests (debug)",
             "type": "shell",
-            "command": "make",
+            "command": "cmake",
             "args": [
-                "test",
-                "debug=yes"
+                "--build",
+                "--preset",
+                "debug",
+                "--target",
+                "test"
             ],
             "problemMatcher": [
                 "$gcc"
@@ -20,10 +23,13 @@
         {
             "label": "Build c4 (debug)",
             "type": "shell",
-            "command": "make",
+            "command": "cmake",
             "args": [
-                "c4",
-                "debug=yes"
+                "--build",
+                "--preset",
+                "debug",
+                "--target",
+                "c4"
             ],
             "problemMatcher": [
                 "$gcc"
@@ -37,13 +43,12 @@
         {
             "label": "Clean",
             "type": "shell",
-            "command": "make",
+            "command": "rm",
             "args": [
-                "clobber"
+                "-rf",
+                "out"
             ],
-            "problemMatcher": [
-                "$gcc"
-            ],
+            "problemMatcher": [],
             "group": {
                 "kind": "none",
                 "isDefault": false

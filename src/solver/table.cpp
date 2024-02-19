@@ -8,12 +8,15 @@
 #include <sstream>
 #include <cstdint>
 #include <stdexcept>
-#include <xmmintrin.h>
-#include <mmintrin.h>
 
 #include "Tracy.hpp"
 #include "position.h"
 #include "settings.h"
+
+#ifdef _MSC_VER
+#include <xmmintrin.h>
+#include <mmintrin.h>
+#endif
 
 Entry::Entry() { data = 0; }
 

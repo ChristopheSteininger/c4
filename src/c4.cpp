@@ -3,7 +3,9 @@
 #include <stdio.h>
 
 #include <chrono>
+#include <iomanip>
 #include <iostream>
+#include <sstream>
 
 #include "solver/position.h"
 #include "solver/settings.h"
@@ -12,7 +14,7 @@
 
 std::string pretty_print_score(Solver &solver, Position &pos, int score) {
     std::stringstream result;
-    
+
     if (score < 0) {
         result << " (loss on move " << solver.get_num_moves_prediction(pos, score) << ").";
     } else if (score > 0) {
@@ -28,9 +30,8 @@ int main() {
     Position pos;
     Solver solver;
 
-    std::cout << "Using a " << BOARD_WIDTH << " x " << BOARD_HEIGHT << " board, a "
-              << Table::get_table_size() << " table, and "
-              << NUM_THREADS << " threads." << std::endl
+    std::cout << "Using a " << BOARD_WIDTH << " x " << BOARD_HEIGHT << " board, a " << Table::get_table_size()
+              << " table, and " << NUM_THREADS << " threads." << std::endl
               << "Solving:" << std::endl;
     pos.printb();
     std::cout << std::endl;
@@ -59,6 +60,8 @@ int main() {
               << "    New write rate   = " << stats.get_new_write_rate() * 100 << "%" << std::endl
               << "    Rewrite rate     = " << stats.get_rewrite_rate() * 100 << "%" << std::endl
               << "    Overwrite rate   = " << stats.get_overwrite_rate() * 100 << "%" << std::endl
-              << "Best moves guessed   = " << (double)stats.get_num_best_moves_guessed() * 100 / stats.get_num_interior_nodes() << "%" << std::endl
-              << "Worst moves guessed  = " << (double)stats.get_num_worst_moves_guessed() * 100 / stats.get_num_interior_nodes() << "%" << std::endl;
+              << "Best moves guessed   = "
+              << (double)stats.get_num_best_moves_guessed() * 100 / stats.get_num_interior_nodes() << "%" << std::endl
+              << "Worst moves guessed  = "
+              << (double)stats.get_num_worst_moves_guessed() * 100 / stats.get_num_interior_nodes() << "%" << std::endl;
 }

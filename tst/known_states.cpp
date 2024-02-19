@@ -263,9 +263,9 @@ const char *all_known_states_tests() {
     // clang-format on
 
     std::vector<fs::path> test_files = {
-        fs::path::path("tst") / "data" / "endgame_L1.txt", fs::path::path("tst") / "data" / "midgame_L1.txt",
-        fs::path::path("tst") / "data" / "midgame_L2.txt", fs::path::path("tst") / "data" / "opening_L1.txt",
-        fs::path::path("tst") / "data" / "opening_L2.txt", fs::path::path("tst") / "data" / "opening_L3.txt",
+        fs::path("tst") / "data" / "endgame_L1.txt", fs::path("tst") / "data" / "midgame_L1.txt",
+        fs::path("tst") / "data" / "midgame_L2.txt", fs::path("tst") / "data" / "opening_L1.txt",
+        fs::path("tst") / "data" / "opening_L2.txt", fs::path("tst") / "data" / "opening_L3.txt",
     };
 
     for (fs::path file : test_files) {

@@ -5,6 +5,7 @@
 
 #include "types.h"
 
+// Used to track the performance of the solver. Not thread safe.
 class Stats {
    public:
     void merge(const Stats &other);
