@@ -18,6 +18,8 @@ class Solver {
 
     const Stats &get_merged_stats() { return pool.get_merged_stats(); }
 
+    void clear_state();
+
    private:
     // Every worker will make a copy of this table. This will give
     // each thread access to a shared table with thread local stats.

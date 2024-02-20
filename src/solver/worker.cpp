@@ -128,6 +128,10 @@ void Worker::stop() {
     }
 }
 
+void Worker::reset_stats() {
+    stats->reset();
+}
+
 void Worker::print_thread_stats() {
     auto now = std::chrono::high_resolution_clock::now();
 

@@ -17,6 +17,8 @@ class Pool {
     int search(Position &pos, int alpha, int beta);
 
     const Stats &get_merged_stats() const { return merged_stats; };
+    void reset_stats();
+
     void print_pool_stats() const;
 
    private:

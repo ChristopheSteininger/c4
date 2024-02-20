@@ -37,8 +37,10 @@ class Worker {
     void wait();
     void stop();
 
-    void print_thread_stats();
     const Stats *get_stats() const { return stats.get(); }
+    void reset_stats();
+
+    void print_thread_stats();
 
    private:
     int id;

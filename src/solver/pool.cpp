@@ -75,6 +75,12 @@ int Pool::search(Position &pos, int alpha, int beta) {
     return score;
 }
 
+void Pool::reset_stats() {
+    for (const std::unique_ptr<Worker> &worker : workers) {
+        worker->reset_stats();
+    }
+}
+
 void Pool::print_pool_stats() const {
     printf("%-5s %10s %10s\n", "ID", "Active", "First");
     for (const std::unique_ptr<Worker> &worker : workers) {

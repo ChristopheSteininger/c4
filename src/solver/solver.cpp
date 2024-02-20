@@ -124,3 +124,8 @@ int Solver::get_num_moves_prediction(Position &pos, int score) const {
         return BOARD_WIDTH * BOARD_HEIGHT;
     }
 }
+
+void Solver::clear_state() {
+    table.clear();
+    pool.reset_stats();
+}

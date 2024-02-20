@@ -189,7 +189,7 @@ std::string get_type_name(TestType type) {
     return "Unknown test type.";
 }
 
-bool test_with_file(const fs::path &file, TestType type) {
+bool test_with_file(const fs::path &file, TestType type, Solver &solver) {
     ZoneScoped;
 
     std::ifstream data_file(file);
@@ -198,7 +198,7 @@ bool test_with_file(const fs::path &file, TestType type) {
         return false;
     }
 
-    Solver solver = Solver();
+    solver.clear_state();
 
     std::chrono::steady_clock::duration total_run_time{};
 
@@ -268,10 +268,11 @@ const char *all_known_states_tests() {
         fs::path("tst") / "data" / "opening_L2.txt", fs::path("tst") / "data" / "opening_L3.txt",
     };
 
+    Solver solver{};
     for (fs::path file : test_files) {
-        mu_assert("Known state test failed.", test_with_file(file, WEAK));
-        mu_assert("Known state test failed.", test_with_file(file, STRONG));
-        mu_assert("Known state test failed.", test_with_file(file, SELF_PLAY));
+        mu_assert("Known state test failed.", test_with_file(file, WEAK, solver));
+        mu_assert("Known state test failed.", test_with_file(file, STRONG, solver));
+        mu_assert("Known state test failed.", test_with_file(file, SELF_PLAY, solver));
 
         std::cout << std::endl;
     }
