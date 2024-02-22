@@ -223,20 +223,15 @@ bool test_with_file(const fs::path &file, TestType type, Solver &solver) {
         // Increment before we print the update.
         num_tests++;
 
-        double mean_nodes = (double)stats.get_num_nodes() / num_tests;
-        double nodes_per_ms = (double)stats.get_num_nodes() / total_run_time_ms;
-        double guess_rate = (double)stats.get_num_best_moves_guessed() * 100 / stats.get_num_interior_nodes();
-        double time_sec = (double)total_run_time_ms / 1000;
-
         // clang-format off
         std::cout.imbue(std::locale(""));
         std::cout << "\r\t" << std::fixed << std::left
                   << std::setw(30) << file.string()
-                  << std::setw(15) << get_type_name(type)
-                  << std::setw(15) << std::setprecision(0) << std::right << mean_nodes
-                  << std::setw(15) << std::setprecision(0) << nodes_per_ms
-                  << std::setw(14) << std::setprecision(1) << guess_rate << "%"
-                  << std::setw(15) << std::setprecision(2) << time_sec
+                  << std::setw(15) << get_type_name(type) << std::right
+                  << std::setw(15) << std::setprecision(0) << (double)stats.get_num_nodes() / num_tests
+                  << std::setw(15) << std::setprecision(0) << (double)stats.get_num_nodes() / total_run_time_ms
+                  << std::setw(14) << std::setprecision(1) << stats.get_best_move_guess_rate() * 100 << "%"
+                  << std::setw(15) << std::setprecision(2) << (double)total_run_time_ms / 1000
                   << std::setw(15) << num_tests
                   << std::flush;
         // clang-format on

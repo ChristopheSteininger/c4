@@ -16,8 +16,8 @@ class Stats {
     unsigned long get_num_exact_nodes() const { return num_exact_nodes; }
     unsigned long get_num_lower_nodes() const { return num_lower_nodes; }
     unsigned long get_num_upper_nodes() const { return num_upper_nodes; }
-    unsigned long get_num_best_moves_guessed() const { return num_best_moves_guessed; }
-    unsigned long get_num_worst_moves_guessed() const { return num_worst_moves_guessed; }
+    double get_best_move_guess_rate() const { return (double)num_best_moves_guessed / get_num_interior_nodes(); }
+    double get_worst_move_guess_rate() const { return (double)num_worst_moves_guessed / get_num_interior_nodes(); }
     unsigned long get_num_interior_nodes() const { return num_exact_nodes + num_lower_nodes + num_upper_nodes; }
 
     // Lookup stats getters.
