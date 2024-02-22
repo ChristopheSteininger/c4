@@ -76,14 +76,16 @@ Table::Table(const Table &parent, const std::shared_ptr<Stats> stats) {
 Table::~Table() { TracyFree(table.get()); }
 
 void Table::clear() {
-    Entry empty;
+    Entry empty{};
     std::fill(table.get(), table.get() + NUM_TABLE_ENTRIES, empty);
 }
 
 void Table::prefetch(board hash) {
     ZoneScoped;
 
-    int index = hash % NUM_TABLE_ENTRIES;
+    assert(hash != 0);
+
+    uint64_t index = hash % NUM_TABLE_ENTRIES;
 
 #if defined(_MSC_VER)
     _mm_prefetch((const char *)(table.get() + index), _MM_HINT_T0);
@@ -97,6 +99,8 @@ void Table::prefetch(board hash) {
 
 Entry Table::get(board hash) {
     ZoneScoped;
+
+    assert(hash != 0);
 
     uint64_t index = hash % NUM_TABLE_ENTRIES;
     Entry entry = table[index];
@@ -121,6 +125,7 @@ Entry Table::get(board hash) {
 void Table::put(board hash, bool is_mirrored, int move, NodeType type, int score) {
     ZoneScoped;
 
+    assert(hash != 0);
     assert(0 <= move && move <= BOARD_WIDTH);
     assert(type == NodeType::EXACT || type == NodeType::LOWER || type == NodeType::UPPER);
     assert(Position::MIN_SCORE <= score && score <= Position::MAX_SCORE);

@@ -31,36 +31,28 @@ static int count_bits(board b) {
     return result;
 }
 
-static void rotate_moves(int *moves, int num_moves, int offset, bool has_table_move) {
-    int *first_move = moves;
+static void sort_moves(Node *children, int num_moves, int *moves, int offset, int table_move) {
+    assert(num_moves > 0);
+    assert(offset >= 0);
+    assert(table_move == -1 || (0 <= table_move && table_move < BOARD_WIDTH));
+
+    int *rotate_start = moves;
     int num_rotate_moves = num_moves;
 
-    // Don't rotate table moves.
-    if (has_table_move) {
-        first_move++;
+    // A move from the table always goes first, regardless of score and rotation.
+    if (table_move != -1) {
+        children[table_move].score = 1000;
+
+        rotate_start++;
         num_rotate_moves--;
     }
 
-    if (num_rotate_moves > 1) {
-        std::rotate(first_move, first_move + (offset % num_rotate_moves), first_move + num_rotate_moves);
-    }
-}
-
-static void sort_moves(Node *children, int num_moves, int *moves, int offset, int table_move) {
-    assert(num_moves > 0);
-
-    // A move from the table always goes first.
-    if (table_move != -1) {
-        children[table_move].dynamic_score = 1000;
-    }
-
     // Sort moves according to score, high to low.
-    std::sort(moves, moves + num_moves,
-              [&children](int a, int b) { return children[a].dynamic_score > children[b].dynamic_score; });
+    std::sort(moves, moves + num_moves, [&children](int a, int b) { return children[a].score > children[b].score; });
 
     // Rotate any non table moves to help threads desync.
-    if (offset != 0) {
-        rotate_moves(moves, num_moves, offset, table_move != -1);
+    if (offset > 0 && num_rotate_moves > 1) {
+        std::rotate(rotate_start, rotate_start + (offset % num_rotate_moves), rotate_start + num_rotate_moves);
     }
 }
 
@@ -77,16 +69,6 @@ static float heuristic(Position &pos, board threats, int col) {
         + 0.1f * center_score;
     // clang-format on
 }
-
-// Create our own copy of the transposition table. This table will use the same
-// underlying storage as parent_table so this thread can benefit from the work
-// other threads have saved in the table.
-Search::Search(const Table &parent_table, const std::shared_ptr<Stats> stats)
-    : table(parent_table, stats), stats(stats) {}
-
-void Search::start() { stop_search = false; }
-
-void Search::stop() { stop_search = true; }
 
 int Search::search(Position &pos, int alpha, int beta, int move_offset) {
     assert(alpha < beta);
@@ -252,6 +234,7 @@ int Search::negamax(Node &node, int alpha, int beta, int move_offset) {
             return SEARCH_STOPPED;
         }
 
+        // If the current move is the best move we have found so far.
         if (child_score > best_recursion_value) {
             best_move_index = i;
             best_move_col = col;
@@ -390,7 +373,7 @@ int Search::static_search(Node &node, int col, int alpha, int beta, bool &is_sta
     // At this point we know the move is complex and cannot be statically evaluated
     // so use a heuristic to guess the value of the move.
     if (col != -1) {
-        node.dynamic_score = heuristic(node.pos, useful_threats, col);
+        node.score = heuristic(node.pos, useful_threats, col);
     }
 
     return INF_SCORE;

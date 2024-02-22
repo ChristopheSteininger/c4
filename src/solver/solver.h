@@ -23,7 +23,7 @@ class Solver {
    private:
     // Every worker will make a copy of this table. This will give
     // each thread access to a shared table with thread local stats.
-    Table table;
+    Table table{};
 
     Pool pool{table};
 };

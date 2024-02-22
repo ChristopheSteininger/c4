@@ -9,32 +9,30 @@
 constexpr int SEARCH_STOPPED = 1000;
 
 struct Node {
-    Position pos;
+    Position pos{};
+    float score{0.0f};
 
-    bool did_lookup;
-    int table_move;
-    board hash;
-    bool is_mirrored;
+    bool did_lookup{false};
+    bool is_mirrored{false};
+    int table_move{-1};
+    board hash{0};
 
-    float dynamic_score;
+    Node() = default;
 
-    Node() {}
-
-    Node(const Position &pos) {
-        this->pos = Position(pos);
-
-        this->did_lookup = false;
-        this->table_move = -1;
-    }
+    Node(const Position &pos) : pos(pos) {};
 };
 
 // A single threaded search.
 class Search {
    public:
-    Search(const Table &parent_table, const std::shared_ptr<Stats> stats);
+    // Create our own copy of the transposition table. This table will use the same
+    // underlying storage as parent_table so this thread can benefit from the work
+    // other threads have saved in the table.
+    Search(const Table &parent_table, const std::shared_ptr<Stats> stats)
+        : table(parent_table, stats), stats(stats) {}
 
-    void start();
-    void stop();
+    void start() { stop_search = false; }
+    void stop() { stop_search = true; }
 
     int search(Position &pos, int alpha, int beta, int move_offset);
 
