@@ -22,7 +22,7 @@ class Position {
     void unmove(board before_move);
 
     // Returns the number of moves played.
-    int num_moves() const;
+    inline int num_moves() const { return ply; };
 
     // Return true only if the game over conditions are met.
     bool has_player_won() const;
@@ -64,7 +64,9 @@ class Position {
     inline int score_win(int turns = 0) const { return score_win_at(ply + turns); }
     inline int score_loss(int turns = 0) const { return score_loss_at(ply + turns); }
 
-    inline int get_ply() const { return ply; }
+    // Decode a score into a last move. The inverse of the `score_win` and `score_loss` functions.
+    int score_to_last_move(int score) const;
+
     inline bool is_same_player(const Position &other) const { return (ply & 1) == (other.ply & 1); }
 
     // Return a hash guaranteed to be unique to the position.
@@ -89,10 +91,10 @@ class Position {
 
    private:
     // The current and next players position.
-    board b0 = 0;
-    board b1 = 0;
+    board b0{0};
+    board b1{0};
 
-    int ply = 0;
+    int ply{0};
 
     // The move history is useful for debugging, but has no purpose
     // in the search, so only enable for debug builds.

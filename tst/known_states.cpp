@@ -89,7 +89,7 @@ bool strong_test(Solver &solver, struct test_data test_data) {
 }
 
 // Tests that if playing a game, the game proceeds as expected. The results of
-// solve_strong(), get_num_moves_prediction(), and get_principal_variation()
+// solve_strong(), score_to_last_move(), and get_principal_variation()
 // must be consistent with each other for the entire game.
 bool self_play_test(Solver &solver, struct test_data test_data) {
     ZoneScoped;
@@ -98,7 +98,7 @@ bool self_play_test(Solver &solver, struct test_data test_data) {
 
     std::vector<int> pv;
     int expected_score = test_data.expected;
-    int expected_num_moves = solver.get_num_moves_prediction(pos, expected_score);
+    int expected_num_moves = pos.score_to_last_move(expected_score);
     int num_pv_moves = solver.get_principal_variation(pos, pv);
 
     // The length of the PV must match the number of expected moves.

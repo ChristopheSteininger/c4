@@ -108,23 +108,6 @@ int Solver::get_principal_variation(Position &pos, std::vector<int> &moves) {
     return static_cast<int>(moves.size());
 }
 
-int Solver::get_num_moves_prediction(Position &pos, int score) const {
-    ZoneScoped;
-
-    // Run the calculation from the perspective of the first player.
-    if (pos.num_moves() & 1) {
-        score *= -1;
-    }
-
-    if (score > 0) {
-        return BOARD_WIDTH * BOARD_HEIGHT - (score * 2) + 1;
-    } else if (score < 0) {
-        return BOARD_WIDTH * BOARD_HEIGHT + ((score + 1) * 2);
-    } else {
-        return BOARD_WIDTH * BOARD_HEIGHT;
-    }
-}
-
 void Solver::clear_state() {
     table.clear();
     pool.reset_stats();

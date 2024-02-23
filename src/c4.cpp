@@ -17,16 +17,16 @@ static inline constexpr bool SOLVE_STRONGLY = true;
 
 static constexpr std::string strongly_weakly() { return (SOLVE_STRONGLY) ? "Strongly" : "Weakly"; }
 
-std::string pretty_print_score(Solver &solver, Position &pos, int score) {
+std::string pretty_print_score(Position &pos, int score) {
     std::stringstream result;
 
     if (SOLVE_STRONGLY) {
         result << "Strong score is " << score;
 
         if (score < 0) {
-            result << " (loss on move #" << solver.get_num_moves_prediction(pos, score) << ").";
+            result << " (loss on move #" << pos.score_to_last_move(score) << ").";
         } else if (score > 0) {
-            result << " (win on move #" << solver.get_num_moves_prediction(pos, score) << ").";
+            result << " (win on move #" << pos.score_to_last_move(score) << ").";
         } else {
             result << " (draw).";
         }
@@ -64,7 +64,7 @@ int main() {
 
     std::cout.imbue(std::locale(""));
     std::cout << std::fixed << std::setprecision(2) << std::endl
-              << pretty_print_score(solver, pos, score) << std::endl
+              << pretty_print_score(pos, score) << std::endl
               << std::endl
               << "Time to solve        = " << run_time_ms / 1000.0 << " s" << std::endl
               << "Nodes per ms         = " << stats.get_num_nodes() / run_time_ms << std::endl

@@ -338,7 +338,7 @@ int Search::static_search(Node &node, int col, int alpha, int beta, bool &is_sta
 
     // If we do not have a forced move then this position cannot be statically evaluated.
     // Do a table lookup to see if we can tighten search bounds.
-    else if (node.pos.get_ply() < ENHANCED_TABLE_CUTOFF_PLIES) {
+    else if (node.pos.num_moves() < ENHANCED_TABLE_CUTOFF_PLIES) {
         node.did_lookup = true;
         node.hash = node.pos.hash(node.is_mirrored);
 

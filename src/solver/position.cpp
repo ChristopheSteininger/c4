@@ -246,8 +246,6 @@ void Position::unmove(board before_move) {
     assert(is_board_valid());
 }
 
-int Position::num_moves() const { return ply; }
-
 bool Position::has_player_won() const { return has_won(b0) != 0; }
 
 bool Position::has_opponent_won() const { return has_won(b1) != 0; }
@@ -333,6 +331,23 @@ bool Position::is_non_losing_move(board non_losing_moves, int col) const {
     board move_mask = FIRST_COLUMN << (BOARD_HEIGHT_1 * col);
 
     return is_move_valid(col) && (move_mask & non_losing_moves);
+}
+
+int Position::score_to_last_move(int score) const {
+    // Run the calculation from the perspective of the first player.
+    if (ply & 1) {
+        score *= -1;
+    }
+
+    int max_moves = BOARD_WIDTH * BOARD_HEIGHT;
+
+    if (score > 0) {
+        return max_moves - 2 * score + 1;
+    } else if (score < 0) {
+        return max_moves + 2 * (score + 1);
+    } else {
+        return max_moves;
+    }
 }
 
 board Position::hash(bool &is_mirrored) const {

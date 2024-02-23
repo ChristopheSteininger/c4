@@ -14,7 +14,6 @@ class Solver {
 
     int get_best_move(Position &pos);
     int get_principal_variation(Position &pos, std::vector<int> &moves);
-    int get_num_moves_prediction(Position &pos, int score) const;
 
     const Stats &get_merged_stats() { return pool.get_merged_stats(); }
 
