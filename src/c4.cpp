@@ -51,7 +51,8 @@ int main() {
 
     std::cout << "Using a " << BOARD_WIDTH << " x " << BOARD_HEIGHT << " board, a " << Table::get_table_size()
               << " table, and " << NUM_THREADS << " threads." << std::endl
-              << strongly_weakly() << " solving:" << std::endl;
+              << strongly_weakly() << " solving:" << std::endl
+              << std::endl;
     pos.printb();
     std::cout << std::endl;
 
@@ -63,8 +64,7 @@ int main() {
     const Stats stats = solver.get_merged_stats();
 
     std::cout.imbue(std::locale(""));
-    std::cout << std::fixed << std::setprecision(2) << std::endl
-              << pretty_print_score(pos, score) << std::endl
+    std::cout << std::fixed << std::setprecision(2) << pretty_print_score(pos, score) << std::endl
               << std::endl
               << "Time to solve        = " << run_time_ms / 1000.0 << " s" << std::endl
               << "Nodes per ms         = " << stats.get_num_nodes() / run_time_ms << std::endl

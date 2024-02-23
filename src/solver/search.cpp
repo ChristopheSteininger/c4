@@ -37,22 +37,21 @@ static void sort_moves(Node *children, int num_moves, int *moves, int offset, in
     assert(table_move == -1 || (0 <= table_move && table_move < BOARD_WIDTH));
 
     int *rotate_start = moves;
-    int num_rotate_moves = num_moves;
+    int *last_move = moves + num_moves;
 
     // A move from the table always goes first, regardless of score and rotation.
     if (table_move != -1) {
-        children[table_move].score = 1000;
-
+        children[table_move].score = INF_SCORE;
         rotate_start++;
-        num_rotate_moves--;
     }
 
     // Sort moves according to score, high to low.
-    std::sort(moves, moves + num_moves, [&children](int a, int b) { return children[a].score > children[b].score; });
+    std::sort(moves, last_move, [&children](int a, int b) { return children[a].score > children[b].score; });
 
     // Rotate any non table moves to help threads desync.
-    if (offset > 0 && num_rotate_moves > 1) {
-        std::rotate(rotate_start, rotate_start + (offset % num_rotate_moves), rotate_start + num_rotate_moves);
+    if (offset > 0 && rotate_start != last_move) {
+        int new_first_move = offset % (last_move - rotate_start);
+        std::rotate(rotate_start, rotate_start + new_first_move, last_move);
     }
 }
 

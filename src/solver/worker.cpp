@@ -105,7 +105,7 @@ void Worker::start(const Position &new_pos, int new_alpha, int new_beta,
     search->start();
 
     mutex.unlock();
-    cond.notify_one();
+    cond.notify_all();
 }
 
 void Worker::wait() {
@@ -164,7 +164,7 @@ void Worker::work() {
             is_searching = false;
 
             // Tell the main thread we've solved the position.
-            if (abs(score) != SEARCH_STOPPED) {
+            if (score != SEARCH_STOPPED) {
                 bool was_first = result->notify_result(score);
 
                 if (was_first) {
@@ -173,7 +173,7 @@ void Worker::work() {
             }
         }
 
-        cond.notify_one();
+        cond.notify_all();
     }
 }
 
@@ -186,7 +186,7 @@ int Worker::run_search() {
     while (true) {
         int score = search->search(pos, a, b, move_offset);
 
-        if (score == SEARCH_STOPPED) {
+        if (abs(score) == SEARCH_STOPPED) {
             return SEARCH_STOPPED;
         }
 
