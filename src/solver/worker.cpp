@@ -135,7 +135,7 @@ void Worker::reset_stats() {
 }
 
 void Worker::print_thread_stats() {
-    auto now = std::chrono::high_resolution_clock::now();
+    auto now = std::chrono::steady_clock::now();
 
     auto active_time_us = std::chrono::duration_cast<std::chrono::microseconds>(active_time);
     auto total_time_us = std::chrono::duration_cast<std::chrono::microseconds>(now - start_time);
@@ -149,7 +149,7 @@ void Worker::work() {
     ZoneScoped;
 
     std::unique_lock<std::mutex> lock(mutex);
-    start_time = std::chrono::high_resolution_clock::now();
+    start_time = std::chrono::steady_clock::now();
 
     while (!is_exiting) {
         // Sleep until we have something to do.
@@ -159,9 +159,9 @@ void Worker::work() {
 
         // We have a new position to search.
         if (is_searching) {
-            auto search_start = std::chrono::high_resolution_clock::now();
+            auto search_start = std::chrono::steady_clock::now();
             int score = run_search();
-            active_time += std::chrono::high_resolution_clock::now() - search_start;
+            active_time += std::chrono::steady_clock::now() - search_start;
 
             is_searching = false;
 

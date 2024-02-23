@@ -49,7 +49,7 @@ int Pool::search(Position &pos, int alpha, int beta) {
     // Spread out the workers over the input bounds.
     double window = min;
     double window_step = (double)(max - min) / workers.size();
-    for (int i = 0; i < workers.size(); i++) {
+    for (size_t i = 0; i < workers.size(); i++) {
         // clang-format off
         int move_offset = (window_step < 1)
             ? (i % 2) * BOARD_WIDTH * BOARD_WIDTH

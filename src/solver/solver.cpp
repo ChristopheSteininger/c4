@@ -5,6 +5,7 @@
 #include <iostream>
 #include <random>
 #include <string>
+#include <sstream>
 #include <thread>
 #include <vector>
 
@@ -128,6 +129,12 @@ std::string Solver::get_settings_string() {
         result << " (affinity on)";
     }
 
-    result << ".";
+    result << "." << std::endl;
+
+    
+#ifndef NDEBUG
+    result << "Running with assertions enabled." << std::endl;
+#endif
+
     return result.str();
 }

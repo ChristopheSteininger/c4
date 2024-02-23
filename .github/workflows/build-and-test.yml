@@ -1,0 +1,36 @@
+name: build-and-test
+
+on: push
+
+jobs: 
+    build:
+        runs-on: ${{ matrix.os }}
+
+        strategy:
+            matrix:
+                include:
+                  - os: ubuntu-latest
+                    compiler: g++
+                  - os: ubuntu-latest
+                    compiler: clang++
+                  - os: windows-latest
+                    compiler: cl
+        
+        steps:
+          - uses: actions/checkout@v4
+            with:
+                submodules: true
+          - uses: ilammy/msvc-dev-cmd@v1
+          - uses: seanmiddleditch/gha-setup-ninja@master
+
+          - name: Setup
+            run: cmake 
+                   -G Ninja
+                   -DCMAKE_CXX_COMPILER=${{ matrix.compiler }}
+                   --preset debug
+        
+          - name: Build
+            run: cmake --build --preset debug
+
+          - name: Test
+            run: out/debug/test --light

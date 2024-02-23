@@ -212,9 +212,9 @@ bool test_with_file(const fs::path &file, TestType type, Solver &solver) {
         struct test_data test_data = read_line(line);
 
         // Run the test.
-        auto start_time = std::chrono::high_resolution_clock::now();
+        auto start_time = std::chrono::steady_clock::now();
         bool result = run_test(solver, test_data, type);
-        total_run_time += std::chrono::high_resolution_clock::now() - start_time;
+        total_run_time += std::chrono::steady_clock::now() - start_time;
 
         if (!result) {
             return false;
@@ -246,7 +246,7 @@ bool test_with_file(const fs::path &file, TestType type, Solver &solver) {
     return true;
 }
 
-const char *all_known_states_tests() {
+const char *all_known_states_tests(bool light_mode) {
     static_assert(BOARD_WIDTH == 7, "Board must be 7 wide.");
     static_assert(BOARD_HEIGHT == 6, "Board must be 6 high.");
 
@@ -263,10 +263,17 @@ const char *all_known_states_tests() {
     // clang-format on
 
     std::vector<fs::path> test_files = {
-        fs::path("tst") / "data" / "endgame_L1.txt", fs::path("tst") / "data" / "midgame_L1.txt",
-        fs::path("tst") / "data" / "midgame_L2.txt", fs::path("tst") / "data" / "opening_L1.txt",
-        fs::path("tst") / "data" / "opening_L2.txt", fs::path("tst") / "data" / "opening_L3.txt",
+        fs::path("tst") / "data" / "endgame_L1.txt",
     };
+
+    // Only test with the longest running known state files if light mode is disabled.
+    if (!light_mode) {
+        test_files.push_back(fs::path("tst") / "data" / "midgame_L1.txt");
+        test_files.push_back(fs::path("tst") / "data" / "midgame_L2.txt");
+        test_files.push_back(fs::path("tst") / "data" / "opening_L1.txt");
+        test_files.push_back(fs::path("tst") / "data" / "opening_L2.txt");
+        test_files.push_back(fs::path("tst") / "data" / "opening_L3.txt");
+    }
 
     Solver solver{};
     for (fs::path file : test_files) {

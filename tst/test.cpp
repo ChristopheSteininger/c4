@@ -152,7 +152,7 @@ const char *test_hash_state_returns_equal_hash_for_states_with_dead_stones() {
     return 0;
 }
 
-const char *all_tests() {
+const char *all_tests(bool light_mode) {
     static_assert(BOARD_WIDTH >= 7, "Board must be at least 7 wide.");
     static_assert(BOARD_HEIGHT >= 6, "Board must be at least 6 high.");
 
@@ -169,18 +169,26 @@ const char *all_tests() {
     mu_run_test(test_hash_state_returns_equal_hash_for_states_with_dead_stones);
 
     // Test against states with known scores.
-    mu_run_test(all_known_states_tests);
+    mu_run_test_params(all_known_states_tests(light_mode));
 
     return 0;
 }
 
-int main() {
+int main(int argc, char **argv) {
+    using namespace std::literals;
+
     // Allow thousands separator.
     setlocale(LC_NUMERIC, "");
 
-    std::cout << Solver::get_settings_string() << std::endl;
+    std::cout << Solver::get_settings_string();
 
-    const char *result = all_tests();
+    // Check if long running tests are disabled.
+    bool light_mode = argc > 1 && argv[1] == "--light"sv;
+    if (light_mode) {
+        std::cout << "Running in light test mode." << std::endl;
+    }
+
+    const char *result = all_tests(light_mode);
 
     std::cout << "Tests run: " << tests_run << std::endl;
     if (result != 0) {
