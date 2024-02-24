@@ -6,11 +6,12 @@ import data
 
 BATCH_SIZE = 64
 
-LEARNING_RATE = 0.001
+LEARNING_RATE = 0.005
 
 EPOCHS = 50
 
 DEVICE = "cpu"
+
 
 class Net(nn.Module):
     def __init__(self):
@@ -19,7 +20,7 @@ class Net(nn.Module):
         self.stack = nn.Sequential(
             nn.Linear(2 * 7 * 6, 16),
             nn.ReLU(),
-            # nn.Linear(32, 32),
+            # nn.Linear(16, 16),
             # nn.ReLU(),
             nn.Linear(16, 3),
         )
@@ -36,8 +37,8 @@ training_dataset, testing_dataset = data.get_datasets()
 training_dataloader = DataLoader(training_dataset, batch_size=BATCH_SIZE, shuffle=True)
 testing_dataloader = DataLoader(testing_dataset, batch_size=BATCH_SIZE, shuffle=True)
 
-print(f"Training samples = {len(training_dataloader.dataset)}")
-print(f"Testing samples = {len(testing_dataloader.dataset)}")
+print(f"Training samples = {len(training_dataloader.dataset):,}")
+print(f"Testing samples = {len(testing_dataloader.dataset):,}")
 
 model = Net().to(DEVICE)
 loss_fn = nn.CrossEntropyLoss()
@@ -82,7 +83,9 @@ def evaluate():
     avg_loss = total_loss / len(testing_dataloader)
     avg_correct = num_correct / len(testing_dataloader.dataset)
 
-    print(f'Test Error:\n Accuracy: {(100 * avg_correct):>0.1f}%, Avg loss: {avg_loss:>8f}')
+    print(f'  Accuracy: {(100 * avg_correct):>0.1f}%, Avg loss: {avg_loss:>8f}')
+
+print(evaluate())
 
 for i in range(EPOCHS):
     print(f"Epoch {i}")
