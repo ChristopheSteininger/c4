@@ -1,6 +1,7 @@
 .vscode/c_cpp_properties.json
 .vscode/settings.json
 .vs/
-out/
 .DS_Store
-notes.md
+out/
+__pycache__/
+src/training/data/

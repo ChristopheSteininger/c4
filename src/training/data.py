@@ -2,57 +2,45 @@ import torch
 from torch.utils.data import Dataset
 import random
 
+import position
+from settings import BOARD_WIDTH, BOARD_HEIGHT, BOARD_AREA, NUM_FEATURES
 
-DATA_FILENAMES = [
-    # "tst/data/all_8_ply_positions.txt",
-    "src/training/data/samples.csv",
-]
-DATA_PLAYERS = ["x", "o"]
-DATA_LABELS = {
+
+DATA_FILENAME = "src/training/data/samples.csv"
+
+DATA_PLAYERS = ["o", "x"]
+
+DATAL_LABELS = {
     "loss": 0,
     "draw": 1,
     "win": 2,
 }
-
-BOARD_WIDTH = 7
-BOARD_HEIGHT = 6
-BOARD_AREA = BOARD_WIDTH * BOARD_HEIGHT
 
 TRAIN_TEST_RATIO = 0.9
 
 
 class C4Dataset(Dataset):
     def __init__(self, data):
-        self.data = data
+        self._data = data
 
     def __len__(self):
-        return len(self.data)
+        return len(self._data)
 
     def __getitem__(self, index):
-        item = self.data[index]
-        # print(item["features"])
-        # print(torch.tensor(item["features"]))
-        return torch.tensor(item["features"], dtype=torch.float32), torch.tensor(item["label"])
+        item = self._data[index]
+
+        features = torch.tensor(item["features"], dtype=torch.float32)
+        labels = torch.tensor([item["label"], item["best_move"]])
+
+        return features, labels
 
 
-def _print_feature(features):
-    for row in range(BOARD_HEIGHT - 1, -1, -1):
-        line = ""
-        for col in range(BOARD_WIDTH):
-            line += " "
-            if features[row + col * BOARD_HEIGHT] == 1:
-                line += DATA_PLAYERS[0]
-            elif features[row + col * BOARD_HEIGHT + BOARD_AREA] == 1:
-                line += DATA_PLAYERS[1]
-            else:
-                line += "."
-        
-        print(line)
-    
-    footer = ""
-    for i in range(BOARD_WIDTH):
-        footer += f" {i}"
-    print(footer)
+def _line_to_best_move(cols):
+    best_move = int(cols[-2])
+    if best_move < 0 or best_move >= BOARD_WIDTH:
+        raise RuntimeError(f"Invalid best move: {best_move}")
+
+    return best_move
 
 
 def _even_labels(data):
@@ -79,30 +67,32 @@ def _line_to_features(cols):
             if cols[col] is player_symbol:
                 features[col + player * BOARD_AREA] = 1
                 num_moves[player] += 1
-    
-    if num_moves[1] > num_moves[0]:
-        raise RuntimeError(f"Sample has more player 2 moves ({num_moves[1]}) than player 1 moves ({num_moves[0]}).")
-    
-    if num_moves[0] - num_moves[1] > 1:
-        raise RuntimeError(f"Sample has too many player 1 moves ({num_moves[0]}) compared to player 2 moves ({num_moves[1]}).")
-    
+
+    if abs(num_moves[0] - num_moves[1]) > 1:
+        raise RuntimeError(f"Sample has incorrect number of player 1 moves ({num_moves[0]}) " \
+                            + "compared to player 2 moves ({num_moves[1]}).")
+
     return features
 
 
 def _line_to_label(cols):
-    label = cols[-1]
-    if label not in DATA_LABELS:
-        raise RuntimeError(f"Unknown label: {label}")
+    score = int(cols[-1])
+    if score < -17 or score > 17:
+        raise RuntimeError(f"Invalid position score: {score}")
 
-    return DATA_LABELS[label]
+    if score < 0:
+        return DATAL_LABELS["loss"]
+    elif score == 0:
+        return DATAL_LABELS["draw"]
+    else:
+        return DATAL_LABELS["win"]
 
 
 def _group_by_label(data):
     grouped = [[] for _ in range(3)]
-
     for d in data:
         grouped[d["label"]].append(d)
-    
+
     return grouped
 
 
@@ -113,42 +103,44 @@ def _mirror(features):
         for col in range(BOARD_WIDTH):
             for row in range(BOARD_HEIGHT):
                 mirror_col = BOARD_WIDTH - col - 1
-                mirrored[row + col * BOARD_HEIGHT + player * BOARD_AREA] = \
-                    features[row + mirror_col * BOARD_HEIGHT + player * BOARD_AREA]
+                if position.get_feature(features, row, mirror_col, player):
+                    position.set_feature(mirrored, row, col, player)
+                # mirrored[row + col * BOARD_HEIGHT + player * BOARD_AREA] = \
+                #     features[row + mirror_col * BOARD_HEIGHT + player * BOARD_AREA]
 
     return mirrored
 
 
 def _add_mirror_positions(data):
     with_mirror = []
-
     for d in data:
         with_mirror.append(d)
         with_mirror.append({
             "features": _mirror(d["features"]),
+            "best_move": BOARD_WIDTH - d["best_move"] - 1,
             "label": d["label"],
             "line": d["line"],
         })
-    
+
     print(f"Mirrored positions from {len(data):,} to {len(with_mirror):,} samples.")
-    
+
     return with_mirror
 
 
 def _load_data(filename):
     data = []
-
     print(f"Loading file {filename} . . .")
 
     with open(filename) as file:
         for line in file.readlines():
             cols = line.strip().split(",")
 
-            if len(cols) != BOARD_AREA + 1:
+            if len(cols) != NUM_FEATURES:
                 raise RuntimeError(f"Invalid line: '{line}'")
 
             data.append({
                 "features": _line_to_features(cols),
+                "best_move": _line_to_best_move(cols),
                 "label": _line_to_label(cols),
                 "line": line,
             })
@@ -159,18 +151,12 @@ def _load_data(filename):
 
     return data
 
+
 def get_datasets():
     # Data is column first, then row, then player. Flattened. Binary.
-    data = []
-    for filename in DATA_FILENAMES:
-        data.extend(_load_data(filename))
-    
-    # _print_feature(data[123]["features"])
-    # _print_feature(_mirror(data[123]["features"]))
-
-    selected_data = _even_labels(data)
+    raw_data = _load_data(DATA_FILENAME)
+    selected_data = _even_labels(raw_data)
     final_data = _add_mirror_positions(selected_data)
-    # final_data = selected_data
 
     # Shuffle to avoid patterns caused by grouping and flipping.
     random.shuffle(final_data)
@@ -178,8 +164,5 @@ def get_datasets():
 
     training_dataset = C4Dataset(final_data[:train_test_split])
     testing_dataset = C4Dataset(final_data[train_test_split:])
-
-    # training_dataset = C4Dataset(_even_labels(_load_data(DATA_FILENAMES[1])))
-    # testing_dataset = C4Dataset(_even_labels(_load_data(DATA_FILENAMES[0])))
 
     return training_dataset, testing_dataset
