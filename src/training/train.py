@@ -1,10 +1,12 @@
 import torch
 from torch import nn
 from torch.utils.data import DataLoader
+import time
 
 import data
 import position
 from settings import NUM_FEATURES
+
 
 BATCH_SIZE = 64
 
@@ -28,14 +30,10 @@ class Net(nn.Module):
         )
 
     def forward(self, input):
-        logits = self.stack(input)
-
-        # softmax = nn.Softmax(dim=1)
-        # return softmax(logits)
-        return logits
+        return self.stack(input)
 
 
-def training_loop(model, training_dataloader, optimiser, loss_fn):
+def _train(model, training_dataloader, optimiser, loss_fn):
     model.train()
 
     for x, y in training_dataloader:
@@ -50,47 +48,31 @@ def training_loop(model, training_dataloader, optimiser, loss_fn):
         optimiser.step()
 
 
-def simulate(model, features, best_move):
-    move_features = torch.empty((0, NUM_FEATURES))
+def _simulate(model, features, best_move):
+    valid_moves = position.get_valid_moves(features)
+    move_features = features.repeat(len(valid_moves), 1)
 
-    best_move_index = None
-    valid_move_counter = 0
-
-    for move in range(7):
-        top_row = position.get_top_row_in_col(features, move)    
-        if top_row == 5:
-            if best_move == move:
-                data.print_feature(features)
-                raise RuntimeError(f"The best move in the position ({best_move}) is not valid.")
-            continue
-
-        if move == best_move:
-            best_move_index = valid_move_counter
-
-        new_feature = features.clone()
-        position.set_feature(new_feature, top_row + 1, move, 0)
-        new_feature = new_feature.reshape((1, NUM_FEATURES))
-
-        move_features = torch.cat((move_features, new_feature), dim=0)
-        valid_move_counter += 1
-    
-    if best_move_index == None or valid_move_counter == 0:
+    if best_move not in valid_moves:
         data.print_feature(features)
-        raise RuntimeError(f"Did not find any valid moves.")
+        raise RuntimeError(f"The best move in the position ({best_move}) is not valid.")
+
+    for i, col in enumerate(valid_moves):
+        position.move(move_features[i], col)
 
     move_features = move_features.to(DEVICE)
     move_scores = model(move_features)
     best_move_guess_index = SOFTMAX(move_scores)[:, 2].argmax()
 
-    return 1 if best_move_index == best_move_guess_index else 0
+    return 1 if valid_moves.index(best_move) == best_move_guess_index else 0
 
 
-def evaluate(epoch, model, testing_dataloader, loss_fn):
+def _evaluate(epoch, model, testing_dataloader, loss_fn):
     model.eval()
 
     total_loss = 0
     num_correct = 0
     num_correct_moves = 0
+    check_correct_moves = epoch % 10 == 0 or epoch == EPOCHS - 1
 
     with torch.no_grad():
         for x, y in testing_dataloader:
@@ -105,15 +87,17 @@ def evaluate(epoch, model, testing_dataloader, loss_fn):
                 .sum() \
                 .item()
 
-            if epoch % 10 == 0 or epoch == EPOCHS - 1:
+            if check_correct_moves:
                 for i in range(device_x.size(dim=0)):
-                    num_correct_moves += simulate(model, device_x[i], device_y[i, 1])
+                    num_correct_moves += _simulate(model, device_x[i], device_y[i, 1])
 
     avg_loss = total_loss / len(testing_dataloader)
     avg_correct = num_correct / len(testing_dataloader.dataset)
     avg_correct_mvoes = num_correct_moves / len(testing_dataloader.dataset)
 
-    print(f"    Accuracy: {(100 * avg_correct):>0.1f}%, Avg loss: {avg_loss:>8f}, Avg correct moves: {100 * avg_correct_mvoes:>0.1f}%")
+    print(f"    Accuracy: {(100 * avg_correct):>0.1f}%, Avg loss: {avg_loss:>8f}")
+    if check_correct_moves:
+        print(f"    Avg correct moves: {100 * avg_correct_mvoes:>0.1f}%")
 
 
 def main():
@@ -132,8 +116,12 @@ def main():
     
     for epoch in range(EPOCHS):
         print(f"\nEpoch {epoch}:")
-        training_loop(model, training_dataloader, optimiser, loss_fn)
-        evaluate(epoch, model, testing_dataloader, loss_fn)
+        start_time = time.time()
+        
+        _train(model, training_dataloader, optimiser, loss_fn)
+        _evaluate(epoch, model, testing_dataloader, loss_fn)
+
+        print(f"    Time: {time.time() - start_time:>0.2f} s")
 
 
 if __name__ == "__main__":

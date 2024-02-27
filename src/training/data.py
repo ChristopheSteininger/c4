@@ -105,8 +105,6 @@ def _mirror(features):
                 mirror_col = BOARD_WIDTH - col - 1
                 if position.get_feature(features, row, mirror_col, player):
                     position.set_feature(mirrored, row, col, player)
-                # mirrored[row + col * BOARD_HEIGHT + player * BOARD_AREA] = \
-                #     features[row + mirror_col * BOARD_HEIGHT + player * BOARD_AREA]
 
     return mirrored
 
@@ -135,7 +133,7 @@ def _load_data(filename):
         for line in file.readlines():
             cols = line.strip().split(",")
 
-            if len(cols) != NUM_FEATURES:
+            if len(cols) != 2 + BOARD_AREA:
                 raise RuntimeError(f"Invalid line: '{line}'")
 
             data.append({
@@ -153,7 +151,6 @@ def _load_data(filename):
 
 
 def get_datasets():
-    # Data is column first, then row, then player. Flattened. Binary.
     raw_data = _load_data(DATA_FILENAME)
     selected_data = _even_labels(raw_data)
     final_data = _add_mirror_positions(selected_data)

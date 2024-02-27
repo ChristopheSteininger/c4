@@ -25,10 +25,18 @@ def get_feature_index(row, col, player):
 
 
 def get_feature(features, row, col, player):
+    assert 0 <= row < BOARD_HEIGHT
+    assert 0 <= col < BOARD_WIDTH
+    assert player == 0 or player == 1
+
     return features[get_feature_index(row, col, player)]
 
 
 def set_feature(features, row, col, player):
+    assert 0 <= row < BOARD_HEIGHT
+    assert 0 <= col < BOARD_WIDTH
+    assert player == 0 or player == 1
+
     index = get_feature_index(row, col, player)
     if features[index] != 0:
         raise RuntimeError(f"Feature at index {index} must be 0, but is {features[index]}.")
@@ -36,21 +44,25 @@ def set_feature(features, row, col, player):
     features[index] = 1
 
 
-def clear_feature(features, row, col, player):
-    index = get_feature_index(row, col, player)
-    if features[index] != 1:
-        raise RuntimeError(f"Feature at index {index} must be 1, but is {features[index]}.")
-
-    features[index] = 0
-
-
 def is_cell_empty(features, row, col):
     return get_feature(features, row, col, 0) == 0 and get_feature(features, row, col, 1) == 0
 
 
-def get_top_row_in_col(features, col):
-    for row in range(5, -1, -1):
-        if not is_cell_empty(features, row, col):
-            return row
+def move(features, col):
+    assert 0 <= col < BOARD_WIDTH
 
-    return -1
+    for row in range(BOARD_HEIGHT):
+        if is_cell_empty(features, row, col):
+            set_feature(features, row, col, 0)
+            return
+
+    assert False
+
+
+def get_valid_moves(features):
+    valid_moves = []
+    for col in range(BOARD_WIDTH):
+        if is_cell_empty(features, BOARD_HEIGHT - 1, col):
+            valid_moves.append(col)
+    
+    return valid_moves
