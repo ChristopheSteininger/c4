@@ -21,7 +21,7 @@ def print_feature(features):
 
 
 def get_feature_index(row, col, player):
-    return row + 6 * col + 6 * 7 * player
+    return row + BOARD_HEIGHT * col + BOARD_AREA * player
 
 
 def get_feature(features, row, col, player):

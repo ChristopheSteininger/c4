@@ -1,6 +1,7 @@
 import torch
 from torch.utils.data import Dataset
 import random
+import time
 
 import position
 from settings import BOARD_WIDTH, BOARD_HEIGHT, BOARD_AREA, NUM_FEATURES
@@ -10,13 +11,9 @@ DATA_FILENAME = "src/training/data/samples.csv"
 
 DATA_PLAYERS = ["o", "x"]
 
-DATAL_LABELS = {
-    "loss": 0,
-    "draw": 1,
-    "win": 2,
-}
-
 TRAIN_TEST_RATIO = 0.9
+
+MAX_SAMPLES = 10_000_000
 
 
 class C4Dataset(Dataset):
@@ -30,7 +27,7 @@ class C4Dataset(Dataset):
         item = self._data[index]
 
         features = torch.tensor(item["features"], dtype=torch.float32)
-        labels = torch.tensor([item["label"], item["best_move"]])
+        labels = torch.tensor([item["score"], item["best_move"]], dtype=torch.float32)
 
         return features, labels
 
@@ -41,21 +38,6 @@ def _line_to_best_move(cols):
         raise RuntimeError(f"Invalid best move: {best_move}")
 
     return best_move
-
-
-def _even_labels(data):
-    grouped_data = _group_by_label(data)
-    num_samples = min([len(g) for g in grouped_data])
-
-    selected_data = []
-    for group in grouped_data:
-        random.shuffle(group)
-
-        selected_data.extend(group[:num_samples])
-
-    print(f"Selected {len(grouped_data)} x {num_samples:,} ({len(selected_data):,}) even samples.")
-
-    return selected_data
 
 
 def _line_to_features(cols):
@@ -75,25 +57,12 @@ def _line_to_features(cols):
     return features
 
 
-def _line_to_label(cols):
+def _line_to_score(cols):
     score = int(cols[-1])
     if score < -17 or score > 17:
         raise RuntimeError(f"Invalid position score: {score}")
 
-    if score < 0:
-        return DATAL_LABELS["loss"]
-    elif score == 0:
-        return DATAL_LABELS["draw"]
-    else:
-        return DATAL_LABELS["win"]
-
-
-def _group_by_label(data):
-    grouped = [[] for _ in range(3)]
-    for d in data:
-        grouped[d["label"]].append(d)
-
-    return grouped
+    return score
 
 
 def _mirror(features):
@@ -101,10 +70,12 @@ def _mirror(features):
 
     for player in range(2):
         for col in range(BOARD_WIDTH):
-            for row in range(BOARD_HEIGHT):
-                mirror_col = BOARD_WIDTH - col - 1
-                if position.get_feature(features, row, mirror_col, player):
-                    position.set_feature(mirrored, row, col, player)
+            mirror_col = BOARD_WIDTH - col - 1
+
+            to_index = position.get_feature_index(0, col, player)
+            from_index = position.get_feature_index(0, mirror_col, player)
+
+            mirrored[to_index:to_index + BOARD_HEIGHT] = features[from_index:from_index + BOARD_HEIGHT]
 
     return mirrored
 
@@ -116,7 +87,7 @@ def _add_mirror_positions(data):
         with_mirror.append({
             "features": _mirror(d["features"]),
             "best_move": BOARD_WIDTH - d["best_move"] - 1,
-            "label": d["label"],
+            "score": d["score"],
             "line": d["line"],
         })
 
@@ -139,21 +110,27 @@ def _load_data(filename):
             data.append({
                 "features": _line_to_features(cols),
                 "best_move": _line_to_best_move(cols),
-                "label": _line_to_label(cols),
+                "score": _line_to_score(cols),
                 "line": line,
             })
 
-    print(f"    Loaded {len([d for d in data if d['label'] == 0]):,} losses.")
-    print(f"    Loaded {len([d for d in data if d['label'] == 1]):,} draws.")
-    print(f"    Loaded {len([d for d in data if d['label'] == 2]):,} wins.")
+    print(f"    Loaded {len([d for d in data if d['score'] < 0]):,} losses.")
+    print(f"    Loaded {len([d for d in data if d['score'] == 0]):,} draws.")
+    print(f"    Loaded {len([d for d in data if d['score'] > 0]):,} wins.")
+
+    if len(data) > MAX_SAMPLES:
+        print(f"    Cutting number of samples from {len(data):,} to {MAX_SAMPLES:,}.")
+        random.shuffle(data)
+        return data[:MAX_SAMPLES]
 
     return data
 
 
 def get_datasets():
+    start_time = time.time()
+
     raw_data = _load_data(DATA_FILENAME)
-    selected_data = _even_labels(raw_data)
-    final_data = _add_mirror_positions(selected_data)
+    final_data = _add_mirror_positions(raw_data)
 
     # Shuffle to avoid patterns caused by grouping and flipping.
     random.shuffle(final_data)
@@ -161,5 +138,7 @@ def get_datasets():
 
     training_dataset = C4Dataset(final_data[:train_test_split])
     testing_dataset = C4Dataset(final_data[train_test_split:])
+
+    print(f"Loaded data in {time.time() - start_time:>0.2f} s")
 
     return training_dataset, testing_dataset
