@@ -16,18 +16,15 @@ MAX_SAMPLES = 10_000_000
 
 class C4Dataset(Dataset):
     def __init__(self, data):
-        self._data = data
+        self._features = torch.tensor([d["features"] for d in data], dtype=torch.float32)
+        self._best_moves = torch.tensor([d["best_move"] for d in data], dtype=torch.int32)
+        self._scores = torch.tensor([d["score"] for d in data], dtype=torch.float32)
 
     def __len__(self):
-        return len(self._data)
+        return len(self._features)
 
     def __getitem__(self, index):
-        item = self._data[index]
-
-        features = torch.tensor(item["features"], dtype=torch.float32)
-        labels = torch.tensor([item["score"], item["best_move"]], dtype=torch.float32)
-
-        return features, labels
+        return self._features[index], self._scores[index], self._best_moves[index]
 
 
 def _line_to_best_move(cols):
@@ -81,14 +78,13 @@ def _mirror(features):
 def _add_mirror_positions(data):
     with_mirror = []
     for d in data:
-        with_mirror.append(d)
         with_mirror.append({
             "features": _mirror(d["features"]),
             "best_move": BOARD_WIDTH - d["best_move"] - 1,
             "score": d["score"],
-            "line": d["line"],
         })
 
+    with_mirror.extend(data)
     print(f"Mirrored positions from {len(data):,} to {len(with_mirror):,} samples.")
 
     return with_mirror

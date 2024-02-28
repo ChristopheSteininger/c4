@@ -20,6 +20,8 @@ DEVICE = "cpu"
 
 SOFTMAX = nn.Softmax(dim=1)
 
+MAX_SIMULATE_SAMPLES = 10_000
+
 
 class Net(nn.Module):
     def __init__(self):
@@ -47,12 +49,12 @@ class Net(nn.Module):
 def _train(model, training_dataloader, optimiser, loss_fn):
     model.train()
 
-    for x, y in training_dataloader:
-        device_x = x.to(DEVICE)
-        device_y = y.to(DEVICE)
+    for X, y, _ in training_dataloader:
+        device_X = X.to(DEVICE)
+        device_y = y.to(DEVICE).reshape((len(y), 1))
 
-        predictions = model(device_x)
-        loss = loss_fn(predictions, device_y[:, [0]])
+        predictions = model(device_X)
+        loss = loss_fn(predictions, device_y)
 
         optimiser.zero_grad()
         loss.backward()
@@ -64,7 +66,7 @@ def _simulate(model, features, best_move):
     move_features = features.repeat(len(valid_moves), 1)
 
     if best_move not in valid_moves:
-        data.print_feature(features)
+        position.print_feature(features)
         raise RuntimeError(f"The best move in the position ({best_move}) is not valid.")
 
     for i, col in enumerate(valid_moves):
@@ -82,32 +84,35 @@ def _evaluate(epoch, model, testing_dataloader, loss_fn):
 
     total_loss = 0
     num_correct = 0
+
     num_correct_moves = 0
+    num_moves_checked = 0
     check_correct_moves = epoch % 10 == 0 or epoch == EPOCHS - 1
 
     with torch.no_grad():
-        for x, y in testing_dataloader:
-            device_x = x.to(DEVICE)
-            device_y = y.to(DEVICE)
+        for X, y, best_moves in testing_dataloader:
+            device_X = X.to(DEVICE)
+            device_y = y.to(DEVICE).reshape((len(y), 1))
 
-            predictions = model(device_x)
+            predictions = model(device_X)
 
-            total_loss += loss_fn(predictions, device_y[:, [0]]).item()
-            num_correct += (torch.round(predictions) == device_y[:, [0]]) \
+            total_loss += loss_fn(predictions, device_y).item()
+            num_correct += (torch.round(predictions) == device_y) \
                 .type(torch.float) \
                 .sum() \
                 .item()
 
             if check_correct_moves:
-                for i in range(device_x.size(dim=0)):
-                    num_correct_moves += _simulate(model, device_x[i], device_y[i, 1])
+                for i in range(min(device_X.size(dim=0), MAX_SIMULATE_SAMPLES - num_moves_checked)):
+                    num_correct_moves += _simulate(model, device_X[i], best_moves[i])
+                    num_moves_checked += 1
 
     avg_loss = total_loss / len(testing_dataloader)
     avg_correct = num_correct / len(testing_dataloader.dataset)
-    avg_correct_moves = num_correct_moves / len(testing_dataloader.dataset)
 
     print(f"    Avg correct: {100 * avg_correct:>0.1f}, Avg loss: {avg_loss:>8f}")
     if check_correct_moves:
+        avg_correct_moves = num_correct_moves / num_moves_checked
         print(f"    Avg correct moves: {100 * avg_correct_moves:>0.1f}%")
 
 
