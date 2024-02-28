@@ -11,8 +11,6 @@ DATA_FILENAME = "src/training/data/samples.csv"
 
 DATA_PLAYERS = ["o", "x"]
 
-TRAIN_TEST_RATIO = 0.9
-
 MAX_SAMPLES = 10_000_000
 
 
@@ -126,19 +124,14 @@ def _load_data(filename):
     return data
 
 
-def get_datasets():
+def get_dataset():
     start_time = time.time()
 
     raw_data = _load_data(DATA_FILENAME)
     final_data = _add_mirror_positions(raw_data)
 
-    # Shuffle to avoid patterns caused by grouping and flipping.
-    random.shuffle(final_data)
-    train_test_split = int(TRAIN_TEST_RATIO * len(final_data))
-
-    training_dataset = C4Dataset(final_data[:train_test_split])
-    testing_dataset = C4Dataset(final_data[train_test_split:])
+    dataset = C4Dataset(final_data)
 
     print(f"Loaded data in {time.time() - start_time:>0.2f} s")
 
-    return training_dataset, testing_dataset
+    return dataset

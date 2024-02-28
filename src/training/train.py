@@ -1,12 +1,14 @@
 import torch
 from torch import nn
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, random_split
 import time
 
 import data
 import position
 from settings import NUM_FEATURES
 
+
+TRAIN_RATIO = 0.9
 
 BATCH_SIZE = 64
 
@@ -23,7 +25,7 @@ class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
 
-        num_a = 32
+        num_a = 42 * 3
         num_b = 16
 
         self.first = nn.Linear(NUM_FEATURES // 2, num_a // 2)
@@ -110,7 +112,8 @@ def _evaluate(epoch, model, testing_dataloader, loss_fn):
 
 
 def main():
-    training_dataset, testing_dataset = data.get_datasets()
+    dataset = data.get_dataset()
+    training_dataset, testing_dataset = random_split(dataset, [TRAIN_RATIO, 1 - TRAIN_RATIO])
 
     training_dataloader = DataLoader(training_dataset, batch_size=BATCH_SIZE, shuffle=True)
     testing_dataloader = DataLoader(testing_dataset, batch_size=BATCH_SIZE, shuffle=True)
@@ -118,15 +121,15 @@ def main():
     model = Net().to(DEVICE)
     loss_fn = nn.MSELoss()
     optimiser = torch.optim.SGD(model.parameters(), lr=LEARNING_RATE)
-    
+
     print("\nStarting training . . .")
     print(f"    Training samples = {len(training_dataloader.dataset):,}")
     print(f"    Testing samples = {len(testing_dataloader.dataset):,}")
-    
+
     for epoch in range(EPOCHS):
         print(f"\nEpoch {epoch}:")
         start_time = time.time()
-        
+
         _train(model, training_dataloader, optimiser, loss_fn)
         _evaluate(epoch, model, testing_dataloader, loss_fn)
 
