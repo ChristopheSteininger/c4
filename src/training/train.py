@@ -87,7 +87,7 @@ def _evaluate(epoch, model, testing_dataloader, loss_fn):
 
     num_correct_moves = 0
     num_moves_checked = 0
-    check_correct_moves = epoch % 10 == 0 or epoch == EPOCHS - 1
+    check_correct_moves = epoch % 1 == 0 or epoch == EPOCHS - 1
 
     with torch.no_grad():
         for X, y, best_moves in testing_dataloader:
@@ -110,7 +110,7 @@ def _evaluate(epoch, model, testing_dataloader, loss_fn):
     avg_loss = total_loss / len(testing_dataloader)
     avg_correct = num_correct / len(testing_dataloader.dataset)
 
-    print(f"    Avg correct: {100 * avg_correct:>0.1f}, Avg loss: {avg_loss:>8f}")
+    print(f"    Avg correct: {100 * avg_correct:>0.1f}%, Avg loss: {avg_loss:>8f}")
     if check_correct_moves:
         avg_correct_moves = num_correct_moves / num_moves_checked
         print(f"    Avg correct moves: {100 * avg_correct_moves:>0.1f}%")
