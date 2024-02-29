@@ -21,13 +21,16 @@ class C4Dataset(Dataset):
         data = line.split(",")
 
         features = torch.tensor(list(map(int, data[0])), dtype=torch.float32)
-        scores = torch.tensor(list(map(int, data[1:])), dtype=torch.float32)
+        scores = torch.tensor(list(map(int, data[1:BOARD_WIDTH + 1])), dtype=torch.float32)
+        scores[scores == -1234] = 0
+        heuristic_move = int(data[-1])
 
         if index % 2 == 1:
             features = self._mirror(features)
             scores = scores.flip(dims=(0,))
+            heuristic_move = BOARD_WIDTH - heuristic_move - 1
 
-        return features, scores
+        return features, scores, heuristic_move
 
     def _num_file_lines(self, filename):
         line_count = 0
