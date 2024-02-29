@@ -5,8 +5,10 @@ import time
 
 import data
 import position
-from settings import NUM_FEATURES
+from settings import BOARD_WIDTH, NUM_FEATURES
 
+
+DATA_FILENAME = "src/training/data/samples.csv"
 
 TRAIN_RATIO = 0.9
 
@@ -35,7 +37,7 @@ class Net(nn.Module):
             nn.ReLU(),
             nn.Linear(num_a, num_b),
             nn.ReLU(),
-            nn.Linear(num_b, 1),
+            nn.Linear(num_b, BOARD_WIDTH),
         )
 
     def forward(self, input):
@@ -49,9 +51,9 @@ class Net(nn.Module):
 def _train(model, training_dataloader, optimiser, loss_fn):
     model.train()
 
-    for X, y, _ in training_dataloader:
+    for X, y in training_dataloader:
         device_X = X.to(DEVICE)
-        device_y = y.to(DEVICE).reshape((len(y), 1))
+        device_y = y.to(DEVICE)
 
         predictions = model(device_X)
         loss = loss_fn(predictions, device_y)
@@ -90,9 +92,9 @@ def _evaluate(epoch, model, testing_dataloader, loss_fn):
     check_correct_moves = epoch % 1 == 0 or epoch == EPOCHS - 1
 
     with torch.no_grad():
-        for X, y, best_moves in testing_dataloader:
+        for X, y in testing_dataloader:
             device_X = X.to(DEVICE)
-            device_y = y.to(DEVICE).reshape((len(y), 1))
+            device_y = y.to(DEVICE)
 
             predictions = model(device_X)
 
@@ -104,7 +106,7 @@ def _evaluate(epoch, model, testing_dataloader, loss_fn):
 
             if check_correct_moves:
                 for i in range(min(device_X.size(dim=0), MAX_SIMULATE_SAMPLES - num_moves_checked)):
-                    num_correct_moves += _simulate(model, device_X[i], best_moves[i])
+                    # num_correct_moves += _simulate(model, device_X[i], best_moves[i])
                     num_moves_checked += 1
 
     avg_loss = total_loss / len(testing_dataloader)
@@ -117,7 +119,7 @@ def _evaluate(epoch, model, testing_dataloader, loss_fn):
 
 
 def main():
-    dataset = data.get_dataset()
+    dataset = data.C4Dataset(DATA_FILENAME)
     training_dataset, testing_dataset = random_split(dataset, [TRAIN_RATIO, 1 - TRAIN_RATIO])
 
     training_dataloader = DataLoader(training_dataset, batch_size=BATCH_SIZE, shuffle=True)
