@@ -63,22 +63,13 @@ def _train(model, training_dataloader, optimiser, loss_fn):
         optimiser.step()
 
 
-def _simulate(model, features, best_move):
+def _simulate(prediction, features, scores):
     valid_moves = position.get_valid_moves(features)
-    move_features = features.repeat(len(valid_moves), 1)
 
-    if best_move not in valid_moves:
-        position.print_feature(features)
-        raise RuntimeError(f"The best move in the position ({best_move}) is not valid.")
+    max_score = max(scores[move] for move in valid_moves).item()
+    prediction_move = prediction.argmax()
 
-    for i, col in enumerate(valid_moves):
-        position.move(move_features[i], col)
-
-    move_features = move_features.to(DEVICE)
-    move_scores = model(move_features)
-    best_move_guess_index = move_scores.argmax()
-
-    return 1 if valid_moves.index(best_move) == best_move_guess_index else 0
+    return 1 if scores[prediction_move] == max_score else 0
 
 
 def _evaluate(epoch, model, testing_dataloader, loss_fn):
@@ -106,11 +97,11 @@ def _evaluate(epoch, model, testing_dataloader, loss_fn):
 
             if check_correct_moves:
                 for i in range(min(device_X.size(dim=0), MAX_SIMULATE_SAMPLES - num_moves_checked)):
-                    # num_correct_moves += _simulate(model, device_X[i], best_moves[i])
+                    num_correct_moves += _simulate(predictions[i], device_X[i], device_y[i])
                     num_moves_checked += 1
 
     avg_loss = total_loss / len(testing_dataloader)
-    avg_correct = num_correct / len(testing_dataloader.dataset)
+    avg_correct = num_correct / (BOARD_WIDTH * len(testing_dataloader.dataset))
 
     print(f"    Avg correct: {100 * avg_correct:>0.1f}%, Avg loss: {avg_loss:>8f}")
     if check_correct_moves:

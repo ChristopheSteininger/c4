@@ -21,10 +21,11 @@ class C4Dataset(Dataset):
         data = line.split(",")
 
         features = torch.tensor(list(map(int, data[0])), dtype=torch.float32)
+        scores = torch.tensor(list(map(int, data[1:])), dtype=torch.float32)
+
         if index % 2 == 1:
             features = self._mirror(features)
-
-        scores = torch.tensor(list(map(int, data[1:])), dtype=torch.float32)
+            scores = scores.flip(dims=(0,))
 
         return features, scores
 
