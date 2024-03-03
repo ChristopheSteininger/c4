@@ -2,7 +2,7 @@ import torch
 from torch.utils.data import Dataset
 import linecache
 
-from settings import BOARD_WIDTH, BOARD_HEIGHT, BOARD_AREA, NUM_FEATURES
+from settings import BOARD_WIDTH, BOARD_HEIGHT, BOARD_AREA
 
 
 MAX_SAMPLES = 100_000
@@ -22,7 +22,7 @@ class C4Dataset(Dataset):
 
         features = torch.tensor(list(map(int, data[0])), dtype=torch.float32)
         scores = torch.tensor(list(map(int, data[1:BOARD_WIDTH + 1])), dtype=torch.float32)
-        scores[scores == -1234] = 0
+        # scores[scores == -1234] = 0
         heuristic_move = int(data[-1])
 
         if index % 2 == 1:

@@ -64,5 +64,5 @@ def get_valid_moves(features):
     for col in range(BOARD_WIDTH):
         if is_cell_empty(features, BOARD_HEIGHT - 1, col):
             valid_moves.append(col)
-    
+
     return valid_moves
