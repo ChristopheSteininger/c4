@@ -25,16 +25,24 @@ class C4Dataset(Dataset):
         line = linecache.getline(file_name, file_line + 1)
         data = line.split(",")
 
-        features = torch.tensor(list(map(int, data[0])), dtype=torch.float32)
-        scores = torch.tensor(list(map(int, data[1:BOARD_WIDTH + 1])), dtype=torch.float32)
-        heuristic_move = torch.tensor(int(data[-1]), dtype=torch.int64).reshape((1,))
+        feature_ints = list(map(int, data[0]))
+        score_ints = list(map(int, data[1:BOARD_WIDTH + 1]))
+        heuristic_int = int(data[-1])
+
+        features = torch.tensor(feature_ints, dtype=torch.float32)
+        scores = torch.tensor(score_ints, dtype=torch.float32)
+
+        max_score = scores.max()
+        labels = (scores == max_score).type(torch.float32)
+        invalid_moves = scores == -1234
+        is_heuristic_correct = (scores[heuristic_int] == max_score).type(torch.int64).reshape((1,))
 
         if index % 2 == 1:
             features = self._mirror(features)
-            scores = scores.flip(dims=(0,))
-            heuristic_move = BOARD_WIDTH - heuristic_move - 1
+            labels = labels.flip(dims=(0,))
+            invalid_moves = invalid_moves.flip(dims=(0,))
 
-        return features, scores, heuristic_move
+        return features, labels, invalid_moves, is_heuristic_correct
 
     def _count_num_samples(self):
         file_index = 0
