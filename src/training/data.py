@@ -3,27 +3,31 @@ from torch.utils.data import Dataset
 import linecache
 
 from settings import BOARD_WIDTH, BOARD_HEIGHT, BOARD_AREA
+import validate
+import os
 
 
 MAX_SAMPLES = 100_000
 
 
 class C4Dataset(Dataset):
-    def __init__(self, filename):
-        self._filename = filename
-        self._num_samples = 2 * self._num_file_lines(filename)
+    def __init__(self):
+        self._num_samples = 2 * self._count_num_samples()
 
     def __len__(self):
         return min(MAX_SAMPLES, self._num_samples)
 
     def __getitem__(self, index):
-        line = linecache.getline(self._filename, (index // 2) + 1)
+        sample_index = index // 2
+        file_name = validate.get_samples_file_name(sample_index)
+        file_line = validate.get_samples_file_line(sample_index)
+
+        line = linecache.getline(file_name, file_line + 1)
         data = line.split(",")
 
         features = torch.tensor(list(map(int, data[0])), dtype=torch.float32)
         scores = torch.tensor(list(map(int, data[1:BOARD_WIDTH + 1])), dtype=torch.float32)
-        # scores[scores == -1234] = 0
-        heuristic_move = int(data[-1])
+        heuristic_move = torch.tensor(int(data[-1]), dtype=torch.int64).reshape((1,))
 
         if index % 2 == 1:
             features = self._mirror(features)
@@ -31,6 +35,20 @@ class C4Dataset(Dataset):
             heuristic_move = BOARD_WIDTH - heuristic_move - 1
 
         return features, scores, heuristic_move
+
+    def _count_num_samples(self):
+        file_index = 0
+        num_samples = 0
+
+        while True:
+            filename = validate.get_samples_file_name_by_index(file_index)
+            if not os.path.exists(filename):
+                break
+
+            num_samples += self._num_file_lines(filename)
+            file_index += 1
+
+        return num_samples
 
     def _num_file_lines(self, filename):
         line_count = 0
