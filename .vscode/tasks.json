@@ -54,6 +54,12 @@
                 "isDefault": false
             },
             "detail": "Remove compiled artifacts."
+        },
+        {
+            "label": "Profile train.py",
+            "type": "austin",
+            "file": "src/training/train.py",
+            "problemMatcher": [],
         }
     ],
     "version": "2.0.0"

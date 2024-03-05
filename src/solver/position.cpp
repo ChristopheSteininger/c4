@@ -3,6 +3,7 @@
 #include <cassert>
 #include <iomanip>
 #include <iostream>
+#include <sstream>
 
 #include "Tracy.hpp"
 #include "settings.h"
@@ -407,6 +408,28 @@ void Position::print_mask(board a, board b) const {
         std::cout << std::setw(2) << std::setfill(' ') << x;
     }
     std::cout << std::endl;
+}
+
+std::string Position::as_sample() const {
+    std::stringstream result;
+
+    for (int p = 0; p < 2; p++) {
+        for (int x = 0; x < BOARD_WIDTH; x++) {
+            for (int y = 0; y < BOARD_HEIGHT; y++) {
+                int shift = y + x * BOARD_HEIGHT_1;
+                board player_board = (p == 0) ? b0 : b1;
+
+                if ((player_board >> shift) & 1) {
+                    result << "1";
+                } else {
+                    result << "0";
+                }
+            }
+        }
+    }
+
+    result << ",";
+    return result.str();
 }
 
 bool Position::are_dead_stones_valid() const {

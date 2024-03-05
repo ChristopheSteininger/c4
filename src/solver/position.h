@@ -2,6 +2,7 @@
 #define BOARD_H_
 
 #include <vector>
+#include <string>
 
 #include "settings.h"
 #include "types.h"
@@ -75,6 +76,7 @@ class Position {
     // Print the game to the console.
     void printb() const;
     void print_mask(board b0, board b1) const;
+    std::string as_sample() const;
 
     // Only used for testing. Returns true only if every dead stone
     // found cannot impact the rest of the game.
@@ -110,6 +112,19 @@ class Position {
 
     // Returns true only if the board has valid column headers.
     bool is_board_valid() const;
+};
+
+struct Sample {
+    Position pos;
+    int scores[BOARD_WIDTH];
+    int heuristic_move;
+
+    Sample(Position pos, int sample_scores[BOARD_WIDTH], int heuristic_move) 
+            : pos(pos), heuristic_move(heuristic_move) {
+        for (int i = 0; i < BOARD_WIDTH; i++) {
+            scores[i] = sample_scores[i];
+        }
+    };
 };
 
 #endif

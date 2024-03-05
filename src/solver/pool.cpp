@@ -75,6 +75,16 @@ int Pool::search(Position &pos, int alpha, int beta) {
     return score;
 }
 
+void Pool::get_all_samples(std::vector<Sample> &all_samples) const {
+    assert(all_samples.size() == 0);
+
+    for (auto &worker : workers) {
+        for (auto sample : worker->get_samples()) {
+            all_samples.push_back(sample);
+        }
+    }
+}
+
 void Pool::reset_stats() {
     for (const std::unique_ptr<Worker> &worker : workers) {
         worker->reset_stats();

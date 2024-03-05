@@ -2,12 +2,12 @@ import torch
 from torch.utils.data import Dataset
 import linecache
 
-from settings import BOARD_WIDTH, BOARD_HEIGHT, BOARD_AREA
+import settings
 import validate
 import os
 
 
-MAX_SAMPLES = 100_000
+MAX_SAMPLES = 1_000_000
 
 
 class C4Dataset(Dataset):
@@ -26,7 +26,7 @@ class C4Dataset(Dataset):
         data = line.split(",")
 
         feature_ints = list(map(int, data[0]))
-        score_ints = list(map(int, data[1:BOARD_WIDTH + 1]))
+        score_ints = list(map(int, data[1:settings.BOARD_WIDTH + 1]))
         heuristic_int = int(data[-1])
 
         features = torch.tensor(feature_ints, dtype=torch.float32)
@@ -68,6 +68,6 @@ class C4Dataset(Dataset):
 
     def _mirror(self, features):
         return features \
-            .reshape((2, BOARD_WIDTH, BOARD_HEIGHT)) \
+            .reshape((2, settings.BOARD_WIDTH, settings.BOARD_HEIGHT)) \
             .flip(dims=(1,)) \
-            .reshape((2 * BOARD_AREA))
+            .reshape((2 * settings.BOARD_AREA))

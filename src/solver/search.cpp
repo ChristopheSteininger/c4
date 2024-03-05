@@ -55,7 +55,7 @@ static void sort_moves(Node *children, int num_moves, int *moves, int offset, in
     }
 }
 
-static float heuristic(Position &pos, board threats, int col) {
+static float heuristic(const Position &pos, board threats, int col) {
     int num_threats = count_bits(threats);
     int num_next_threats = count_bits(pos.find_next_turn_threats(threats));
     int num_next_next_threats = count_bits(pos.find_next_next_turn_threats(threats));
@@ -69,12 +69,16 @@ static float heuristic(Position &pos, board threats, int col) {
     // clang-format on
 }
 
-int Search::search(Position &pos, int alpha, int beta, int move_offset) {
+int Search::search(const Position &pos, int alpha, int beta, int move_offset) {
     assert(alpha < beta);
     assert(!pos.has_player_won());
     assert(!pos.has_opponent_won());
     assert(!pos.is_draw());
-    assert(!pos.wins_this_move(pos.find_player_threats()));
+    // assert(!pos.wins_this_move(pos.find_player_threats()));
+
+    if (pos.wins_this_move(pos.find_player_threats())) {
+        return pos.score_win(1);
+    }
 
     Node child(pos);
     bool is_static = false;
@@ -253,6 +257,39 @@ int Search::negamax(Node &node, int alpha, int beta, int move_offset) {
     // Store the result in the transposition table.
     NodeType type = get_node_type(value, original_alpha, original_beta);
     table.put(node.hash, node.is_mirrored, best_move_col, type, value);
+
+    // Record a new sample if necessary.
+    if (SAMPLE_RATE > 0 && node.hash % 100 == 0) {
+        int sample_scores[BOARD_WIDTH];
+
+        int max_heuristic_score = -INF_SCORE;
+        int max_heuristic_move = -1;
+
+        for (int sample_move = 0; sample_move < BOARD_WIDTH; sample_move++) {
+            if (node.pos.is_move_valid(sample_move)) {
+                board before_move = node.pos.move(sample_move);
+
+                sample_scores[sample_move] = -search(Position(node.pos), -INF_SCORE, INF_SCORE, 0);
+
+                board player_threats = node.pos.find_player_threats();
+                board opponent_threats = node.pos.find_opponent_threats();
+                board useful_threats = node.pos.find_useful_threats(opponent_threats, player_threats);
+                int score = heuristic(node.pos, useful_threats, sample_move);
+
+                if (score > max_heuristic_score) {
+                    max_heuristic_score = score;
+                    max_heuristic_move = sample_move;
+                }
+
+                node.pos.unmove(before_move);
+            } else {
+                sample_scores[sample_move] = -1234;
+            }
+        }
+
+        assert(max_heuristic_move != -1);
+        samples.push_back(Sample(Position(node.pos), sample_scores, max_heuristic_move));
+    }
 
     // Update statistics.
     stats->node_type(type);

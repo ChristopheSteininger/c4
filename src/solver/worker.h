@@ -7,6 +7,7 @@
 #include <memory>
 #include <mutex>
 #include <thread>
+#include <vector>
 
 #include "Tracy.hpp"
 #include "position.h"
@@ -37,6 +38,7 @@ class Worker {
     void wait();
     void stop();
 
+    const std::vector<Sample> &get_samples() const { return search->get_samples(); }
     const Stats *get_stats() const { return stats.get(); }
     void reset_stats();
 

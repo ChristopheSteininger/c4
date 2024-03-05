@@ -1,6 +1,20 @@
 {
     "configurations": [
         {
+            "name": "Debug train.py",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "src/training/train.py",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Debug validate.py",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "src/training/validate.py",
+            "console": "integratedTerminal"
+        },
+        {
             "name": "Debug Tests",
             "type": "cppdbg",
             "request": "launch",

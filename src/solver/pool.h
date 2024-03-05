@@ -16,6 +16,7 @@ class Pool {
 
     int search(Position &pos, int alpha, int beta);
 
+    void get_all_samples(std::vector<Sample> &all_samples) const;
     const Stats &get_merged_stats() const { return merged_stats; };
     void reset_stats();
 

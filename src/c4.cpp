@@ -7,6 +7,12 @@
 #include <iostream>
 #include <sstream>
 
+#include <filesystem>
+#include <vector>
+#include <fstream>
+
+namespace fs = std::filesystem;
+
 #include "solver/position.h"
 #include "solver/settings.h"
 #include "solver/solver.h"
@@ -45,9 +51,36 @@ std::string pretty_print_score(Position &pos, int score) {
     return result.str();
 }
 
+void save_samples(std::vector<Sample> &samples) {
+    fs::path path = fs::path("src") / "training" / "data" / "raw_samples.csv";
+    std::ofstream output_file(path);
+    
+    if (!output_file.is_open()) {
+        std::cout << "Could not open the file: " << path.string() << std::endl;
+        return;
+    }
+
+    for (Sample sample : samples) {
+        output_file << sample.pos.as_sample();
+
+        for (int i = 0; i < BOARD_WIDTH; i++) {
+            output_file << sample.scores[i] << ",";
+        }
+
+        output_file << sample.heuristic_move << std::endl;
+    }
+}
+
 int main() {
     Position pos;
     Solver solver;
+
+    // pos.move(3);
+    // pos.move(3);
+    // pos.move(3);
+    // pos.move(3);
+    // pos.move(3);
+    // pos.move(3);
 
     std::cout << "Using a " << BOARD_WIDTH << " x " << BOARD_HEIGHT << " board, a " << Table::get_table_size()
               << " table, and " << NUM_THREADS << " threads." << std::endl
@@ -63,7 +96,12 @@ int main() {
     long long run_time_ms = std::chrono::duration_cast<std::chrono::milliseconds>(run_time).count();
     const Stats stats = solver.get_merged_stats();
 
+    std::vector<Sample> all_samples{};
+    solver.get_all_samples(all_samples);
+    save_samples(all_samples);
+
     std::cout.imbue(std::locale(""));
+    std::cout << "Got " << all_samples.size() << " samples." << std::endl;
     std::cout << std::fixed << std::setprecision(2) << pretty_print_score(pos, score) << std::endl
               << std::endl
               << "Time to solve        = " << run_time_ms / 1000.0 << " s" << std::endl

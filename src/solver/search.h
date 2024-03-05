@@ -1,6 +1,8 @@
 #ifndef SEARCH_H_
 #define SEARCH_H_
 
+#include <vector>
+
 #include "position.h"
 #include "stats.h"
 #include "table.h"
@@ -34,11 +36,14 @@ class Search {
     void start() { stop_search = false; }
     void stop() { stop_search = true; }
 
-    int search(Position &pos, int alpha, int beta, int move_offset);
+    int search(const Position &pos, int alpha, int beta, int move_offset);
+
+    const std::vector<Sample> &get_samples() const { return samples; }
 
    private:
     Table table;
     std::shared_ptr<Stats> stats;
+    std::vector<Sample> samples;
 
     bool stop_search{false};
 
