@@ -12,6 +12,7 @@
 
 #include "Tracy.hpp"
 #include "position.h"
+#include "os.h"
 
 void SearchResult::reset() {
     std::unique_lock<std::mutex> lock(mutex);
@@ -58,6 +59,7 @@ Worker::Worker(int id, const Table &parent_table, std::shared_ptr<SearchResult> 
 
     // Start the thread, which will go to sleep until a position is submitted.
     this->thread = std::thread(&Worker::work, this);
+    set_thread_affinity(thread, id);
 }
 
 Worker::~Worker() {

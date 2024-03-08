@@ -73,7 +73,7 @@ void *allocate_huge_pages(size_t count, size_t size) {
 
     return mem_with_huge_pages;
 #else
-    std::cerr << "Error: huge pages requested but not implemented." << std::endl;
+    std::cerr << "Error huge pages requested but not implemented." << std::endl;
     return calloc(count, size);
 #endif
 }
@@ -95,5 +95,17 @@ void free_huge_pages(void *memory) {
     }
 #else
     free(memory);
+#endif
+}
+
+void set_thread_affinity(std::thread &thread, int id) {
+    if (!ENABLE_AFFINITY) {
+        return;
+    }
+
+#ifdef _WIN32
+    SetThreadAffinityMask(thread.native_handle(), DWORD_PTR(1) << id);
+#else
+    std::cerr << "Error thread affinity requested but not implemented." << std::endl;
 #endif
 }

@@ -24,6 +24,8 @@ inline constexpr uint64_t NUM_TABLE_ENTRIES = 134217757;
 
 inline constexpr bool ENABLE_HUGE_PAGES = false;
 
+inline constexpr bool ENABLE_AFFINITY = false;
+
 // At depths higher than this value, the search will do a transposition table
 // lookup for each child in hope of tightening bounds or finding a cut off.
 inline constexpr int ENHANCED_TABLE_CUTOFF_PLIES = BOARD_WIDTH * BOARD_HEIGHT - 12;

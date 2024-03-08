@@ -116,14 +116,18 @@ void Solver::clear_state() {
 
 std::string Solver::get_settings_string() { 
     std::stringstream result;
-    result << "Using a " << BOARD_WIDTH << " x " << BOARD_HEIGHT << " board, a "
-        << Table::get_table_size() << " table";
-    
+    result << "Using a " << BOARD_WIDTH << " x " << BOARD_HEIGHT << " board";
+
+    result << ", a " << Table::get_table_size() << " table";
     if (ENABLE_HUGE_PAGES) {
         result << " (huge pages on)";
     }
         
-    result << ", and " << NUM_THREADS << " threads.";
+    result << ", and " << NUM_THREADS << " threads";
+    if (ENABLE_AFFINITY) {
+        result << " (affinity on)";
+    }
 
+    result << ".";
     return result.str();
 }
