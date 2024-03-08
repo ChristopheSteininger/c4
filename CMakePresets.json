@@ -2,41 +2,6 @@
     "version": 3,
     "configurePresets": [
         {
-            "name": "windows-base",
-            "hidden": true,
-            "generator": "Ninja",
-            "binaryDir": "${sourceDir}/out/${presetName}",
-            "cacheVariables": {
-                "CMAKE_C_COMPILER": "cl.exe",
-                "CMAKE_CXX_COMPILER": "cl.exe"
-            },
-            "condition": {
-                "type": "equals",
-                "lhs": "${hostSystemName}",
-                "rhs": "Windows"
-            }
-        },
-        {
-            "name": "x64-debug",
-            "displayName": "x64 Debug",
-            "inherits": "windows-base",
-            "architecture": {
-                "value": "x64",
-                "strategy": "external"
-            },
-            "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Debug"
-            }
-        },
-        {
-            "name": "x64-release",
-            "displayName": "x64 Release",
-            "inherits": "x64-debug",
-            "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Release"
-            }
-        },
-        {
             "name": "default",
             "hidden": true,
             "generator": "Ninja",
@@ -48,7 +13,8 @@
             "inherits": "default",
             "description": "Optimised build configuration",
             "cacheVariables": {
-              "MODE": "OPTIMISE"
+              "MODE": "OPTIMISE",
+              "CMAKE_BUILD_TYPE": "Release"
             }
           },
           {
@@ -56,7 +22,8 @@
             "inherits": "default",
             "description": "Profile build configuration",
             "cacheVariables": {
-              "MODE": "PROFILE"
+              "MODE": "PROFILE",
+              "CMAKE_BUILD_TYPE": "Release"
             }
           },
           {
@@ -64,7 +31,8 @@
             "inherits": "default",
             "description": "Debug build configuration",
             "cacheVariables": {
-              "MODE": "DEBUG"
+              "MODE": "DEBUG",
+              "CMAKE_BUILD_TYPE": "Debug"
             }
           }
     ],

@@ -11,6 +11,7 @@
 class Solver {
    public:
     ~Solver();
+
     int solve_weak(Position &pos);
     int solve_strong(Position &pos);
 

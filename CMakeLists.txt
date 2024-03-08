@@ -30,8 +30,28 @@ add_library(tracy OBJECT tracy/public/TracyClient.cpp)
 if (MSVC)
 	message(STATUS "Compiling with MSVC in ${MODE} mode.")
 	
-	# MSVC generates many useless warnings with /Wall.
-	add_compile_options(/W4 /Ox /GL)
+	if (MODE MATCHES "OPTIMISE")
+		target_compile_definitions(solver PUBLIC NDEBUG)
+		target_compile_options(solver PUBLIC /W4 /Ox /GL)
+		target_link_options(solver PUBLIC /GL)
+	elseif(MODE MATCHES "PROFILE")
+		target_compile_definitions(solver PUBLIC NDEBUG TRACY_ENABLE)
+		target_compile_options(solver PUBLIC -Wall -O3 -flto=full)
+		target_link_options(solver PUBLIC -flto=full)
+		target_include_directories(solver PUBLIC tracy/public)
+		
+		target_link_libraries(c4 PRIVATE tracy)
+		target_link_libraries(test PRIVATE tracy)
+	elseif(MODE MATCHES "DEBUG")
+		target_compile_definitions(solver PUBLIC NO_COLOR_OUTPUT)
+		target_compile_options(solver PUBLIC -Wall -g)
+	else()
+		message(FATAL_ERROR "Mode $MODE not recognised.")
+	endif()
+	
+	# Tracy must be compiled with C++11.
+	target_compile_options(tracy PRIVATE -w -std=c++11 /Ox /GL -DTRACY_ENABLE)
+	target_include_directories(solver PUBLIC tracy/public/tracy)
 else()
 	message(STATUS "Compiling with GCC/Clang in ${MODE} mode.")
 	
