@@ -4,6 +4,7 @@
 
 #include "../src/solver/position.h"
 #include "../src/solver/settings.h"
+#include "../src/solver/solver.h"
 #include "../src/solver/table.h"
 #include "../src/solver/types.h"
 #include "known_states.h"
@@ -177,8 +178,7 @@ int main() {
     // Allow thousands separator.
     setlocale(LC_NUMERIC, "");
 
-    std::cout << "Using a " << BOARD_WIDTH << " x " << BOARD_HEIGHT << " board, a " << Table::get_table_size()
-              << " table, and " << NUM_THREADS << " threads." << std::endl;
+    std::cout << Solver::get_settings_string() << std::endl;
 
     const char *result = all_tests();
 

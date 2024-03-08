@@ -4,6 +4,7 @@
 #include <iomanip>
 #include <iostream>
 #include <random>
+#include <string>
 #include <thread>
 #include <vector>
 
@@ -111,4 +112,18 @@ int Solver::get_principal_variation(Position &pos, std::vector<int> &moves) {
 void Solver::clear_state() {
     table.clear();
     pool.reset_stats();
+}
+
+std::string Solver::get_settings_string() { 
+    std::stringstream result;
+    result << "Using a " << BOARD_WIDTH << " x " << BOARD_HEIGHT << " board, a "
+        << Table::get_table_size() << " table";
+    
+    if (ENABLE_HUGE_PAGES) {
+        result << " (huge pages on)";
+    }
+        
+    result << ", and " << NUM_THREADS << " threads.";
+
+    return result.str();
 }

@@ -12,6 +12,7 @@
 #include "Tracy.hpp"
 #include "position.h"
 #include "settings.h"
+#include "os.h"
 
 #ifdef _MSC_VER
 #include <mmintrin.h>
@@ -60,7 +61,10 @@ NodeType Entry::get_type() const {
 }
 
 Table::Table() {
-    this->table = std::shared_ptr<Entry[]>(new Entry[NUM_TABLE_ENTRIES], std::default_delete<Entry[]>());
+    Entry *memory = static_cast<Entry *>(allocate_huge_pages(NUM_TABLE_ENTRIES, sizeof(Entry)));
+    auto memory_free = [](Entry *memory) { free_huge_pages(memory); };
+
+    this->table = std::shared_ptr<Entry[]>(memory, memory_free);
     this->stats = std::make_shared<Stats>();
 
     TracyAlloc(table.get(), NUM_TABLE_ENTRIES * sizeof(Entry));

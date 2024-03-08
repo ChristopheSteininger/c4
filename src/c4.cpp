@@ -49,8 +49,7 @@ int main() {
     Position pos;
     Solver solver;
 
-    std::cout << "Using a " << BOARD_WIDTH << " x " << BOARD_HEIGHT << " board, a " << Table::get_table_size()
-              << " table, and " << NUM_THREADS << " threads." << std::endl
+    std::cout << Solver::get_settings_string() << std::endl
               << strongly_weakly() << " solving:" << std::endl
               << std::endl;
     pos.printb();

@@ -1,6 +1,8 @@
 #ifndef SOLVER_H_
 #define SOLVER_H_
 
+#include <string>
+
 #include "pool.h"
 #include "position.h"
 #include "settings.h"
@@ -18,6 +20,8 @@ class Solver {
     const Stats &get_merged_stats() { return pool.get_merged_stats(); }
 
     void clear_state();
+
+    static std::string get_settings_string();
 
    private:
     // Every worker will make a copy of this table. This will give
