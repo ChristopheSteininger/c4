@@ -201,6 +201,9 @@ bool test_with_file(const fs::path &file, TestType type, Solver &solver) {
     solver.clear_state();
 
     std::chrono::steady_clock::duration total_run_time{};
+    
+    auto last_console_update = std::chrono::steady_clock::now();
+    auto min_console_update = std::chrono::milliseconds(100);
 
     std::string line;
     int num_tests = 0;
@@ -223,18 +226,19 @@ bool test_with_file(const fs::path &file, TestType type, Solver &solver) {
         // Increment before we print the update.
         num_tests++;
 
-        // clang-format off
-        std::cout.imbue(std::locale(""));
-        std::cout << "\r\t" << std::fixed << std::left
-                  << std::setw(30) << file.string()
-                  << std::setw(15) << get_type_name(type) << std::right
-                  << std::setw(15) << std::setprecision(0) << (double)stats.get_num_nodes() / num_tests
-                  << std::setw(15) << std::setprecision(0) << (double)stats.get_num_nodes() / total_run_time_ms
-                  << std::setw(14) << std::setprecision(1) << stats.get_best_move_guess_rate() * 100 << "%"
-                  << std::setw(15) << std::setprecision(2) << (double)total_run_time_ms / 1000
-                  << std::setw(15) << num_tests
-                  << std::flush;
-        // clang-format on
+        if (num_tests == 1000 || std::chrono::steady_clock::now() - last_console_update > min_console_update) {
+            // clang-format off
+            std::cout << "\r\t" << std::fixed << std::left
+                      << std::setw(30) << file.string()
+                      << std::setw(15) << get_type_name(type) << std::right
+                      << std::setw(15) << std::setprecision(0) << (double)stats.get_num_nodes() / num_tests
+                      << std::setw(15) << std::setprecision(0) << (double)stats.get_num_nodes() / total_run_time_ms
+                      << std::setw(14) << std::setprecision(1) << stats.get_best_move_guess_rate() * 100 << "%"
+                      << std::setw(15) << std::setprecision(2) << (double)total_run_time_ms / 1000
+                      << std::setw(15) << num_tests;
+            // clang-format on
+            last_console_update = std::chrono::steady_clock::now();
+        }
     }
 
     std::cout << std::endl;
@@ -247,6 +251,7 @@ const char *all_known_states_tests() {
     static_assert(BOARD_HEIGHT == 6, "Board must be 6 high.");
 
     // clang-format off
+    std::cout.imbue(std::locale(""));
     std::cout << "Running known state tests . . ." << std::endl;
     std::cout << '\t' << std::left << std::setw(30) << "Test"
               << std::setw(15) << "Type"
