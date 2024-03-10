@@ -109,3 +109,14 @@ void set_thread_affinity(std::thread &thread, int id) {
     std::cerr << "Error thread affinity requested but not implemented." << std::endl;
 #endif
 }
+
+void os_prefetch(void *address) {
+#ifdef _WIN32
+    _mm_prefetch(static_cast<const char *>(address), _MM_HINT_T2);
+#else
+    // void __builtin_prefetch(const void *addr, int rw=0, int locality=3)
+    // rw       = read/write flag. 0 for read, 1 for write & read/write.
+    // locality = persistance in cache.
+    __builtin_prefetch(address, 1, 3);
+#endif
+}

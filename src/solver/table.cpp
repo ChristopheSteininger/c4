@@ -14,11 +14,6 @@
 #include "settings.h"
 #include "os.h"
 
-#ifdef _MSC_VER
-#include <mmintrin.h>
-#include <xmmintrin.h>
-#endif
-
 Entry::Entry() { data = 0; }
 
 Entry::Entry(board hash, int move, NodeType type, int score) {
@@ -90,15 +85,7 @@ void Table::prefetch(board hash) {
     assert(hash != 0);
 
     uint64_t index = hash % NUM_TABLE_ENTRIES;
-
-#if defined(_MSC_VER)
-    _mm_prefetch((const char *)(table.get() + index), _MM_HINT_T0);
-#else
-    // void __builtin_prefetch(const void *addr, int rw=0, int locality=3)
-    // rw       = read/write flag. 0 for read, 1 for write & read/write.
-    // locality = persistance in cache.
-    __builtin_prefetch(table.get() + index, 1, 3);
-#endif
+    os_prefetch(table.get() + index);
 }
 
 Entry Table::get(board hash) {

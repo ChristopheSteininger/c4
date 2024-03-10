@@ -10,4 +10,6 @@ void free_huge_pages(void *memory);
 
 void set_thread_affinity(std::thread &thread, int id);
 
+void os_prefetch(void *address);
+
 #endif
