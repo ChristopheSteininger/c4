@@ -22,6 +22,25 @@ Pool::~Pool() {
     wait_all();
 }
 
+static int get_move_rotation(double window_step, int i) {
+    // clang-format off
+   if (window_step < 0.1) {
+        return (i % BOARD_WIDTH) * BOARD_WIDTH * BOARD_WIDTH * BOARD_WIDTH
+            + (i % 2) * BOARD_WIDTH * BOARD_WIDTH
+            + (i % 3) * BOARD_WIDTH
+            + (i % 5);
+    }
+
+    if (window_step < 1.0) {
+        return (i % 2) * BOARD_WIDTH * BOARD_WIDTH
+            + (i % 3) * BOARD_WIDTH
+            + (i % 5);
+    }
+
+    return (i % 3) * BOARD_WIDTH + (i % 5);
+    // clang-format off
+}
+
 int Pool::search(Position &pos, int alpha, int beta) {
     // Check if the game is already over before launching the full search.
     if (pos.has_opponent_won()) {
@@ -50,14 +69,7 @@ int Pool::search(Position &pos, int alpha, int beta) {
     double window = min;
     double window_step = (double)(max - min) / workers.size();
     for (size_t i = 0; i < workers.size(); i++) {
-        // clang-format off
-        int move_offset = (window_step < 1)
-            ? (i % 2) * BOARD_WIDTH * BOARD_WIDTH
-                + (i % 3) * BOARD_WIDTH
-                + (i % 5)
-            : (i % 3) * BOARD_WIDTH
-                + (i % 5);
-        // clang-format on
+        int move_offset = get_move_rotation(window_step, i);
 
         workers[i]->start(pos, min, max, (int)window, (i % 3) + 1, move_offset);
         window += window_step;
