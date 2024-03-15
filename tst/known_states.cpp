@@ -235,7 +235,8 @@ bool test_with_file(const fs::path &file, TestType type, Solver &solver) {
                       << std::setw(15) << std::setprecision(0) << (double)stats.get_num_nodes() / total_run_time_ms
                       << std::setw(14) << std::setprecision(1) << stats.get_best_move_guess_rate() * 100 << "%"
                       << std::setw(15) << std::setprecision(2) << (double)total_run_time_ms / 1000
-                      << std::setw(15) << num_tests;
+                      << std::setw(15) << num_tests
+                      << std::flush;
             // clang-format on
             last_console_update = std::chrono::steady_clock::now();
         }
