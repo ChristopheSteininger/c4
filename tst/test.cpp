@@ -156,7 +156,7 @@ const char *all_tests(bool light_mode) {
     static_assert(BOARD_WIDTH >= 7, "Board must be at least 7 wide.");
     static_assert(BOARD_HEIGHT >= 6, "Board must be at least 6 high.");
 
-    printf("Running unit tests . . .\n");
+    std::cout << "Running unit tests . . ." << std::endl;
 
     mu_run_test(all_board_tests);
 

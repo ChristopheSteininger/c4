@@ -1,5 +1,5 @@
-#include <cstdio>
 #include <cstdlib>
+#include <iostream>
 
 #include "../src/solver/position.h"
 #include "../src/solver/settings.h"
@@ -497,7 +497,8 @@ const char *test_find_dead_stones_returns_subset_of_dead_stones_on_random_games(
         // Play random moves until the game is draw, or the last player won the game.
         while (!pos.has_opponent_won() && !pos.is_draw()) {
             if (!pos.are_dead_stones_valid()) {
-                printf("Trial #%d. Found dead stones which may impact the rest of the game.\n", trial + 1);
+                std::cout << "Trial #" << trial + 1 << ". Found dead stones which may impact the rest of the game."
+                    << std::endl;
                 pos.printb();
 
                 mu_fail("Dead stone check on random board failed.");
@@ -552,7 +553,7 @@ const char *test_find_dead_stones_returns_subset_of_dead_stones_on_random_games(
 //                             && b0_wins == b0_wins_plus_dead_stones
 //                             && b1_wins == b1_wins_minus_dead_stones
 //                             && b1_wins == b1_wins_plus_dead_stones) {
-//                         printf("Trial #%d. Found additional dead stones.\n", trial + 1);
+//                         std::cout << "Trial #" << trial + 1 << ". Found additional dead stones." << std::endl;
 //                         printb(b0, b1);
 //                         printb(dead_stones, current_stone);
 //                         printb(b0 | empty_positions, 0);

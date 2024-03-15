@@ -2,7 +2,8 @@
 
 #include <algorithm>
 #include <cassert>
-#include <cstdio>
+#include <iostream>
+#include <iomanip>
 #include <vector>
 
 #include "settings.h"
@@ -94,7 +95,10 @@ void Pool::reset_stats() {
 }
 
 void Pool::print_pool_stats() const {
-    printf("%-5s %10s %10s\n", "ID", "Active", "First");
+    std::cout << std::left << std::setw(5) << "ID"
+        << std::right << std::setw(10) << "Active"
+        << std::right << std::setw(10) << "First"
+        << std::endl;
     for (const std::unique_ptr<Worker> &worker : workers) {
         worker->print_thread_stats();
     }

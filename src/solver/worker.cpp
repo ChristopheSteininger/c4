@@ -4,7 +4,8 @@
 #include <cassert>
 #include <chrono>
 #include <condition_variable>
-#include <cstdio>
+#include <iostream>
+#include <iomanip>
 #include <memory>
 #include <mutex>
 #include <string>
@@ -142,7 +143,10 @@ void Worker::print_thread_stats() {
 
     double utilisation = active_time_us.count() * 100.0 / total_time_us.count();
 
-    printf("%-5d %9.2f%% %10d\n", id, utilisation, solutions_found);
+    std::cout << std::left << std::setw(5) << id
+        << std::right << std::setw(9) << std::fixed << std::setprecision(2) << utilisation << "%"
+        << std::right << std::setw(10) << solutions_found
+        << std::endl;
 }
 
 void Worker::work() {
