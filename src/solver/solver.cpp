@@ -131,7 +131,6 @@ std::string Solver::get_settings_string() {
 
     result << "." << std::endl;
 
-    
 #ifndef NDEBUG
     result << "Running with assertions enabled." << std::endl;
 #endif
