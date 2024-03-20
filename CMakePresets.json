@@ -23,7 +23,7 @@
             "description": "Profile build configuration",
             "cacheVariables": {
               "MODE": "PROFILE",
-              "CMAKE_BUILD_TYPE": "Release"
+              "CMAKE_BUILD_TYPE": "Debug"
             }
           },
           {

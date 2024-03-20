@@ -56,7 +56,7 @@ Worker::Worker(int id, const Table &parent_table, std::shared_ptr<SearchResult> 
     this->id = id;
     this->result = result;
     this->stats = std::make_shared<Stats>();
-    this->search = std::make_unique<Search>(parent_table, stats);
+    this->search = std::make_unique<Search>(parent_table, stats, id);
 
     // Start the thread, which will go to sleep until a position is submitted.
     this->thread = std::thread(&Worker::work, this);
@@ -80,12 +80,12 @@ Worker::~Worker() {
 }
 
 void Worker::start(const Position &new_pos, int new_alpha, int new_beta,
-        int new_window, int new_step, int new_move_offset) {
+        int new_window, int new_step, int new_score_jitter) {
     ZoneScoped;
 
     assert(new_alpha <= new_beta);
     assert(new_step > 0);
-    assert(new_move_offset >= 0);
+    assert(new_score_jitter >= 0);
 
     mutex.lock();
 
@@ -100,7 +100,7 @@ void Worker::start(const Position &new_pos, int new_alpha, int new_beta,
     beta = new_beta;
     window = new_window;
     step = new_step;
-    move_offset = new_move_offset;
+    score_jitter = new_score_jitter;
 
     // Tells the thread to start searching the given position as soon
     // as we wake it up.
@@ -190,7 +190,7 @@ int Worker::run_search() {
     int b = window + 1;
 
     while (true) {
-        int score = search->search(pos, a, b, move_offset);
+        int score = search->search(pos, a, b, score_jitter);
 
         if (abs(score) == SEARCH_STOPPED) {
             return SEARCH_STOPPED;

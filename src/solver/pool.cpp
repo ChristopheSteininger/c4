@@ -23,19 +23,20 @@ Pool::~Pool() {
     wait_all();
 }
 
-static int get_move_rotation(double window_step, int i) {
+static int get_score_jitter(double window_step, size_t i) {
     // clang-format off
    if (window_step < 0.1) {
-        return (i % BOARD_WIDTH) * BOARD_WIDTH * BOARD_WIDTH * BOARD_WIDTH
-            + (i % 2) * BOARD_WIDTH * BOARD_WIDTH
-            + (i % 3) * BOARD_WIDTH
-            + (i % 5);
+        return (i % 3) * BOARD_WIDTH * BOARD_WIDTH * BOARD_WIDTH * BOARD_WIDTH
+            + (i % 4) * BOARD_WIDTH * BOARD_WIDTH * BOARD_WIDTH
+            + (i % 5) * BOARD_WIDTH * BOARD_WIDTH
+            + (i % 6) * BOARD_WIDTH
+            + (i % 7);
     }
 
     if (window_step < 1.0) {
         return (i % 2) * BOARD_WIDTH * BOARD_WIDTH
             + (i % 3) * BOARD_WIDTH
-            + (i % 5);
+            + (i % 4);
     }
 
     return (i % 3) * BOARD_WIDTH + (i % 5);
@@ -70,9 +71,9 @@ int Pool::search(Position &pos, int alpha, int beta) {
     double window = min;
     double window_step = (double)(max - min) / workers.size();
     for (size_t i = 0; i < workers.size(); i++) {
-        int move_offset = get_move_rotation(window_step, i);
+        int score_jitter = get_score_jitter(window_step, i);
 
-        workers[i]->start(pos, min, max, (int)window, (i % 3) + 1, move_offset);
+        workers[i]->start(pos, min, max, (int)window, (i % 3) + 1, score_jitter);
         window += window_step;
     }
 

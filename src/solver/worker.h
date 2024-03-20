@@ -72,7 +72,7 @@ class Worker {
     int beta;
     int window;
     int step;
-    int move_offset;
+    int score_jitter;
     // End shared search data.
 
     // Used to measure time the worker is active

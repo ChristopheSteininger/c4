@@ -30,4 +30,8 @@ inline constexpr bool ENABLE_AFFINITY = false;
 // lookup for each child in hope of tightening bounds or finding a cut off.
 inline constexpr int ENHANCED_TABLE_CUTOFF_PLIES = BOARD_WIDTH * BOARD_HEIGHT - 12;
 
+// Determines how much noise to add to move scores near the root of the search tree. This noise helps
+// threads to desync. Increase jitter with number of threads.
+inline constexpr float MOVE_SCORE_JITTER = 0.1f;
+
 #endif

@@ -31,28 +31,26 @@ static int count_bits(board b) {
     return result;
 }
 
-static void sort_moves(Node *children, int num_moves, int *moves, int offset, int table_move) {
+void Search::sort_moves(Node *children, int num_moves, int *moves, int score_jitter, int table_move) {
     assert(num_moves > 0);
-    assert(offset >= 0);
+    assert(score_jitter >= 0);
     assert(table_move == -1 || (0 <= table_move && table_move < BOARD_WIDTH));
-
-    int *rotate_start = moves;
-    int *last_move = moves + num_moves;
 
     // A move from the table always goes first, regardless of score and rotation.
     if (table_move != -1) {
         children[table_move].score = INF_SCORE;
-        rotate_start++;
+    }
+
+    // Add some noise to move scores to help threads desync.
+    if (score_jitter > 0) {
+        int max_rand = 1 + (score_jitter % BOARD_WIDTH);
+        for (int i = 0; i < num_moves; i++) {
+            children[moves[i]].score += MOVE_SCORE_JITTER * (dist(rand) % max_rand);
+        }
     }
 
     // Sort moves according to score, high to low.
-    std::sort(moves, last_move, [&children](int a, int b) { return children[a].score > children[b].score; });
-
-    // Rotate any non table moves to help threads desync.
-    if (offset > 0 && rotate_start != last_move) {
-        int new_first_move = offset % (last_move - rotate_start);
-        std::rotate(rotate_start, rotate_start + new_first_move, last_move);
-    }
+    std::sort(moves, moves + num_moves, [&children](int a, int b) { return children[a].score > children[b].score; });
 }
 
 static float heuristic(Position &pos, board threats, int col) {
@@ -69,7 +67,7 @@ static float heuristic(Position &pos, board threats, int col) {
     // clang-format on
 }
 
-int Search::search(Position &pos, int alpha, int beta, int move_offset) {
+int Search::search(Position &pos, int alpha, int beta, int score_jitter) {
     assert(alpha < beta);
     assert(!pos.has_player_won());
     assert(!pos.has_opponent_won());
@@ -85,13 +83,13 @@ int Search::search(Position &pos, int alpha, int beta, int move_offset) {
     }
 
     if (pos.is_same_player(child.pos)) {
-        return negamax(child, alpha, beta, move_offset);
+        return negamax(child, alpha, beta, score_jitter);
     } else {
-        return -negamax(child, -beta, -alpha, move_offset);
+        return -negamax(child, -beta, -alpha, score_jitter);
     }
 }
 
-int Search::negamax(Node &node, int alpha, int beta, int move_offset) {
+int Search::negamax(Node &node, int alpha, int beta, int score_jitter) {
     ZoneScoped;
 
     assert(alpha < beta);
@@ -208,7 +206,7 @@ int Search::negamax(Node &node, int alpha, int beta, int move_offset) {
     }
 
     // Sort moves according to score.
-    sort_moves(children, num_moves, moves, move_offset, node.table_move);
+    sort_moves(children, num_moves, moves, score_jitter, node.table_move);
 
     // If none of the above checks pass, then this is an internal node and we must
     // evaluate the child nodes to determine the score of this node.
@@ -216,17 +214,20 @@ int Search::negamax(Node &node, int alpha, int beta, int move_offset) {
     for (int i = 0; i < num_moves && alpha < beta; i++) {
         int col = moves[i];
 
-        int child_move_offset = move_offset / BOARD_WIDTH;
-        if (node.table_move != -1 && i == 0) {
-            // Table moves do not respect the move offset, so pass it onto the child.
-            child_move_offset = move_offset;
+        int child_score_jitter = score_jitter / BOARD_WIDTH;
+
+        // If the difference in score between this move and the next & previous moves is too
+        // large to be affected by score jitter, then pass the move jitter on to the child.
+        if ((i == 0 || children[moves[i - 1]].score > children[col].score + MOVE_SCORE_JITTER) &&
+            (i == num_moves - 1 || children[moves[i + 1]].score < children[col].score - MOVE_SCORE_JITTER)) {
+            child_score_jitter = score_jitter;
         }
 
         // The children of this node can be more than one move deeper if static
         // evalulation found and played forced moves.
         int child_score = node.pos.is_same_player(children[col].pos)
-                              ? negamax(children[col], alpha, beta, child_move_offset)
-                              : -negamax(children[col], -beta, -alpha, child_move_offset);
+                              ? negamax(children[col], alpha, beta, child_score_jitter)
+                              : -negamax(children[col], -beta, -alpha, child_score_jitter);
 
         // If the child aborted the search, propagate the signal upwards.
         if (abs(child_score) == SEARCH_STOPPED) {
