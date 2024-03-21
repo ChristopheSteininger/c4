@@ -177,9 +177,6 @@ const char *all_tests(bool light_mode) {
 int main(int argc, char **argv) {
     using namespace std::literals;
 
-    // Allow thousands separator.
-    setlocale(LC_NUMERIC, "");
-
     std::cout << Solver::get_settings_string();
 
     // Check if long running tests are disabled.

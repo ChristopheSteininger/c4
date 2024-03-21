@@ -189,6 +189,21 @@ std::string get_type_name(TestType type) {
     return "Unknown test type.";
 }
 
+static void print_update(const fs::path &file, TestType type, const Solver &solver, int num_tests,
+                         std::chrono::steady_clock::duration total_run_time) {
+    const Stats &stats = solver.get_merged_stats();
+    long long total_run_time_ms = std::chrono::duration_cast<std::chrono::milliseconds>(total_run_time).count();
+
+    // clang-format off
+    std::cout << "\r\t" << std::fixed << std::left << std::setw(30) << file.string() << std::setw(15)
+              << get_type_name(type) << std::right << std::setw(15) << std::setprecision(0)
+              << (double)stats.get_num_nodes() / num_tests << std::setw(15) << std::setprecision(0)
+              << (double)stats.get_num_nodes() / total_run_time_ms << std::setw(14) << std::setprecision(1)
+              << stats.get_best_move_guess_rate() * 100 << "%" << std::setw(15) << std::setprecision(2)
+              << (double)total_run_time_ms / 1000 << std::setw(15) << num_tests << std::flush;
+    // clang-format on
+}
+
 bool test_with_file(const fs::path &file, TestType type, Solver &solver) {
     ZoneScoped;
 
@@ -220,28 +235,16 @@ bool test_with_file(const fs::path &file, TestType type, Solver &solver) {
             return false;
         }
 
-        const Stats stats = solver.get_merged_stats();
-        auto total_run_time_ms = std::chrono::duration_cast<std::chrono::milliseconds>(total_run_time).count();
-
-        // Increment before we print the update.
         num_tests++;
 
-        if (num_tests == 1000 || std::chrono::steady_clock::now() - last_console_update > min_console_update) {
-            // clang-format off
-            std::cout << "\r\t" << std::fixed << std::left
-                      << std::setw(30) << file.string()
-                      << std::setw(15) << get_type_name(type) << std::right
-                      << std::setw(15) << std::setprecision(0) << (double)stats.get_num_nodes() / num_tests
-                      << std::setw(15) << std::setprecision(0) << (double)stats.get_num_nodes() / total_run_time_ms
-                      << std::setw(14) << std::setprecision(1) << stats.get_best_move_guess_rate() * 100 << "%"
-                      << std::setw(15) << std::setprecision(2) << (double)total_run_time_ms / 1000
-                      << std::setw(15) << num_tests
-                      << std::flush;
-            // clang-format on
+        // Update the console with our progress so far.
+        if (std::chrono::steady_clock::now() - last_console_update > min_console_update) {
             last_console_update = std::chrono::steady_clock::now();
+            print_update(file, type, solver, num_tests, total_run_time);
         }
     }
 
+    print_update(file, type, solver, num_tests, total_run_time);
     std::cout << std::endl;
 
     return true;

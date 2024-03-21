@@ -65,7 +65,7 @@ int main() {
     std::cout << std::fixed << std::setprecision(2) << pretty_print_score(pos, score) << std::endl
               << std::endl
               << "Time to solve        = " << run_time_ms / 1000.0 << " s" << std::endl
-              << "Nodes per ms         = " << stats.get_num_nodes() / run_time_ms << std::endl
+              << "Nodes per ms         = " << stats.get_num_nodes() / std::max(1LL, run_time_ms) << std::endl
               << "Nodes:" << std::endl
               << "    Exact            = " << stats.get_num_exact_nodes() << std::endl
               << "    Lower            = " << stats.get_num_lower_nodes() << std::endl

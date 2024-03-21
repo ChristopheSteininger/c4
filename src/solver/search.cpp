@@ -36,7 +36,7 @@ void Search::sort_moves(Node *children, int num_moves, int *moves, int score_jit
     assert(score_jitter >= 0);
     assert(table_move == -1 || (0 <= table_move && table_move < BOARD_WIDTH));
 
-    // A move from the table always goes first, regardless of score and rotation.
+    // A move from the table always goes first.
     if (table_move != -1) {
         children[table_move].score = INF_SCORE;
     }
