@@ -12,13 +12,13 @@ class Stats {
     void reset();
 
     // Search stats getters.
-    unsigned long get_num_nodes() const { return num_nodes; }
-    unsigned long get_num_exact_nodes() const { return num_exact_nodes; }
-    unsigned long get_num_lower_nodes() const { return num_lower_nodes; }
-    unsigned long get_num_upper_nodes() const { return num_upper_nodes; }
+    unsigned long long get_num_nodes() const { return num_nodes; }
+    unsigned long long get_num_exact_nodes() const { return num_exact_nodes; }
+    unsigned long long get_num_lower_nodes() const { return num_lower_nodes; }
+    unsigned long long get_num_upper_nodes() const { return num_upper_nodes; }
     double get_best_move_guess_rate() const { return (double)num_best_moves_guessed / get_num_interior_nodes(); }
     double get_worst_move_guess_rate() const { return (double)num_worst_moves_guessed / get_num_interior_nodes(); }
-    unsigned long get_num_interior_nodes() const { return num_exact_nodes + num_lower_nodes + num_upper_nodes; }
+    unsigned long long get_num_interior_nodes() const { return num_exact_nodes + num_lower_nodes + num_upper_nodes; }
 
     // Lookup stats getters.
     double get_hit_rate() const {
@@ -74,22 +74,22 @@ class Stats {
 
    private:
     // Search stats.
-    unsigned long num_nodes{0};
-    unsigned long num_exact_nodes{0};
-    unsigned long num_lower_nodes{0};
-    unsigned long num_upper_nodes{0};
-    unsigned long num_best_moves_guessed{0};
-    unsigned long num_worst_moves_guessed{0};
+    unsigned long long num_nodes{0};
+    unsigned long long num_exact_nodes{0};
+    unsigned long long num_lower_nodes{0};
+    unsigned long long num_upper_nodes{0};
+    unsigned long long num_best_moves_guessed{0};
+    unsigned long long num_worst_moves_guessed{0};
 
     // Lookup stats.
-    unsigned long num_lookup_success{0};
-    unsigned long num_lookup_collision{0};
-    unsigned long num_lookup_miss{0};
+    unsigned long long num_lookup_success{0};
+    unsigned long long num_lookup_collision{0};
+    unsigned long long num_lookup_miss{0};
 
     // Store stats.
-    unsigned long num_store_entries{0};
-    unsigned long num_store_overwrites{0};
-    unsigned long num_store_rewrites{0};
+    unsigned long long num_store_entries{0};
+    unsigned long long num_store_overwrites{0};
+    unsigned long long num_store_rewrites{0};
 };
 
 #endif
