@@ -43,7 +43,7 @@ static int get_score_jitter(double window_step, size_t i) {
     // clang-format off
 }
 
-int Pool::search(Position &pos, int alpha, int beta) {
+int Pool::search(const Position &pos, int alpha, int beta) {
     // Check if the game is already over before launching the full search.
     if (pos.has_opponent_won()) {
         return pos.score_loss(-2);

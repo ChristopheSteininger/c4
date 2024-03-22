@@ -18,7 +18,15 @@ Solver::~Solver() {
     // pool.print_pool_stats();
 }
 
-int Solver::solve_weak(Position &pos) {
+int Solver::solve(const Position& pos, int alpha, int beta) {
+    assert(alpha < beta);
+    assert(alpha >= Position::MIN_SCORE);
+    assert(beta <= Position::MAX_SCORE);
+    
+    return pool.search(pos, alpha, beta);
+}
+
+int Solver::solve_weak(const Position &pos) {
     ZoneScoped;
 
     int result = pool.search(pos, -1, 1);
@@ -32,14 +40,16 @@ int Solver::solve_weak(Position &pos) {
     }
 }
 
-int Solver::solve_strong(Position &pos) {
+int Solver::solve_strong(const Position &pos) {
     ZoneScoped;
 
     return pool.search(pos, Position::MIN_SCORE, Position::MAX_SCORE);
 }
 
-int Solver::get_best_move(Position &pos) {
+int Solver::get_best_move(const Position &pos_orig) {
     ZoneScoped;
+
+    Position pos{pos_orig};
 
     assert(!pos.has_player_won());
     assert(!pos.has_opponent_won());
@@ -94,7 +104,7 @@ int Solver::get_best_move(Position &pos) {
     return -1;
 }
 
-int Solver::get_principal_variation(Position &pos, std::vector<int> &moves) {
+int Solver::get_principal_variation(const Position &pos, std::vector<int> &moves) {
     ZoneScoped;
 
     assert(moves.size() == 0);

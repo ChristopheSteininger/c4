@@ -12,11 +12,12 @@ class Solver {
    public:
     ~Solver();
 
-    int solve_weak(Position &pos);
-    int solve_strong(Position &pos);
+    int solve(const Position &pos, int alpha, int beta);
+    int solve_weak(const Position &pos);
+    int solve_strong(const Position &pos);
 
-    int get_best_move(Position &pos);
-    int get_principal_variation(Position &pos, std::vector<int> &moves);
+    int get_best_move(const Position &pos);
+    int get_principal_variation(const Position &pos, std::vector<int> &moves);
 
     const Stats &get_merged_stats() const { return pool.get_merged_stats(); }
 

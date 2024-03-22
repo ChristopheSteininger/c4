@@ -14,7 +14,7 @@ class Pool {
     Pool(const Table &parent_table);
     ~Pool();
 
-    int search(Position &pos, int alpha, int beta);
+    int search(const Position &pos, int alpha, int beta);
 
     const Stats &get_merged_stats() const { return merged_stats; };
     void reset_stats();

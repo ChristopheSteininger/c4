@@ -20,10 +20,12 @@ file(GLOB_RECURSE SRCS "${CMAKE_SOURCE_DIR}/src/solver/*.cpp")
 file(GLOB_RECURSE TSTS "${CMAKE_SOURCE_DIR}/tst/*.cpp")
 
 add_executable(c4 "${CMAKE_SOURCE_DIR}/src/c4.cpp")
+add_executable(random "${CMAKE_SOURCE_DIR}/src/random.cpp")
 add_executable(test ${TSTS})
 
 add_library(solver OBJECT ${SRCS})
 target_link_libraries(c4 PRIVATE solver)
+target_link_libraries(random PRIVATE solver)
 target_link_libraries(test PRIVATE solver)
 
 # Add compiler settings depending on target machine and $MODE.
@@ -38,7 +40,6 @@ if (MSVC)
         target_compile_definitions(solver PUBLIC NDEBUG)
         target_compile_options(solver PUBLIC /W4)
     elseif(MODE MATCHES "DEBUG")
-        target_compile_definitions(solver PUBLIC NO_COLOR_OUTPUT)
         target_compile_options(solver PUBLIC /W4 /Zi)
     else()
         message(FATAL_ERROR "Mode $MODE not recognised.")
