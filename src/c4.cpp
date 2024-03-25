@@ -22,10 +22,11 @@ static std::string pretty_print_score(Position &pos, int score) {
     if (SOLVE_STRONGLY) {
         result << "Strong score is " << score;
 
+        int last_move = pos.num_moves() + pos.moves_left(score);
         if (score < 0) {
-            result << " (loss on move #" << pos.score_to_last_move(score) << ").";
+            result << " (loss on move #" << last_move << ").";
         } else if (score > 0) {
-            result << " (win on move #" << pos.score_to_last_move(score) << ").";
+            result << " (win on move #" << last_move << ").";
         } else {
             result << " (draw).";
         }

@@ -64,8 +64,9 @@ class Position {
     inline int score_win(int turns = 0) const { return score_win_at(ply + turns); }
     inline int score_loss(int turns = 0) const { return score_loss_at(ply + turns); }
 
-    // Decode a score into a last move. The inverse of the `score_win` and `score_loss` functions.
-    int score_to_last_move(int score) const;
+    // Decode a score into number of remaining moves if both players are optimal.
+    // The inverse of the `score_win` and `score_loss` functions.
+    int moves_left(int score) const;
 
     inline bool is_same_player(const Position &other) const { return (ply & 1) == (other.ply & 1); }
 
@@ -80,10 +81,6 @@ class Position {
     // found cannot impact the rest of the game.
     bool are_dead_stones_valid() const;
 
-    // Print the list of moves played. Useful for debugging but keeping
-    // track of history degrades performance so only enable for debug builds.
-    void print_move_history() const;
-
     // The score of winning or losing as early as possible.
     // The earliest possible win is on the 7th move.
     static constexpr int MAX_SCORE = score_win_at(7);
@@ -95,12 +92,6 @@ class Position {
     board b1{0};
 
     int ply{0};
-
-    // The move history is useful for debugging, but has no purpose
-    // in the search, so only enable for debug builds.
-#ifndef NDEBUG
-    std::vector<int> move_history{};
-#endif
 
     // Returns the input board reflected along the middle column.
     board mirror(board hash) const;

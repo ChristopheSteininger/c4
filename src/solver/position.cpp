@@ -333,7 +333,7 @@ bool Position::is_non_losing_move(board non_losing_moves, int col) const {
     return is_move_valid(col) && (move_mask & non_losing_moves);
 }
 
-int Position::score_to_last_move(int score) const {
+int Position::moves_left(int score) const {
     // Run the calculation from the perspective of the first player.
     if (ply & 1) {
         score *= -1;
@@ -341,13 +341,16 @@ int Position::score_to_last_move(int score) const {
 
     int max_moves = BOARD_WIDTH * BOARD_HEIGHT;
 
+    int last_move;
     if (score > 0) {
-        return max_moves - 2 * score + 1 + (max_moves % 2);
+        last_move = max_moves - 2 * score + 1 + (max_moves % 2);
     } else if (score < 0) {
-        return max_moves + 2 * (score + 1) - (max_moves % 2);
+        last_move = max_moves + 2 * (score + 1) - (max_moves % 2);
     } else {
-        return max_moves;
+        last_move = max_moves;
     }
+
+    return last_move - ply;
 }
 
 board Position::hash(bool &is_mirrored) const {
@@ -429,15 +432,6 @@ bool Position::are_dead_stones_valid() const {
            && b1_wins == b1_wins_minus_dead_stones  // Condition #1 for player #2.
            && b0_wins == b0_wins_plus_dead_stones   // Condition #2 for player #1.
            && b1_wins == b1_wins_plus_dead_stones;  // Condition #2 for player #2.
-}
-
-void Position::print_move_history() const {
-#ifndef NDEBUG
-    for (int i = 0; i < ply; i++) {
-        std::cout << (move_history[i] + 1);
-    }
-    std::cout << std::endl;
-#endif
 }
 
 // Private functions

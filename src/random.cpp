@@ -37,12 +37,8 @@ static Solver solver{};
 
 
 static void print_game(const Position &pos, int moves[], int score) {
-#ifndef NDEBUG
-    int moves_left = pos.score_to_last_move(score) - pos.num_moves();
-#endif
-
     assert(MIN_MOVES <= pos.num_moves() && pos.num_moves() < MAX_MOVES);
-    assert(MIN_MOVES_LEFT <= moves_left && moves_left < MAX_MOVES_LEFT);
+    assert(MIN_MOVES_LEFT <= pos.moves_left(score) && pos.moves_left(score) < MAX_MOVES_LEFT);
     assert(!pos.is_game_over());
 
     for (int i = 0; i < pos.num_moves(); i++) {
@@ -110,9 +106,11 @@ static bool try_random_game(int num_moves) {
     }
 
     // Check that the game has the right level of complexity.
-    int score = solver.solve_strong(pos);
-    int moves_left = pos.score_to_last_move(score) - num_moves;
+    int alpha = std::min(-1, pos.score_loss(MAX_MOVES_LEFT));
+    int beta = std::max(1, pos.score_win(MAX_MOVES_LEFT));
+    int score = solver.solve(pos, alpha, beta);
 
+    int moves_left = pos.moves_left(score);
     if (MIN_MOVES_LEFT <= moves_left && moves_left < MAX_MOVES_LEFT) {
         print_game(pos, moves, score);
         return true;
@@ -125,6 +123,8 @@ int main() {
     std::cout.imbue(std::locale(""));
     std::cout << solver.get_settings_string()
               << std::endl
+              << "Searching for games with " << MIN_MOVES << " <= moves played < " << MAX_MOVES << ", and "
+              << MIN_MOVES_LEFT << " <= moves left < " << MAX_MOVES_LEFT << "." << std::endl
               << "Generating " << NUM_GAMES << " random games:" << std::endl;
 
     int game_lengths[BOARD_WIDTH * BOARD_HEIGHT]{};

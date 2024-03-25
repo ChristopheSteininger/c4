@@ -98,13 +98,13 @@ bool self_play_test(Solver &solver, struct test_data test_data) {
 
     std::vector<int> pv;
     int expected_score = test_data.expected;
-    int expected_num_moves = pos.score_to_last_move(expected_score);
+    int expected_moves_left = pos.moves_left(expected_score);
     int num_pv_moves = solver.get_principal_variation(pos, pv);
 
     // The length of the PV must match the number of expected moves.
-    if (expected_num_moves != num_pv_moves + pos.num_moves()) {
-        std::cout << "PV length does not match expected num moves. Expected num moves was " << expected_num_moves
-                  << " but got " << num_pv_moves + pos.num_moves() << " from PV." << std::endl;
+    if (expected_moves_left != num_pv_moves) {
+        std::cout << "PV length does not match expected num moves. Expected num moves was " << expected_moves_left
+                  << " but got " << num_pv_moves << " from PV." << std::endl;
         pos.printb();
 
         return false;
@@ -137,19 +137,10 @@ bool self_play_test(Solver &solver, struct test_data test_data) {
         expected_score = -expected_score;
     }
 
-    // Fail if the move counter does not match the prediction at the start of the game.
-    if (expected_num_moves != pos.num_moves()) {
-        std::cout << "Game ended with unexpected move count. Expected move count was " << expected_num_moves
-                  << " but got " << pos.num_moves() << "." << std::endl;
-        pos.printb();
-
-        return false;
-    }
-
     // Fail if number of moves played does not match the prediction.
-    if (expected_num_moves != moves_played + test_data.pos.num_moves()) {
-        std::cout << "Game ended after unexpected number of moves. Expected " << expected_num_moves << " moves but got "
-                  << moves_played + test_data.pos.num_moves() << " moves." << std::endl;
+    if (expected_moves_left != moves_played) {
+        std::cout << "Game ended after unexpected number of moves. Expected " << expected_moves_left << " moves but got "
+                  << moves_played << " moves." << std::endl;
         pos.printb();
 
         return false;
