@@ -196,10 +196,6 @@ board Position::move(int col) {
 
     assert(is_board_valid());
 
-#ifndef NDEBUG
-    move_history.push_back(col);
-#endif
-
     return before_move;
 }
 
@@ -219,15 +215,6 @@ board Position::move(board mask) {
 
     assert(is_board_valid());
 
-#ifndef NDEBUG
-    for (int col = 0; col < BOARD_WIDTH; col++) {
-        if (mask & (FIRST_COLUMN << (col * BOARD_HEIGHT_1))) {
-            move_history.push_back(col);
-            break;
-        }
-    }
-#endif
-
     return before_move;
 }
 
@@ -238,10 +225,6 @@ void Position::unmove(board before_move) {
     b0 = before_move;
 
     ply--;
-
-#ifndef NDEBUG
-    move_history.pop_back();
-#endif
 
     assert(is_board_valid());
 }
