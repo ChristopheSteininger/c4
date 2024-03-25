@@ -63,7 +63,7 @@ bool weak_test(Solver &solver, struct test_data test_data) {
 
     if (expected != actual) {
         std::cout << std::endl
-                  << "The position below has a weak score " << expected << ", but got " << actual << std::endl;
+                  << "The position below has a weak score of " << expected << ", but got " << actual << std::endl;
         test_data.pos.printb();
 
         return false;
@@ -79,7 +79,7 @@ bool strong_test(Solver &solver, struct test_data test_data) {
 
     if (test_data.expected != actual) {
         std::cout << std::endl
-                  << "The position below has a weak score " << test_data.expected << ", but got " << actual
+                  << "The position below has a score of " << test_data.expected << ", but got " << actual
                   << std::endl;
         test_data.pos.printb();
 
@@ -186,8 +186,8 @@ static void print_update(const fs::path &file, TestType type, const Solver &solv
     long long total_run_time_ms = std::chrono::duration_cast<std::chrono::milliseconds>(total_run_time).count();
 
     // clang-format off
-    std::cout << "\r\t" << std::fixed << std::left << std::setw(30) << file.string() << std::setw(15)
-              << get_type_name(type) << std::right << std::setw(15) << std::setprecision(0)
+    std::cout << "\r\t" << std::fixed << std::left << std::setw(35) << file.string() << std::setw(15)
+              << get_type_name(type) << std::right << std::setw(10) << std::setprecision(0)
               << (double)stats.get_num_nodes() / num_tests << std::setw(15) << std::setprecision(0)
               << (double)stats.get_num_nodes() / total_run_time_ms << std::setw(14) << std::setprecision(1)
               << stats.get_best_move_guess_rate() * 100 << "%" << std::setw(15) << std::setprecision(2)
@@ -222,11 +222,13 @@ bool test_with_file(const fs::path &file, TestType type, Solver &solver) {
         bool result = run_test(solver, test_data, type);
         total_run_time += std::chrono::steady_clock::now() - start_time;
 
+        num_tests++;
+
         if (!result) {
+            print_update(file, type, solver, num_tests, total_run_time);
+            std::cout << std::endl;
             return false;
         }
-
-        num_tests++;
 
         // Update the console with our progress so far.
         if (std::chrono::steady_clock::now() - last_console_update > min_console_update) {
@@ -242,14 +244,21 @@ bool test_with_file(const fs::path &file, TestType type, Solver &solver) {
 }
 
 const char *all_known_states_tests(bool light_mode) {
-    static_assert(BOARD_WIDTH == 7, "Board must be 7 wide.");
-    static_assert(BOARD_HEIGHT == 6, "Board must be 6 high.");
+    std::string dir_name = std::to_string(BOARD_WIDTH) + "x" + std::to_string(BOARD_HEIGHT);
+    fs::path test_dir = fs::path("tst") / "data" / dir_name;
+
+    // Test data has not been generated for all board sizes.
+    if (!fs::is_directory(test_dir)) {
+        std::cout << "Could not find a directory with test data for this board size: '"
+            << test_dir << "'." << std::endl;
+        return 0;
+    }
 
     // clang-format off
     std::cout.imbue(std::locale(""));
     std::cout << "Running known state tests . . ." << std::endl;
-    std::cout << '\t' << std::left << std::setw(30) << "Test"
-              << std::setw(15) << "Type"
+    std::cout << '\t' << std::left << std::setw(35) << "Test"
+              << std::setw(10) << "Type"
               << std::right << std::setw(15) << "Mean nodes"
               << std::setw(15) << "Nodes per ms"
               << std::setw(15) << "Guess rate"
@@ -257,17 +266,15 @@ const char *all_known_states_tests(bool light_mode) {
               << std::endl;
     // clang-format on
 
-    std::vector<fs::path> test_files = {
-        fs::path("tst") / "data" / "7x6" / "endgame_L1.txt",
-    };
+    // Sort alphabetically as the first test file will contain the easiest positions,
+    // and the last file will contain the most complex positions.
+    std::vector<fs::path> test_files;
+    std::copy(fs::directory_iterator(test_dir), fs::directory_iterator(), std::back_inserter(test_files));
+    std::sort(test_files.begin(), test_files.end());
 
-    // Only test with the longest running known state files if light mode is disabled.
-    if (!light_mode) {
-        test_files.push_back(fs::path("tst") / "data" / "7x6" / "midgame_L1.txt");
-        test_files.push_back(fs::path("tst") / "data" / "7x6" / "midgame_L2.txt");
-        test_files.push_back(fs::path("tst") / "data" / "7x6" / "opening_L1.txt");
-        test_files.push_back(fs::path("tst") / "data" / "7x6" / "opening_L2.txt");
-        test_files.push_back(fs::path("tst") / "data" / "7x6" / "opening_L3.txt");
+    // Only test with the easiest positions if light mode is enabled.
+    if (light_mode) {
+        test_files.erase(test_files.begin() + 1, test_files.end());
     }
 
     Solver solver{};

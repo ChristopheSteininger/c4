@@ -153,8 +153,8 @@ const char *test_hash_state_returns_equal_hash_for_states_with_dead_stones() {
 }
 
 const char *all_tests(bool light_mode) {
-    static_assert(BOARD_WIDTH >= 7, "Board must be at least 7 wide.");
-    static_assert(BOARD_HEIGHT >= 6, "Board must be at least 6 high.");
+    static_assert(BOARD_WIDTH >= 4, "Board must be at least 4 wide.");
+    static_assert(BOARD_HEIGHT >= 4, "Board must be at least 4 high.");
 
     std::cout << "Running unit tests . . ." << std::endl;
 
