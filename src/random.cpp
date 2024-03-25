@@ -37,7 +37,9 @@ static Solver solver{};
 
 
 static void print_game(const Position &pos, int moves[], int score) {
+#ifndef NDEBUG
     int moves_left = pos.score_to_last_move(score) - pos.num_moves();
+#endif
 
     assert(MIN_MOVES <= pos.num_moves() && pos.num_moves() < MAX_MOVES);
     assert(MIN_MOVES_LEFT <= moves_left && moves_left < MAX_MOVES_LEFT);
@@ -46,7 +48,7 @@ static void print_game(const Position &pos, int moves[], int score) {
     for (int i = 0; i < pos.num_moves(); i++) {
         assert(0 <= moves[i] && moves[i] < BOARD_WIDTH);
 
-        std::cout << moves[i];
+        std::cout << (1 + moves[i]);
     }
 
     std::cout << " " << score << std::endl;

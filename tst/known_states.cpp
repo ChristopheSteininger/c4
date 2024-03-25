@@ -44,7 +44,7 @@ struct test_data read_line(std::string &line) {
 
     // Reconstruct the board.
     int i = 0;
-    for (; '1' <= line.at(i) && line.at(i) <= '7'; i++) {
+    for (; line.at(i) != ' '; i++) {
         pos.move(line.at(i) - '1');
     }
 
@@ -267,16 +267,16 @@ const char *all_known_states_tests(bool light_mode) {
     // clang-format on
 
     std::vector<fs::path> test_files = {
-        fs::path("tst") / "data" / "endgame_L1.txt",
+        fs::path("tst") / "data" / "7x6" / "endgame_L1.txt",
     };
 
     // Only test with the longest running known state files if light mode is disabled.
     if (!light_mode) {
-        test_files.push_back(fs::path("tst") / "data" / "midgame_L1.txt");
-        test_files.push_back(fs::path("tst") / "data" / "midgame_L2.txt");
-        test_files.push_back(fs::path("tst") / "data" / "opening_L1.txt");
-        test_files.push_back(fs::path("tst") / "data" / "opening_L2.txt");
-        test_files.push_back(fs::path("tst") / "data" / "opening_L3.txt");
+        test_files.push_back(fs::path("tst") / "data" / "7x6" / "midgame_L1.txt");
+        test_files.push_back(fs::path("tst") / "data" / "7x6" / "midgame_L2.txt");
+        test_files.push_back(fs::path("tst") / "data" / "7x6" / "opening_L1.txt");
+        test_files.push_back(fs::path("tst") / "data" / "7x6" / "opening_L2.txt");
+        test_files.push_back(fs::path("tst") / "data" / "7x6" / "opening_L3.txt");
     }
 
     Solver solver{};

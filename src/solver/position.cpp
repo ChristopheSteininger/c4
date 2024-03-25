@@ -344,7 +344,7 @@ int Position::score_to_last_move(int score) const {
     if (score > 0) {
         return max_moves - 2 * score + 1 + (max_moves % 2);
     } else if (score < 0) {
-        return max_moves + 2 * (score + 1);
+        return max_moves + 2 * (score + 1) - (max_moves % 2);
     } else {
         return max_moves;
     }
