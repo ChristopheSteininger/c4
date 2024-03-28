@@ -43,7 +43,23 @@ int Solver::solve_weak(const Position &pos) {
 int Solver::solve_strong(const Position &pos) {
     ZoneScoped;
 
-    return pool.search(pos, Position::MIN_SCORE, Position::MAX_SCORE);
+    int score = 0;
+
+    int alpha = pos.score_loss();
+    int beta = pos.score_win();
+
+    while (alpha < beta) {
+        int mid = std::max(score, alpha + 1);
+        score = pool.search(pos, mid - 1, mid);
+
+        if (score < mid) {
+            beta = score;
+        } else {
+            alpha = score;
+        }
+    }
+
+    return score;
 }
 
 int Solver::get_best_move(const Position &pos_orig) {
