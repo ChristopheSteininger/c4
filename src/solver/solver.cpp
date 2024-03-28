@@ -18,11 +18,11 @@ Solver::~Solver() {
     // pool.print_pool_stats();
 }
 
-int Solver::solve(const Position& pos, int alpha, int beta) {
+int Solver::solve(const Position &pos, int alpha, int beta) {
+    assert(Position::MIN_SCORE <= alpha);
     assert(alpha < beta);
-    assert(alpha >= Position::MIN_SCORE);
     assert(beta <= Position::MAX_SCORE);
-    
+
     return pool.search(pos, alpha, beta);
 }
 

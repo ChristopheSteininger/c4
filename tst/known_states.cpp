@@ -40,7 +40,7 @@ int sign(int x) {
 }
 
 struct test_data read_line(std::string &line) {
-    Position pos = Position();
+    Position pos{};
 
     // Reconstruct the board.
     int i = 0;

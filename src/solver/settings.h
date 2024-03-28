@@ -14,8 +14,6 @@ inline constexpr int NUM_THREADS = 4;
 // The transposition table uses the Chinese Remainer Theorem to reduce the number of bits per entry.
 // For this to work, the size of the table must be odd. Use a prime number for fewer collisions.
 // Some example prime numbers:
-//  * 131101     =  1 MB
-//  * 1048583    =  8 MB
 //  * 8388617    = 64 MB
 //  * 134217757  =  1 GB
 //  * 1073741827 =  8 GB
@@ -34,5 +32,8 @@ inline constexpr int ENHANCED_TABLE_CUTOFF_PLIES = BOARD_WIDTH * BOARD_HEIGHT - 
 // Determines how much noise to add to move scores near the root of the search tree. This noise helps
 // threads to desync. Increase jitter with number of threads.
 inline constexpr float MOVE_SCORE_JITTER = 0.3f;
+
+// No need for jitter if running with a single thread.
+static_assert(NUM_THREADS > 1 || MOVE_SCORE_JITTER == 0);
 
 #endif

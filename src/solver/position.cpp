@@ -117,17 +117,19 @@ static board dead_stones_in_direction(const board b0, const board b1, const Dire
 
     // Detect the patterns #. and .#
     //                     ^       ^
-    board uncovered = ((empty_positions >> shift) & played_positions) | ((empty_positions << shift) & played_positions);
+    board uncovered = ((empty_positions >> shift) & played_positions)
+        | ((empty_positions << shift) & played_positions);
 
     // Detect the patterns ##. and .##
     //                     ^         ^
-    board covered_by_1 = ((uncovered >> shift) & played_positions) | ((uncovered << shift) & played_positions);
+    board covered_by_1 = ((uncovered >> shift) & played_positions)
+        | ((uncovered << shift) & played_positions);
 
     // Detect the patterns #XX. and .XX#
     //                     ^           ^
     board pairs = ((b0 >> shift) & b0) | ((b1 >> shift) & b1);
-    board covered_by_pair =
-        ((covered_by_1 >> shift) & (pairs >> shift)) | ((covered_by_1 << shift) & (pairs << 2 * shift));
+    board covered_by_pair = ((covered_by_1 >> shift) & (pairs >> shift))
+        | ((covered_by_1 << shift) & (pairs << 2 * shift));
 
     // Use the previous patterns to find all stones covered by
     // enough other stones that we know these are dead stones.
@@ -171,9 +173,10 @@ static board has_won_in_direction(const board b, const Direction dir) {
 }
 
 static board has_won(const board b) {
-    return has_won_in_direction(b, Direction::VERTICAL) | has_won_in_direction(b, Direction::HORIZONTAL) |
-           has_won_in_direction(b, Direction::NEGATIVE_DIAGONAL) |
-           has_won_in_direction(b, Direction::POSITIVE_DIAGONAL);
+    return has_won_in_direction(b, Direction::VERTICAL)
+        | has_won_in_direction(b, Direction::HORIZONTAL)
+        | has_won_in_direction(b, Direction::NEGATIVE_DIAGONAL)
+        | has_won_in_direction(b, Direction::POSITIVE_DIAGONAL);
 }
 
 // Public functions.
@@ -420,12 +423,14 @@ bool Position::are_dead_stones_valid() const {
 // Private functions
 
 board Position::find_dead_stones() const {
-    return dead_stones_in_direction(b0, b1, Direction::VERTICAL, BORDER_VERTICAL) &
-           (dead_stones_in_direction(b0, b1, Direction::NEGATIVE_DIAGONAL, BORDER_NEGATIVE_DIAGONAL) |
-            TOO_SHORT_NEGATIVE_DIAGONAL) &
-           dead_stones_in_direction(b0, b1, Direction::HORIZONTAL, BORDER_HORIZONTAL) &
-           (dead_stones_in_direction(b0, b1, Direction::POSITIVE_DIAGONAL, BORDER_POSITIVE_DIAGONAL) |
-            TOO_SHORT_POSITIVE_DIAGONAL);
+    board vertical = dead_stones_in_direction(b0, b1, Direction::VERTICAL, BORDER_VERTICAL);
+    board horizontal = dead_stones_in_direction(b0, b1, Direction::HORIZONTAL, BORDER_HORIZONTAL);
+    board pos_diag = dead_stones_in_direction(b0, b1, Direction::POSITIVE_DIAGONAL, BORDER_POSITIVE_DIAGONAL)
+        | TOO_SHORT_POSITIVE_DIAGONAL;
+    board neg_diag = dead_stones_in_direction(b0, b1, Direction::NEGATIVE_DIAGONAL, BORDER_NEGATIVE_DIAGONAL)
+        | TOO_SHORT_NEGATIVE_DIAGONAL;
+
+    return vertical & horizontal & pos_diag & neg_diag;
 }
 
 board Position::mirror(board b) const {
