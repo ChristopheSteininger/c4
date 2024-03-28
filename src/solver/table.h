@@ -37,13 +37,15 @@ class Entry {
     static constexpr uint64_t HASH_MASK = ((uint64_t)1 << HASH_BITS) - 1;
     static constexpr int HASH_SHIFT = 14;
 
-    static constexpr int MOVE_MASK = (1 << 4) - 1;
+    static constexpr int MOVE_BITS = 4;
+    static constexpr int MOVE_MASK = (1 << MOVE_BITS) - 1;
     static constexpr int MOVE_SHIFT = 10;
 
     static constexpr int TYPE_MASK = (1 << 2) - 1;
     static constexpr int TYPE_SHIFT = 8;
 
-    static constexpr int SCORE_MASK = (1 << 8) - 1;
+    static constexpr int SCORE_BITS = 8;
+    static constexpr int SCORE_MASK = (1 << SCORE_BITS) - 1;
     static constexpr int SCORE_SHIFT = 0;
 
     // Not all bits of the hash are saved, however the hashing will still be unique
@@ -52,6 +54,12 @@ class Entry {
 
     // The number of entries must be odd otherwise CRT does not apply.
     static_assert(NUM_TABLE_ENTRIES % 2 == 1);
+
+    // Move bits must be wide enough to store any valid move.
+    static_assert((1 << MOVE_BITS) >= BOARD_WIDTH);
+
+    // Score bits must be wide enough to store the entire range of possible scores.
+    static_assert((1 << SCORE_BITS) > Position::MAX_SCORE - Position::MIN_SCORE);
 };
 
 class Table {

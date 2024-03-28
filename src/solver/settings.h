@@ -20,6 +20,7 @@ inline constexpr int NUM_THREADS = 4;
 //  * 134217757  =  1 GB
 //  * 1073741827 =  8 GB
 //  * 4294967311 = 32 GB
+//  * 6442450967 = 48 GB
 inline constexpr uint64_t NUM_TABLE_ENTRIES = 134217757;
 
 inline constexpr bool ENABLE_HUGE_PAGES = false;
@@ -32,6 +33,6 @@ inline constexpr int ENHANCED_TABLE_CUTOFF_PLIES = BOARD_WIDTH * BOARD_HEIGHT - 
 
 // Determines how much noise to add to move scores near the root of the search tree. This noise helps
 // threads to desync. Increase jitter with number of threads.
-inline constexpr float MOVE_SCORE_JITTER = 0.1f;
+inline constexpr float MOVE_SCORE_JITTER = 0.3f;
 
 #endif

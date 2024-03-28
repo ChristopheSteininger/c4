@@ -117,7 +117,7 @@ void Table::put(board hash, bool is_mirrored, int move, NodeType type, int score
     ZoneScoped;
 
     assert(hash != 0);
-    assert(0 <= move && move <= BOARD_WIDTH);
+    assert(0 <= move && move < BOARD_WIDTH);
     assert(type == NodeType::EXACT || type == NodeType::LOWER || type == NodeType::UPPER);
     assert(Position::MIN_SCORE <= score && score <= Position::MAX_SCORE);
 
