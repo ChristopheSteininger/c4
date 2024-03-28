@@ -9,7 +9,7 @@
 |                           **6** | Draw | Draw | 2<sup>nd</sup> player, <br> move #36 | 1<sup>st</sup> player, <br> move #41 | 2<sup>nd</sup> player, <br> move #48 | 2<sup>nd</sup> player, <br> move #52
 |                           **7** | Draw | Draw | 1<sup>st</sup> player, <br> move #41 |                                 Draw | 1<sup>st</sup> player, <br> move #53 |
 |                           **8** | Draw | Draw | 2<sup>nd</sup> player, <br> move #48 | 1<sup>st</sup> player, <br> move #55 |
-|                           **9** | Draw | Draw | 1<sup>st</sup> player, <br> move #53 |
+|                           **9** | Draw | Draw | 1<sup>st</sup> player, <br> move #53 |                                 Draw |
 |                          **10** | Draw | Draw | 2<sup>nd</sup> player, <br> move #60 |
 |                          **11** | Draw | Draw |
 |                          **12** | Draw |
