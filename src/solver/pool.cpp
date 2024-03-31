@@ -44,19 +44,15 @@ static int get_score_jitter(double window_step, size_t i) {
 }
 
 int Pool::search(const Position &pos, int alpha, int beta) {
-    // Check if the game is already over before launching the full search.
-    if (pos.has_opponent_won()) {
-        return pos.score_loss(-2);
-    }
-    if (pos.has_player_won()) {
-        return pos.score_win(-2);
-    }
-    if (pos.is_draw()) {
-        return 0;
-    }
-    if (pos.wins_this_move(pos.find_player_threats())) {
-        return pos.score_win();
-    }
+    assert(alpha < beta);
+
+    assert(pos.score_loss() <= alpha);
+    assert(Position::MIN_SCORE <= alpha);
+    assert(beta <= pos.score_win());
+    assert(beta <= Position::MAX_SCORE);
+
+    assert(!pos.is_game_over());
+    assert(!pos.wins_this_move(pos.find_player_threats()));
 
     // No worker should still be running at this point.
     wait_all();
@@ -64,16 +60,13 @@ int Pool::search(const Position &pos, int alpha, int beta) {
     result->reset();
     merged_stats.reset();
 
-    int min = std::max(alpha, pos.score_loss());
-    int max = std::min(beta, pos.score_win());
-
     // Spread out the workers over the input bounds.
-    double window = min;
-    double window_step = (double)(max - min) / workers.size();
+    double window = alpha;
+    double window_step = (double)(beta - alpha) / workers.size();
     for (size_t i = 0; i < workers.size(); i++) {
         int score_jitter = get_score_jitter(window_step, i);
 
-        workers[i]->start(pos, min, max, (int)window, (i % 3) + 1, score_jitter);
+        workers[i]->start(pos, alpha, beta, (int)window, (i % 3) + 1, score_jitter);
         window += window_step;
     }
 

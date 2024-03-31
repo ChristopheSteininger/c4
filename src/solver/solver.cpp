@@ -38,9 +38,37 @@ int Solver::solve_strong(const Position &pos) {
     return solve(pos, pos.score_loss(), pos.score_win());
 }
 
-int Solver::solve(const Position &pos, int alpha, int beta) {
-    assert(alpha < beta);
+int Solver::solve(const Position &pos, int lower, int upper) {
+    assert(lower < upper);
 
+    // Check if the game is already over before launching the full search.
+    if (pos.has_opponent_won()) {
+        return pos.score_loss(-2);
+    }
+    if (pos.has_player_won()) {
+        return pos.score_win(-2);
+    }
+    if (pos.is_draw()) {
+        return 0;
+    }
+    if (pos.wins_this_move(pos.find_player_threats())) {
+        return pos.score_win();
+    }
+
+    int min_score = std::max(pos.score_loss(), Position::MIN_SCORE);
+    int max_score = std::min(pos.score_win(), Position::MAX_SCORE);
+
+    // If the bounds of the search are beyond the best or worst possible
+    // scores in this position, then immediately return.
+    if (upper <= min_score) {
+        return min_score;
+    }
+    if (lower >= max_score) {
+        return max_score;
+    }
+
+    int alpha = std::max(lower, min_score);
+    int beta = std::min(upper, max_score);
     int score = (alpha + beta) / 2;
 
     while (alpha < beta) {

@@ -83,7 +83,7 @@ void Worker::start(const Position &new_pos, int new_alpha, int new_beta,
         int new_window, int new_step, int new_score_jitter) {
     ZoneScoped;
 
-    assert(new_alpha <= new_beta);
+    assert(new_alpha < new_beta);
     assert(new_step > 0);
     assert(new_score_jitter >= 0);
 

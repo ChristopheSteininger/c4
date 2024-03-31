@@ -84,7 +84,7 @@ class Position {
     // The score of winning or losing as early as possible.
     // The earliest possible win is on the 7th move.
     static constexpr int MAX_SCORE = score_win_at(7);
-    static constexpr int MIN_SCORE = score_loss_at(7);
+    static constexpr int MIN_SCORE = -MAX_SCORE;
 
    private:
     // The current and next players position.
