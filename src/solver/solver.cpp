@@ -18,18 +18,10 @@ Solver::~Solver() {
     // pool.print_pool_stats();
 }
 
-int Solver::solve(const Position &pos, int alpha, int beta) {
-    assert(Position::MIN_SCORE <= alpha);
-    assert(alpha < beta);
-    assert(beta <= Position::MAX_SCORE);
-
-    return pool.search(pos, alpha, beta);
-}
-
 int Solver::solve_weak(const Position &pos) {
     ZoneScoped;
 
-    int result = pool.search(pos, -1, 1);
+    int result = solve(pos, -1, 1);
 
     if (result > 0) {
         return 1;
@@ -43,16 +35,19 @@ int Solver::solve_weak(const Position &pos) {
 int Solver::solve_strong(const Position &pos) {
     ZoneScoped;
 
-    int score = 0;
+    return solve(pos, pos.score_loss(), pos.score_win());
+}
 
-    int alpha = pos.score_loss();
-    int beta = pos.score_win();
+int Solver::solve(const Position &pos, int alpha, int beta) {
+    assert(alpha < beta);
+
+    int score = (alpha + beta) / 2;
 
     while (alpha < beta) {
-        int mid = std::max(score, alpha + 1);
-        score = pool.search(pos, mid - 1, mid);
+        int window = std::max(score, alpha + 1);
+        score = pool.search(pos, window - 1, window);
 
-        if (score < mid) {
+        if (score < window) {
             beta = score;
         } else {
             alpha = score;
@@ -88,7 +83,7 @@ int Solver::get_best_move(const Position &pos_orig) {
 
         // Validate the move stored in the table is the best move.
         board before_move = pos.move(table_move);
-        int table_score = -pool.search(pos, -entry.get_score() - 1, -entry.get_score() + 1);
+        int table_score = -solve(pos, -entry.get_score() - 1, -entry.get_score() + 1);
         pos.unmove(before_move);
 
         // The table doesn't always store the best move to play. If this is the case,
@@ -103,7 +98,7 @@ int Solver::get_best_move(const Position &pos_orig) {
     for (int move = 0; move < BOARD_WIDTH; move++) {
         if (pos.is_move_valid(move)) {
             board before_move = pos.move(move);
-            int child_score = -pool.search(pos, -score - 1, -score + 1);
+            int child_score = -solve(pos, -score - 1, -score + 1);
             pos.unmove(before_move);
 
             if (child_score == score) {

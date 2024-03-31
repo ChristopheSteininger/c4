@@ -67,27 +67,22 @@ static bool is_game_over_in_n_moves(const Position &pos, int min_moves, int max_
     int min_move_score = pos.score_win(min_moves);
     int max_move_score = pos.score_win(max_moves);
 
-    int win_beta = std::min(Position::MAX_SCORE, min_move_score);
-    int loss_alpha = std::max(Position::MIN_SCORE, -min_move_score);
-
     // MAX_SCORE represents the fewest number of moves possible to win a game (7 moves).
     // It is not possible for the game to be over in fewer moves than this.
     // Similarly, MIN_SCORE represents the few number of moves possible to lose a game.
-    if (max_move_score >= win_beta || loss_alpha >= -max_move_score) {
+    if (max_move_score >= Position::MAX_SCORE || Position::MIN_SCORE >= -max_move_score) {
         return false;
     }
 
     // Return true if the current player will win within `min_moves` to `max_moves`.
-    int win_score = solver.solve(pos, max_move_score, win_beta);
-    if ((win_score == win_beta && win_beta == Position::MAX_SCORE) ||
-        (max_move_score < win_score && win_score < win_beta)) {
+    int win_score = solver.solve(pos, max_move_score, min_move_score);
+    if (max_move_score < win_score && win_score < min_move_score) {
         return true;
     }
 
     // Return true if the current player will lose within `min_moves` to `max_moves`.
-    int loss_score = solver.solve(pos, loss_alpha, -max_move_score);
-    return (loss_score == loss_alpha && loss_alpha == Position::MIN_SCORE)
-        || (loss_alpha < loss_score && loss_score < -max_move_score);
+    int loss_score = solver.solve(pos, -min_move_score, -max_move_score);
+    return (-min_move_score < loss_score && loss_score < -max_move_score);
 }
 
 static int get_random_move(Position &pos) {

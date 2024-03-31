@@ -94,7 +94,7 @@ bool strong_test(Solver &solver, struct test_data test_data) {
 bool self_play_test(Solver &solver, struct test_data test_data) {
     ZoneScoped;
 
-    Position pos = Position(test_data.pos);
+    Position pos{test_data.pos};
 
     std::vector<int> pv;
     int expected_score = test_data.expected;
