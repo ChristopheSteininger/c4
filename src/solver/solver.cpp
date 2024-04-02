@@ -85,7 +85,7 @@ int Solver::solve(const Position &pos, int lower, int upper) {
     return score;
 }
 
-int Solver::get_best_move(const Position &pos_orig) {
+int Solver::get_best_move(const Position &pos_orig, int score) {
     ZoneScoped;
 
     Position pos{pos_orig};
@@ -99,24 +99,22 @@ int Solver::get_best_move(const Position &pos_orig) {
     // can be solved by static analysis. For these positions we need to try each move
     // to find the best move.
 
-    int score = solve_strong(pos);
-
     // Check if the result is stored in the table.
     bool is_mirrored;
     board hash = pos.hash(is_mirrored);
 
     Entry entry = table.get(hash);
-    if (entry.get_type() == NodeType::EXACT) {
+    if (entry.get_type() != NodeType::MISS) {
         int table_move = entry.get_move(is_mirrored);
 
         // Validate the move stored in the table is the best move.
         board before_move = pos.move(table_move);
-        int table_score = -solve(pos, -entry.get_score() - 1, -entry.get_score() + 1);
+        int table_score = -solve(pos, -score, -score + 1);
         pos.unmove(before_move);
 
         // The table doesn't always store the best move to play. If this is the case,
         // Try every move until we find the best move.
-        if (table_score == score) {
+        if (table_score >= score) {
             return table_move;
         }
     }
@@ -126,10 +124,10 @@ int Solver::get_best_move(const Position &pos_orig) {
     for (int move = 0; move < BOARD_WIDTH; move++) {
         if (pos.is_move_valid(move)) {
             board before_move = pos.move(move);
-            int child_score = -solve(pos, -score - 1, -score + 1);
+            int child_score = -solve(pos, -score, -score + 1);
             pos.unmove(before_move);
 
-            if (child_score == score) {
+            if (child_score >= score) {
                 return move;
             }
         }
@@ -148,12 +146,16 @@ int Solver::get_principal_variation(const Position &pos, std::vector<int> &moves
 
     assert(moves.size() == 0);
 
+    int score = solve_strong(pos);
+
     Position pv = Position(pos);
     while (!pv.is_game_over()) {
-        int best_move = get_best_move(pv);
+        int best_move = get_best_move(pv, score);
 
         moves.push_back(best_move);
         pv.move(best_move);
+
+        score = -score;
     }
 
     return static_cast<int>(moves.size());
