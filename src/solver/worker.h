@@ -8,7 +8,6 @@
 #include <mutex>
 #include <thread>
 
-#include "Tracy.hpp"
 #include "position.h"
 #include "search.h"
 #include "stats.h"

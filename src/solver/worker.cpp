@@ -11,7 +11,6 @@
 #include <string>
 #include <thread>
 
-#include "Tracy.hpp"
 #include "position.h"
 #include "os.h"
 
@@ -40,8 +39,6 @@ bool SearchResult::notify_result(int result) {
 }
 
 int SearchResult::wait_for_result() {
-    ZoneScoped;
-
     std::unique_lock<std::mutex> lock(mutex);
 
     while (!found.load()) {
@@ -81,8 +78,6 @@ Worker::~Worker() {
 
 void Worker::start(const Position &new_pos, int new_alpha, int new_beta,
         int new_window, int new_step, int new_score_jitter) {
-    ZoneScoped;
-
     assert(new_alpha < new_beta);
     assert(new_step > 0);
     assert(new_score_jitter >= 0);
@@ -112,8 +107,6 @@ void Worker::start(const Position &new_pos, int new_alpha, int new_beta,
 }
 
 void Worker::wait() {
-    ZoneScoped;
-
     std::unique_lock<std::mutex> lock(mutex);
 
     // Block until the thread is done searching and
@@ -124,8 +117,6 @@ void Worker::wait() {
 }
 
 void Worker::stop() {
-    ZoneScoped;
-
     if (is_searching) {
         search->stop();
     }
@@ -150,8 +141,6 @@ void Worker::print_thread_stats() {
 }
 
 void Worker::work() {
-    ZoneScoped;
-
     std::unique_lock<std::mutex> lock(mutex);
     start_time = std::chrono::steady_clock::now();
 
@@ -184,8 +173,6 @@ void Worker::work() {
 }
 
 int Worker::run_search() {
-    ZoneScoped;
-
     int a = window;
     int b = window + 1;
 

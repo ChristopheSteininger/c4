@@ -3,7 +3,6 @@
 #include <algorithm>
 #include <cassert>
 
-#include "Tracy.hpp"
 #include "position.h"
 #include "settings.h"
 #include "table.h"
@@ -95,8 +94,6 @@ int Search::search(Position &pos, int alpha, int beta, int score_jitter) {
 }
 
 int Search::negamax(Node &node, int alpha, int beta, int score_jitter) {
-    ZoneScoped;
-
     assert(alpha < beta);
     assert(!node.pos.is_game_over());
     assert(!node.pos.wins_this_move(node.pos.find_player_threats()));
@@ -274,8 +271,6 @@ int Search::negamax(Node &node, int alpha, int beta, int score_jitter) {
 }
 
 int Search::static_search(Node &node, int alpha, int beta, bool &is_static) {
-    ZoneScoped;
-
     assert(alpha < beta);
     assert(!is_static);
     assert(!node.pos.is_game_over());

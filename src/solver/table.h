@@ -67,7 +67,6 @@ class Table {
    public:
     Table();
     Table(const Table &parent, const std::shared_ptr<Stats> stats);
-    ~Table();
 
     Table(const Table &table) = delete;
 

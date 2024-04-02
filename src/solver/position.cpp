@@ -4,7 +4,6 @@
 #include <iomanip>
 #include <iostream>
 
-#include "Tracy.hpp"
 #include "settings.h"
 
 // Represents a single direction in which a player can win.
@@ -98,8 +97,6 @@ static board find_threats(const board b) {
 }
 
 static board dead_stones_in_direction(const board b0, const board b1, const Direction dir, const board border) {
-    ZoneScoped;
-
     int shift = static_cast<int>(dir);
 
     board played_positions = b0 | b1;
@@ -376,8 +373,6 @@ int Position::moves_left(int score) const {
 }
 
 board Position::hash(bool &is_mirrored) const {
-    ZoneScoped;
-
     // Find any stones which cannot impact the rest of the game and assume
     // player 0 played these stones. This prevents these stones from
     // influencing the hash.
@@ -470,8 +465,6 @@ board Position::find_dead_stones() const {
 }
 
 board Position::mirror(board b) const {
-    ZoneScoped;
-
     board mirror = 0;
 
     for (int col = 0; col <= (BOARD_WIDTH - 1) / 2; col++) {

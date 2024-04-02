@@ -11,7 +11,6 @@
 #include "../src/solver/settings.h"
 #include "../src/solver/solver.h"
 #include "../src/solver/table.h"
-#include "Tracy.hpp"
 #include "minunit.h"
 
 namespace fs = std::filesystem;
@@ -56,8 +55,6 @@ struct test_data read_line(std::string &line) {
 }
 
 bool weak_test(Solver &solver, struct test_data test_data) {
-    ZoneScoped;
-
     int actual = solver.solve_weak(test_data.pos);
     int expected = sign(test_data.expected);
 
@@ -73,8 +70,6 @@ bool weak_test(Solver &solver, struct test_data test_data) {
 }
 
 bool strong_test(Solver &solver, struct test_data test_data) {
-    ZoneScoped;
-
     int actual = solver.solve_strong(test_data.pos);
 
     if (test_data.expected != actual) {
@@ -92,8 +87,6 @@ bool strong_test(Solver &solver, struct test_data test_data) {
 // solve_strong(), score_to_last_move(), and get_principal_variation()
 // must be consistent with each other for the entire game.
 bool self_play_test(Solver &solver, struct test_data test_data) {
-    ZoneScoped;
-
     Position pos{test_data.pos};
 
     std::vector<int> pv;
@@ -196,8 +189,6 @@ static void print_update(const fs::path &file, TestType type, const Solver &solv
 }
 
 bool test_with_file(const fs::path &file, TestType type, Solver &solver) {
-    ZoneScoped;
-
     std::ifstream data_file(file);
     if (!data_file.is_open()) {
         std::cout << "Could not open the file: " << file.string() << std::endl;

@@ -9,7 +9,6 @@
 #include <sstream>
 #include <stdexcept>
 
-#include "Tracy.hpp"
 #include "position.h"
 #include "settings.h"
 #include "os.h"
@@ -62,8 +61,6 @@ Table::Table() {
     this->table = std::shared_ptr<Entry[]>(memory, memory_free);
     this->stats = std::make_shared<Stats>();
 
-    TracyAlloc(table.get(), NUM_TABLE_ENTRIES * sizeof(Entry));
-
     clear();
 }
 
@@ -72,16 +69,12 @@ Table::Table(const Table &parent, const std::shared_ptr<Stats> stats) {
     this->stats = stats;
 }
 
-Table::~Table() { TracyFree(table.get()); }
-
 void Table::clear() {
     Entry empty{};
     std::fill(table.get(), table.get() + NUM_TABLE_ENTRIES, empty);
 }
 
 void Table::prefetch(board hash) {
-    ZoneScoped;
-
     assert(hash != 0);
 
     uint64_t index = hash % NUM_TABLE_ENTRIES;
@@ -89,8 +82,6 @@ void Table::prefetch(board hash) {
 }
 
 Entry Table::get(board hash) {
-    ZoneScoped;
-
     assert(hash != 0);
 
     uint64_t index = hash % NUM_TABLE_ENTRIES;
@@ -114,8 +105,6 @@ Entry Table::get(board hash) {
 }
 
 void Table::put(board hash, bool is_mirrored, int move, NodeType type, int score) {
-    ZoneScoped;
-
     assert(hash != 0);
     assert(0 <= move && move < BOARD_WIDTH);
     assert(type == NodeType::EXACT || type == NodeType::LOWER || type == NodeType::UPPER);

@@ -11,9 +11,8 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 # The $MODE setting changes compiler options (cmake -DMODE=xyz .):
 #   * OPTIMISE - (default) will produce the fastest binary possible.
-#   * PROFILE  - allows profiling with tracy.
 #   * DEBUG    - runs with assertions and debug symbols enabled.
-set(MODE "OPTIMISE" CACHE STRING "Goal for the project build: OPTIMISE, PROFILE, DEBUG")
+set(MODE "OPTIMISE" CACHE STRING "Goal for the project build: OPTIMISE, DEBUG")
 
 # Setup targets
 file(GLOB_RECURSE SRCS "${CMAKE_SOURCE_DIR}/src/solver/*.cpp")
@@ -36,16 +35,11 @@ if (MSVC)
         target_compile_definitions(solver PUBLIC NDEBUG)
         target_compile_options(solver PUBLIC /W4 /Ox /GL)
         target_link_options(solver PUBLIC /GL)
-    elseif(MODE MATCHES "PROFILE")
-        target_compile_definitions(solver PUBLIC NDEBUG)
-        target_compile_options(solver PUBLIC /W4)
     elseif(MODE MATCHES "DEBUG")
         target_compile_options(solver PUBLIC /W4 /Zi)
     else()
         message(FATAL_ERROR "Mode $MODE not recognised.")
     endif()
-
-    target_include_directories(solver PUBLIC tracy/public/tracy)
 else()
     message(STATUS "Compiling with GCC/Clang in ${MODE} mode.")
 
@@ -59,24 +53,10 @@ else()
         target_compile_definitions(solver PUBLIC NDEBUG)
         target_compile_options(solver PUBLIC -Wall -O3 -flto=full)
         target_link_options(solver PUBLIC -flto=full)
-    elseif(MODE MATCHES "PROFILE")
-        target_compile_definitions(solver PUBLIC NDEBUG TRACY_ENABLE)
-        target_compile_options(solver PUBLIC -Wall -O3 -flto=full)
-        target_link_options(solver PUBLIC -flto=full)
-        target_include_directories(solver PUBLIC tracy/public)
-
-        # Tracy must be compiled with C++11.
-        add_library(tracy OBJECT tracy/public/TracyClient.cpp)
-        target_compile_options(tracy PRIVATE -w -std=c++11 -O3 -flto=full -DTRACY_ENABLE)
-        
-        target_link_libraries(c4 PRIVATE tracy)
-        target_link_libraries(test PRIVATE tracy)
     elseif(MODE MATCHES "DEBUG")
         target_compile_definitions(solver PUBLIC NO_COLOR_OUTPUT)
         target_compile_options(solver PUBLIC -Wall -g)
     else()
         message(FATAL_ERROR "Mode $MODE not recognised.")
     endif()
-
-    target_include_directories(solver PUBLIC tracy/public/tracy)
 endif()

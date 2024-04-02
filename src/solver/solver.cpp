@@ -9,7 +9,6 @@
 #include <thread>
 #include <vector>
 
-#include "Tracy.hpp"
 #include "position.h"
 #include "settings.h"
 #include "table.h"
@@ -19,8 +18,6 @@ Solver::~Solver() {
 }
 
 int Solver::solve_weak(const Position &pos) {
-    ZoneScoped;
-
     int result = solve(pos, -1, 1);
 
     if (result > 0) {
@@ -33,8 +30,6 @@ int Solver::solve_weak(const Position &pos) {
 }
 
 int Solver::solve_strong(const Position &pos) {
-    ZoneScoped;
-
     return solve(pos, pos.score_loss(), pos.score_win());
 }
 
@@ -86,8 +81,6 @@ int Solver::solve(const Position &pos, int lower, int upper) {
 }
 
 int Solver::get_best_move(const Position &pos_orig, int score) {
-    ZoneScoped;
-
     Position pos{pos_orig};
 
     assert(!pos.has_player_won());
@@ -142,8 +135,6 @@ int Solver::get_best_move(const Position &pos_orig, int score) {
 }
 
 int Solver::get_principal_variation(const Position &pos, std::vector<int> &moves) {
-    ZoneScoped;
-
     assert(moves.size() == 0);
 
     int score = solve_strong(pos);
