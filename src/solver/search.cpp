@@ -31,29 +31,7 @@ static int count_bits(board b) {
     return result;
 }
 
-void Search::sort_moves(Node *children, int num_moves, int *moves, int score_jitter, int table_move) {
-    assert(num_moves > 0);
-    assert(score_jitter >= 0);
-    assert(table_move == -1 || (0 <= table_move && table_move < BOARD_WIDTH));
-
-    // A move from the table always goes first.
-    if (table_move != -1) {
-        children[table_move].score = INF_SCORE;
-    }
-
-    // Add some noise to move scores to help threads desync.
-    if (score_jitter > 0) {
-        int max_rand = 1 + (score_jitter % BOARD_WIDTH);
-        for (int i = 0; i < num_moves; i++) {
-            children[moves[i]].score += MOVE_SCORE_JITTER * (dist(rand) % max_rand);
-        }
-    }
-
-    // Sort moves according to score, high to low.
-    std::sort(moves, moves + num_moves, [&children](int a, int b) { return children[a].score > children[b].score; });
-}
-
-static float heuristic(Position &pos, board threats, int col) {
+static float heuristic(Position &pos, board threats, int col, bool is_table_move) {
     int num_threats = count_bits(threats);
     int num_next_threats = count_bits(pos.find_next_turn_threats(threats));
     int num_next_next_threats = count_bits(pos.find_next_next_turn_threats(threats));
@@ -61,10 +39,37 @@ static float heuristic(Position &pos, board threats, int col) {
 
     // clang-format off
     return 1.0f * num_next_threats
+        + 0.5f * is_table_move
         + 0.5f * num_next_next_threats
         + 0.3f * num_threats
         + 0.1f * center_score;
     // clang-format on
+}
+
+void Search::sort_moves(Position &pos, Node *children, int num_moves, int *moves, int score_jitter, int table_move) {
+    assert(num_moves > 0);
+    assert(score_jitter >= 0);
+    assert(table_move == -1 || (0 <= table_move && table_move < BOARD_WIDTH));
+
+    for (int i = 0; i < num_moves; i++) {
+        int col = moves[i];
+
+        board before_move = pos.move(col);
+
+        board useful_threats = pos.find_useful_threats(pos.find_opponent_threats(), pos.find_player_threats());
+        children[col].score = heuristic(pos, useful_threats, col, col == table_move);
+
+        // Add some noise to move scores to help threads desync.
+        if (score_jitter > 0) {
+            int max_rand = 1 + (score_jitter % BOARD_WIDTH);
+            children[col].score += MOVE_SCORE_JITTER * (dist(rand) % max_rand);
+        }
+
+        pos.unmove(before_move);
+    }
+
+    // Sort moves according to score, high to low.
+    std::sort(moves, moves + num_moves, [&children](int a, int b) { return children[a].score > children[b].score; });
 }
 
 int Search::search(Position &pos, int alpha, int beta, int score_jitter) {
@@ -77,7 +82,7 @@ int Search::search(Position &pos, int alpha, int beta, int score_jitter) {
     Node child(pos);
     bool is_static = false;
 
-    int child_score = static_search(child, -1, alpha, beta, is_static);
+    int child_score = static_search(child, alpha, beta, is_static);
     if (is_static) {
         return child_score;
     }
@@ -110,8 +115,8 @@ int Search::negamax(Node &node, int alpha, int beta, int score_jitter) {
     // Prefetch the position's entry.
     if (!node.did_lookup) {
         node.hash = node.pos.hash(node.is_mirrored);
+        table.prefetch(node.hash);
     }
-    table.prefetch(node.hash);
 
     // If there are too few empty spaces left on the board for the player to win, then the best
     // score possible is a draw.
@@ -152,7 +157,7 @@ int Search::negamax(Node &node, int alpha, int beta, int score_jitter) {
 
             children[col] = Node(node.pos);
             children[col].pos.move(col);
-            int child_alpha = -static_search(children[col], col, -beta, -alpha, is_static);
+            int child_alpha = -static_search(children[col], -beta, -alpha, is_static);
 
             alpha = std::max(alpha, child_alpha);
             value = std::max(value, child_alpha);
@@ -193,6 +198,7 @@ int Search::negamax(Node &node, int alpha, int beta, int score_jitter) {
 
             case NodeType::LOWER:
                 alpha = std::max(alpha, entry.get_score());
+                node.table_move = entry.get_move(node.is_mirrored);
                 break;
 
             case NodeType::UPPER:
@@ -206,7 +212,7 @@ int Search::negamax(Node &node, int alpha, int beta, int score_jitter) {
     }
 
     // Sort moves according to score.
-    sort_moves(children, num_moves, moves, score_jitter, node.table_move);
+    sort_moves(node.pos, children, num_moves, moves, score_jitter, node.table_move);
 
     // If none of the above checks pass, then this is an internal node and we must
     // evaluate the child nodes to determine the score of this node.
@@ -267,7 +273,7 @@ int Search::negamax(Node &node, int alpha, int beta, int score_jitter) {
     return value;
 }
 
-int Search::static_search(Node &node, int col, int alpha, int beta, bool &is_static) {
+int Search::static_search(Node &node, int alpha, int beta, bool &is_static) {
     ZoneScoped;
 
     assert(alpha < beta);
@@ -317,17 +323,11 @@ int Search::static_search(Node &node, int col, int alpha, int beta, bool &is_sta
         return alpha;
     }
 
-    board useful_threats = 0;
-    if (col != -1) {
-        board player_threats = node.pos.find_player_threats();
-        useful_threats = node.pos.find_useful_threats(opponent_threats, player_threats);
-    }
-
     // Check if we have a forced move and if so, statically evaluate it.
     board forced_move = get_forced_move(opponent_wins, non_losing_moves);
     if (forced_move) {
         node.pos.move(forced_move);
-        int child_score = -static_search(node, -1, -beta, -alpha, is_static);
+        int child_score = -static_search(node, -beta, -alpha, is_static);
 
         if (is_static) {
             return child_score;
@@ -359,7 +359,6 @@ int Search::static_search(Node &node, int col, int alpha, int beta, bool &is_sta
                 break;
 
             case NodeType::UPPER:
-                node.table_move = entry.get_move(node.is_mirrored);
                 beta = std::min(beta, entry.get_score());
                 break;
         }
@@ -368,12 +367,6 @@ int Search::static_search(Node &node, int col, int alpha, int beta, bool &is_sta
             is_static = true;
             return entry.get_score();
         }
-    }
-
-    // At this point we know the move is complex and cannot be statically evaluated
-    // so use a heuristic to guess the value of the move.
-    if (col != -1) {
-        node.score = heuristic(node.pos, useful_threats, col);
     }
 
     return INF_SCORE;

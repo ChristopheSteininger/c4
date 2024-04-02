@@ -39,15 +39,15 @@ class Entry {
 
     static constexpr int TYPE_BITS = 2;
     static constexpr int TYPE_MASK = (1 << TYPE_BITS) - 1;
-    static constexpr int TYPE_SHIFT = 8;
+    static constexpr int TYPE_SHIFT = SCORE_BITS;
 
     static constexpr int MOVE_BITS = 4;
     static constexpr int MOVE_MASK = (1 << MOVE_BITS) - 1;
-    static constexpr int MOVE_SHIFT = 10;
+    static constexpr int MOVE_SHIFT = SCORE_BITS + TYPE_BITS;
 
     static constexpr int HASH_BITS = 8 * sizeof(data) - SCORE_BITS - TYPE_BITS - MOVE_BITS;
     static constexpr uint64_t HASH_MASK = ((uint64_t)1 << HASH_BITS) - 1;
-    static constexpr int HASH_SHIFT = 14;
+    static constexpr int HASH_SHIFT = 8 * sizeof(data) - HASH_BITS;
 
     // Not all bits of the hash are saved, however the hashing will still be unique
     // by the Chinese Remainder Theorem as long as the check below passes.
