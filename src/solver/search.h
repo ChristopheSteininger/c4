@@ -16,8 +16,8 @@ struct Node {
 
     bool did_lookup{false};
     bool is_mirrored{false};
-    int table_move{-1};
     board hash{0};
+    Entry entry{};
 
     Node() = default;
 

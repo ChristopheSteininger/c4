@@ -30,7 +30,7 @@ static int count_bits(board b) {
     return result;
 }
 
-static float heuristic(Position &pos, board threats, int col, bool is_table_move) {
+static float heuristic(const Position &pos, board threats, int col, bool is_table_move) {
     int num_threats = count_bits(threats);
     int num_next_threats = count_bits(pos.find_next_turn_threats(threats));
     int num_next_next_threats = count_bits(pos.find_next_next_turn_threats(threats));
@@ -50,6 +50,7 @@ void Search::sort_moves(Position &pos, Node *children, int num_moves, int *moves
     assert(score_jitter >= 0);
     assert(table_move == -1 || (0 <= table_move && table_move < BOARD_WIDTH));
 
+    // Score each valid move by taking a guess on how good the position will be for the player.
     for (int i = 0; i < num_moves; i++) {
         int col = moves[i];
 
@@ -183,33 +184,33 @@ int Search::negamax(Node &node, int alpha, int beta, int score_jitter) {
     }
 
     // Check if this state has already been seen.
+    int table_move = -1;
     if (!node.did_lookup) {
-        Entry entry = table.get(node.hash);
+        node.entry = table.get(node.hash);
+    }
+    switch (node.entry.get_type()) {
+        case NodeType::MISS:
+            break;
 
-        switch (entry.get_type()) {
-            case NodeType::MISS:
-                break;
+        case NodeType::EXACT:
+            return node.entry.get_score();
 
-            case NodeType::EXACT:
-                return entry.get_score();
+        case NodeType::LOWER:
+            alpha = std::max(alpha, node.entry.get_score());
+            table_move = node.entry.get_move(node.is_mirrored);
+            break;
 
-            case NodeType::LOWER:
-                alpha = std::max(alpha, entry.get_score());
-                node.table_move = entry.get_move(node.is_mirrored);
-                break;
+        case NodeType::UPPER:
+            beta = std::min(beta, node.entry.get_score());
+            break;
+    }
 
-            case NodeType::UPPER:
-                beta = std::min(beta, entry.get_score());
-                break;
-        }
-
-        if (alpha >= beta) {
-            return entry.get_score();
-        }
+    if (alpha >= beta) {
+        return node.entry.get_score();
     }
 
     // Sort moves according to score.
-    sort_moves(node.pos, children, num_moves, moves, score_jitter, node.table_move);
+    sort_moves(node.pos, children, num_moves, moves, score_jitter, table_move);
 
     // If none of the above checks pass, then this is an internal node and we must
     // evaluate the child nodes to determine the score of this node.
@@ -318,6 +319,10 @@ int Search::static_search(Node &node, int alpha, int beta, bool &is_static) {
         }
 
         alpha = std::max(alpha, child_score);
+        if (alpha >= beta) {
+            is_static = true;
+            return alpha;
+        }
     }
 
     // If we do not have a forced move then this position cannot be statically evaluated.
@@ -327,29 +332,31 @@ int Search::static_search(Node &node, int alpha, int beta, bool &is_static) {
         node.hash = node.pos.hash(node.is_mirrored);
 
         // Check if this state has already been seen.
-        Entry entry = table.get(node.hash);
+        node.entry = table.get(node.hash);
 
-        switch (entry.get_type()) {
+        switch (node.entry.get_type()) {
             case NodeType::MISS:
                 break;
 
             case NodeType::EXACT:
                 is_static = true;
-                return entry.get_score();
+                return node.entry.get_score();
 
             case NodeType::LOWER:
-                node.table_move = entry.get_move(node.is_mirrored);
-                alpha = std::max(alpha, entry.get_score());
+                alpha = std::max(alpha, node.entry.get_score());
+                if (alpha >= beta) {
+                    is_static = true;
+                    return node.entry.get_score();
+                }
                 break;
 
             case NodeType::UPPER:
-                beta = std::min(beta, entry.get_score());
-                break;
-        }
-
-        if (alpha >= beta) {
-            is_static = true;
-            return entry.get_score();
+                beta = std::min(beta, node.entry.get_score());
+                if (alpha >= beta) {
+                    is_static = true;
+                    return node.entry.get_score();
+                }
+                return beta;
         }
     }
 

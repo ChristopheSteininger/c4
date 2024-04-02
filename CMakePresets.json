@@ -18,15 +18,6 @@
             }
           },
           {
-            "name": "profile",
-            "inherits": "default",
-            "description": "Profile build configuration",
-            "cacheVariables": {
-              "MODE": "PROFILE",
-              "CMAKE_BUILD_TYPE": "Debug"
-            }
-          },
-          {
             "name": "debug",
             "inherits": "default",
             "description": "Debug build configuration",
@@ -40,10 +31,6 @@
       {
         "name": "optimise",
         "configurePreset": "optimise"
-      },
-      {
-        "name": "profile",
-        "configurePreset": "profile"
       },
       {
         "name": "debug",
