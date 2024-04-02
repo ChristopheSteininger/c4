@@ -51,8 +51,15 @@ class Position {
     // Returns a 1 in any cell in which either player can win this move.
     board wins_this_move(board threats) const;
 
-    // Returns a 1 in any cell in which the current playe can move without loosing next turn.
+    // Returns a 1 in any cell in which the current player can move without loosing next turn.
     board find_non_losing_moves(board opponent_threats) const;
+
+    // Checks if the next player can win the game next turn, regardless the current player's next move.
+    bool is_forced_loss_next_turn(board opponent_wins, board non_losing_moves) const;
+
+    // If the current player has only one move which does not loss immediately, returns that move.
+    // Otherwise returns 0.
+    board find_forced_move(board opponent_wins, board non_losing_moves) const;
 
     // Returns true only if the current player is allowed to play the given move.
     bool is_move_valid(int col) const;

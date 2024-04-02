@@ -304,6 +304,42 @@ board Position::find_non_losing_moves(board opponent_threats) const {
     return valid_moves & ~below_threats & VALID_CELLS;
 }
 
+bool Position::is_forced_loss_next_turn(board opponent_wins, board non_losing_moves) const {
+    // If the player can only move below the opponents threats, the player will lose.
+    if (non_losing_moves == 0) {
+        return true;
+    }
+
+    // If the opponent has no threats next move, then the player cannot loss next turn.
+    if (opponent_wins == 0) {
+        return false;
+    }
+    
+    // Otherwise the game is lost if and only if:
+    //  * The opponent has multiple threats
+    //  * Or, the opponent has two threats on top of each other
+    return (opponent_wins & (opponent_wins - 1)) || !(opponent_wins & non_losing_moves);
+}
+
+board Position::find_forced_move(board opponent_wins, board non_losing_moves) const {
+    assert(!is_forced_loss_next_turn(opponent_wins, non_losing_moves));
+
+    // A move is forced if the opponent could win next turn.
+    if (opponent_wins) {
+        assert((opponent_wins & (opponent_wins - 1)) == 0);
+        assert((opponent_wins & non_losing_moves) == opponent_wins);
+
+        return opponent_wins;
+    }
+
+    // A move is also forced if the player has only one move which does not lose immediately.
+    if ((non_losing_moves & (non_losing_moves - 1)) == 0) {
+        return non_losing_moves;
+    }
+
+    return 0;
+}
+
 bool Position::is_move_valid(int col) const {
     assert(0 <= col && col < BOARD_WIDTH);
 

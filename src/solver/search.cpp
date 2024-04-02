@@ -296,23 +296,12 @@ int Search::static_search(Node &node, int alpha, int beta, bool &is_static) {
     // These moves will not be played.
     board opponent_threats = node.pos.find_opponent_threats();
     board non_losing_moves = node.pos.find_non_losing_moves(opponent_threats);
+    board opponent_wins = node.pos.wins_this_move(opponent_threats);
 
-    // If the player can only move below the opponents threats, the player will lose.
-    if (non_losing_moves == 0) {
+    // Check if the opponent can force a win next move.
+    if (node.pos.is_forced_loss_next_turn(opponent_wins, non_losing_moves)) {
         is_static = true;
         return node.pos.score_loss();
-    }
-
-    // Check if the opponent could win next move.
-    board opponent_wins = node.pos.wins_this_move(opponent_threats);
-    if (opponent_wins) {
-        // The game is lost if:
-        //  * The opponent has multiple threats
-        //  * Or, the opponent has two threats on top of each other
-        if (opponent_wins & (opponent_wins - 1) || !(opponent_wins & non_losing_moves)) {
-            is_static = true;
-            return node.pos.score_loss();
-        }
     }
 
     // At this point we know it is not possible to win or lose in the next two turns, so tighten bounds.
@@ -324,7 +313,7 @@ int Search::static_search(Node &node, int alpha, int beta, bool &is_static) {
     }
 
     // Check if we have a forced move and if so, statically evaluate it.
-    board forced_move = get_forced_move(opponent_wins, non_losing_moves);
+    board forced_move = node.pos.find_forced_move(opponent_wins, non_losing_moves);
     if (forced_move) {
         node.pos.move(forced_move);
         int child_score = -static_search(node, -beta, -alpha, is_static);
@@ -370,20 +359,4 @@ int Search::static_search(Node &node, int alpha, int beta, bool &is_static) {
     }
 
     return INF_SCORE;
-}
-
-board Search::get_forced_move(board opponent_wins, board non_losing_moves) {
-    // A move is forced if the opponent could win next turn.
-    if (opponent_wins) {
-        assert((opponent_wins & (opponent_wins - 1)) == 0);
-        assert((opponent_wins & non_losing_moves) == opponent_wins);
-        return opponent_wins;
-    }
-
-    // A move is also forced if the player has only one move which does not lose immediately.
-    if ((non_losing_moves & (non_losing_moves - 1)) == 0) {
-        return non_losing_moves;
-    }
-
-    return 0;
 }
