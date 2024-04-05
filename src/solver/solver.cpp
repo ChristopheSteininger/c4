@@ -67,7 +67,6 @@ int Solver::solve(const Position &pos, int lower, int upper) {
     int beta = std::min(upper, max_score);
     int score = (alpha + beta) / 2;
 
-
     while (alpha < beta) {
         int window = std::max(score, alpha + 1);
         
@@ -76,10 +75,10 @@ int Solver::solve(const Position &pos, int lower, int upper) {
         auto run_time = std::chrono::steady_clock::now() - start_time;
 
         if (print_progress_enabled) {
-            auto seconds = std::chrono::duration_cast<std::chrono::seconds>(run_time);
+            long long seconds = std::chrono::duration_cast<std::chrono::seconds>(run_time).count();
 
             std::cout << "Finished search in range [" << window - 1 << ", " << window << "] after " << seconds
-                      << ". Result = " << score << "." << std::endl;
+                      << " s. Result = " << score << "." << std::endl;
         }
 
         if (score < window) {
