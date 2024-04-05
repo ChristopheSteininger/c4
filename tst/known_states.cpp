@@ -253,7 +253,8 @@ const char *all_known_states_tests(bool light_mode) {
               << std::right << std::setw(15) << "Mean nodes"
               << std::setw(15) << "Nodes per ms"
               << std::setw(15) << "Guess rate"
-              << std::setw(15) << "Time (s)" << std::setw(15) << "Trials"
+              << std::setw(15) << "Time (s)"
+              << std::setw(15) << "Games"
               << std::endl;
     // clang-format on
 

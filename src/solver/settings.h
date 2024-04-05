@@ -31,9 +31,6 @@ inline constexpr int ENHANCED_TABLE_CUTOFF_PLIES = BOARD_WIDTH * BOARD_HEIGHT - 
 
 // Determines how much noise to add to move scores near the root of the search tree. This noise helps
 // threads to desync. Increase jitter with number of threads.
-inline constexpr float MOVE_SCORE_JITTER = 0.3f;
-
-// No need for jitter if running with a single thread.
-static_assert(NUM_THREADS > 1 || MOVE_SCORE_JITTER == 0);
+inline constexpr float MOVE_SCORE_JITTER = (NUM_THREADS > 1) ? 0.3f : 0.0f;
 
 #endif

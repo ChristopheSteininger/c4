@@ -76,10 +76,8 @@ Worker::~Worker() {
     }
 }
 
-void Worker::start(const Position &new_pos, int new_alpha, int new_beta,
-        int new_window, int new_step, int new_score_jitter) {
+void Worker::start(const Position &new_pos, int new_alpha, int new_beta, int new_score_jitter) {
     assert(new_alpha < new_beta);
-    assert(new_step > 0);
     assert(new_score_jitter >= 0);
 
     mutex.lock();
@@ -93,8 +91,6 @@ void Worker::start(const Position &new_pos, int new_alpha, int new_beta,
     pos = Position(new_pos);
     alpha = new_alpha;
     beta = new_beta;
-    window = new_window;
-    step = new_step;
     score_jitter = new_score_jitter;
 
     // Tells the thread to start searching the given position as soon
@@ -153,13 +149,13 @@ void Worker::work() {
         // We have a new position to search.
         if (is_searching) {
             auto search_start = std::chrono::steady_clock::now();
-            int score = run_search();
+            int score = search->search(pos, alpha, beta, score_jitter);
             active_time += std::chrono::steady_clock::now() - search_start;
 
             is_searching = false;
 
             // Tell the main thread we've solved the position.
-            if (score != SEARCH_STOPPED) {
+            if (abs(score) != SEARCH_STOPPED) {
                 bool was_first = result->notify_result(score);
 
                 if (was_first) {
@@ -169,31 +165,5 @@ void Worker::work() {
         }
 
         cond.notify_all();
-    }
-}
-
-int Worker::run_search() {
-    int a = window;
-    int b = window + 1;
-
-    while (true) {
-        int score = search->search(pos, a, b, score_jitter);
-
-        if (abs(score) == SEARCH_STOPPED) {
-            return SEARCH_STOPPED;
-        }
-
-        // If the result is within the bounds, then the result is exact and we can exit.
-        // Or if the true score is outside [alpha, beta] return the score.
-        if ((a < score && score < b) || (score <= a && a <= alpha) || (score >= b && b >= beta)) {
-            return score;
-        }
-
-        // Increase bounds for the next search.
-        if (score <= a) {
-            a = std::max(alpha, a - step);
-        } else {
-            b = std::min(beta, b + step);
-        }
     }
 }

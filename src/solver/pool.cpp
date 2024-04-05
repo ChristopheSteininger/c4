@@ -60,14 +60,11 @@ int Pool::search(const Position &pos, int alpha, int beta) {
     result->reset();
     merged_stats.reset();
 
-    // Spread out the workers over the input bounds.
-    double window = alpha;
-    double window_step = (double)(beta - alpha) / workers.size();
+    // Pass the new position to the workers and start searching.
     for (size_t i = 0; i < workers.size(); i++) {
-        int score_jitter = get_score_jitter(window_step, i);
+        int score_jitter = get_score_jitter((double) (beta - alpha) / workers.size(), i);
 
-        workers[i]->start(pos, alpha, beta, (int)window, (i % 3) + 1, score_jitter);
-        window += window_step;
+        workers[i]->start(pos, alpha, beta, score_jitter);
     }
 
     // Block until any of the workers find the solution.

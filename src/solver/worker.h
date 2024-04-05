@@ -32,7 +32,7 @@ class Worker {
     Worker(int id, const Table &parent_table, const std::shared_ptr<SearchResult> result);
     ~Worker();
 
-    void start(const Position &new_pos, int new_alpha, int new_beta, int new_window, int new_step, int new_move_offset);
+    void start(const Position &new_pos, int new_alpha, int new_beta, int new_move_offset);
     void wait();
     void stop();
 
@@ -69,8 +69,6 @@ class Worker {
     Position pos;
     int alpha;
     int beta;
-    int window;
-    int step;
     int score_jitter;
     // End shared search data.
 
@@ -80,7 +78,6 @@ class Worker {
     std::chrono::steady_clock::duration active_time{};
 
     void work();
-    int run_search();
 };
 
 #endif
