@@ -55,6 +55,8 @@ int main() {
     pos.printb();
     std::cout << std::endl;
 
+    solver.print_progress();
+
     auto start_time = std::chrono::steady_clock::now();
     int score = (SOLVE_STRONGLY) ? solver.solve_strong(pos) : solver.solve_weak(pos);
     auto run_time = std::chrono::steady_clock::now() - start_time;

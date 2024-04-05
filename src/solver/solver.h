@@ -23,9 +23,13 @@ class Solver {
 
     void clear_state();
 
+    void print_progress() { print_progress_enabled = true; }
+
     static std::string get_settings_string();
 
    private:
+    bool print_progress_enabled{false};
+
     // Every worker will make a copy of this table. This will give
     // each thread access to a shared table with thread local stats.
     Table table{};

@@ -1,6 +1,7 @@
 #include "solver.h"
 
 #include <cassert>
+#include <chrono>
 #include <iomanip>
 #include <iostream>
 #include <random>
@@ -66,9 +67,20 @@ int Solver::solve(const Position &pos, int lower, int upper) {
     int beta = std::min(upper, max_score);
     int score = (alpha + beta) / 2;
 
+
     while (alpha < beta) {
         int window = std::max(score, alpha + 1);
+        
+        auto start_time = std::chrono::steady_clock::now();
         score = pool.search(pos, window - 1, window);
+        auto run_time = std::chrono::steady_clock::now() - start_time;
+
+        if (print_progress_enabled) {
+            auto seconds = std::chrono::duration_cast<std::chrono::seconds>(run_time);
+
+            std::cout << "Finished search in range [" << window - 1 << ", " << window << "] after " << seconds
+                      << ". Result = " << score << "." << std::endl;
+        }
 
         if (score < window) {
             beta = score;
