@@ -4,6 +4,7 @@
 #include <random>
 
 #include "position.h"
+#include "progress.h"
 #include "stats.h"
 #include "table.h"
 
@@ -33,8 +34,9 @@ class Search {
     // Create our own copy of the transposition table. This table will use the same
     // underlying storage as parent_table so this thread can benefit from the work
     // other threads have saved in the table.
-    Search(const Table &parent_table, const std::shared_ptr<Stats> &stats, int id)
-        : table(parent_table, stats), stats(stats), rand(id) {}
+    Search(int id, const Table &parent_table, const std::shared_ptr<Stats> stats,
+        const std::shared_ptr<Progress> progress)
+        : id(id), table(parent_table, stats), stats(std::move(stats)), progress(std::move(progress)), rand(id) {}
 
     void start() { stop_search = false; }
     void stop() { stop_search = true; }
@@ -42,8 +44,11 @@ class Search {
     int search(Position &pos, int alpha, int beta, int score_jitter);
 
    private:
+    int id;
+
     Table table;
     std::shared_ptr<Stats> stats;
+    std::shared_ptr<Progress> progress;
 
     std::mt19937 rand;
     std::uniform_int_distribution<uint16_t> dist;
@@ -52,7 +57,8 @@ class Search {
 
     int negamax(Node &node, int alpha, int beta, int score_jitter);
 
-    void sort_moves(Position &pos, Node *children, int num_moves, int *moves, int score_jitter, int table_move);
+    void sort_moves(Position &pos, Node *children, board opponent_threats,
+        int num_moves, int *moves, int score_jitter, int table_move);
     int static_search(Node &node, int alpha, int beta, bool &is_static);
 };
 

@@ -7,6 +7,7 @@
       "project": "CMakeLists.txt",
       "projectTarget": "test.exe",
       "name": "Tests",
+      "isDefaultConfiguration": true,
       "currentDir": "${workspaceRoot}"
     }
   ]

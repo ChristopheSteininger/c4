@@ -6,12 +6,13 @@
 #include <vector>
 
 #include "position.h"
+#include "progress.h"
 #include "table.h"
 #include "worker.h"
 
 class Pool {
    public:
-    Pool(const Table &parent_table);
+    Pool(const Table &parent_table, const std::shared_ptr<Progress> &progress);
     ~Pool();
 
     int search(const Position &pos, int alpha, int beta);

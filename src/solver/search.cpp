@@ -30,22 +30,24 @@ static int count_bits(board b) {
     return result;
 }
 
-static float heuristic(const Position &pos, board threats, int col, bool is_table_move) {
-    int num_threats = count_bits(threats);
-    int num_next_threats = count_bits(pos.find_next_turn_threats(threats));
-    int num_next_next_threats = count_bits(pos.find_next_next_turn_threats(threats));
+static float heuristic(const Position &pos, board opponent_threats, int col, bool is_table_move) {
+    // Opponent and player are swapped, since a move was just played.
+    board player_threats = pos.find_opponent_threats();
+    board threats = pos.find_useful_threats(player_threats, opponent_threats);
+
     float center_score = (float)std::min(col, BOARD_WIDTH - col - 1) / BOARD_WIDTH;
 
     // clang-format off
-    return 1.0f * num_next_threats
+    return 1.2f * count_bits(pos.find_next_turn_threats(threats))
         + 0.5f * is_table_move
-        + 0.5f * num_next_next_threats
-        + 0.3f * num_threats
+        + 0.5f * count_bits(pos.find_next_next_turn_threats(threats))
+        + 0.3f * count_bits(threats)
         + 0.1f * center_score;
     // clang-format on
 }
 
-void Search::sort_moves(Position &pos, Node *children, int num_moves, int *moves, int score_jitter, int table_move) {
+void Search::sort_moves(Position &pos, Node *children, board opponent_threats,
+        int num_moves, int *moves, int score_jitter, int table_move) {
     assert(num_moves > 0);
     assert(score_jitter >= 0);
     assert(table_move == -1 || (0 <= table_move && table_move < BOARD_WIDTH));
@@ -55,17 +57,14 @@ void Search::sort_moves(Position &pos, Node *children, int num_moves, int *moves
         int col = moves[i];
 
         board before_move = pos.move(col);
-
-        board useful_threats = pos.find_useful_threats(pos.find_opponent_threats(), pos.find_player_threats());
-        children[col].score = heuristic(pos, useful_threats, col, col == table_move);
+        children[col].score = heuristic(pos, opponent_threats, col, col == table_move);
+        pos.unmove(before_move);
 
         // Add some noise to move scores to help threads desync.
         if (score_jitter > 0) {
             int max_rand = 1 + (score_jitter % BOARD_WIDTH);
             children[col].score += MOVE_SCORE_JITTER * (dist(rand) % max_rand);
         }
-
-        pos.unmove(before_move);
     }
 
     // Sort moves according to score, high to low.
@@ -210,7 +209,7 @@ int Search::negamax(Node &node, int alpha, int beta, int score_jitter) {
     }
 
     // Sort moves according to score.
-    sort_moves(node.pos, children, num_moves, moves, score_jitter, table_move);
+    sort_moves(node.pos, children, opponent_threats, num_moves, moves, score_jitter, table_move);
 
     // If none of the above checks pass, then this is an internal node and we must
     // evaluate the child nodes to determine the score of this node.
@@ -267,6 +266,8 @@ int Search::negamax(Node &node, int alpha, int beta, int score_jitter) {
         // Oops.
         stats->worst_move_guessed();
     }
+
+    progress->completed_node(id, node.pos.num_moves());
 
     return value;
 }

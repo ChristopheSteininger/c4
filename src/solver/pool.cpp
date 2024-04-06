@@ -9,11 +9,11 @@
 #include "settings.h"
 #include "table.h"
 
-Pool::Pool(const Table &parent_table) {
+Pool::Pool(const Table &parent_table, const std::shared_ptr<Progress> &progress) {
     result = std::make_shared<SearchResult>();
 
     for (int i = 0; i < NUM_THREADS; i++) {
-        workers.push_back(std::make_unique<Worker>(i, parent_table, result));
+        workers.push_back(std::make_unique<Worker>(i, parent_table, result, progress));
     }
 }
 

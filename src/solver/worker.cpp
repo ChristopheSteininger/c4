@@ -49,11 +49,12 @@ int SearchResult::wait_for_result() {
     return score;
 }
 
-Worker::Worker(int id, const Table &parent_table, std::shared_ptr<SearchResult> result) {
+Worker::Worker(int id, const Table &parent_table, std::shared_ptr<SearchResult> result,
+               const std::shared_ptr<Progress> &progress) {
     this->id = id;
-    this->result = result;
+    this->result = std::move(result);
     this->stats = std::make_shared<Stats>();
-    this->search = std::make_unique<Search>(parent_table, stats, id);
+    this->search = std::make_unique<Search>(id, parent_table, stats, progress);
 
     // Start the thread, which will go to sleep until a position is submitted.
     this->thread = std::thread(&Worker::work, this);

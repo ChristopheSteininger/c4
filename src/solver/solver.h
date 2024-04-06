@@ -2,9 +2,11 @@
 #define SOLVER_H_
 
 #include <string>
+#include <memory>
 
 #include "pool.h"
 #include "position.h"
+#include "progress.h"
 #include "settings.h"
 #include "table.h"
 
@@ -23,18 +25,18 @@ class Solver {
 
     void clear_state();
 
-    void print_progress() { print_progress_enabled = true; }
+    void print_progress() { progress->print_progress(); }
 
     static std::string get_settings_string();
 
    private:
-    bool print_progress_enabled{false};
-
+    std::shared_ptr<Progress> progress{std::make_shared<Progress>()};
+    
     // Every worker will make a copy of this table. This will give
     // each thread access to a shared table with thread local stats.
     Table table{};
 
-    Pool pool{table};
+    Pool pool{table, progress};
 };
 
 #endif
