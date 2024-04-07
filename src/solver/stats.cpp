@@ -1,5 +1,6 @@
 #include "stats.h"
 
+#include <iomanip>
 #include <sstream>
 
 void Stats::merge(const Stats &other) {

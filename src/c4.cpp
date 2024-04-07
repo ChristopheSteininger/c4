@@ -2,7 +2,6 @@
 #include <locale.h>
 
 #include <chrono>
-#include <iomanip>
 #include <iostream>
 #include <sstream>
 
@@ -46,11 +45,10 @@ static std::string pretty_print_score(const Position &pos, int score) {
 }
 
 int main() {
-    std::cout.imbue(std::locale(""));
-
     Position pos;
     Solver solver;
 
+    std::cout.imbue(std::locale(""));
     std::cout << Solver::get_settings_string()
               << strongly_weakly() << " solving:" << std::endl
               << std::endl
