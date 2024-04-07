@@ -60,8 +60,8 @@ bool weak_test(Solver &solver, struct test_data test_data) {
 
     if (expected != actual) {
         std::cout << std::endl
-                  << "The position below has a weak score of " << expected << ", but got " << actual << std::endl;
-        test_data.pos.printb();
+                  << "The position below has a weak score of " << expected << ", but got " << actual << std::endl
+                  << test_data.pos.display_board();
 
         return false;
     }
@@ -75,8 +75,8 @@ bool strong_test(Solver &solver, struct test_data test_data) {
     if (test_data.expected != actual) {
         std::cout << std::endl
                   << "The position below has a score of " << test_data.expected << ", but got " << actual
-                  << std::endl;
-        test_data.pos.printb();
+                  << std::endl
+                  << test_data.pos.display_board();
 
         return false;
     }
@@ -97,8 +97,8 @@ bool self_play_test(Solver &solver, struct test_data test_data) {
     // The length of the PV must match the number of expected moves.
     if (expected_moves_left != num_pv_moves) {
         std::cout << "PV length does not match expected num moves. Expected num moves was " << expected_moves_left
-                  << " but got " << num_pv_moves << " from PV." << std::endl;
-        pos.printb();
+                  << " but got " << num_pv_moves << " from PV." << std::endl
+                  << pos.display_board();
 
         return false;
     }
@@ -111,8 +111,8 @@ bool self_play_test(Solver &solver, struct test_data test_data) {
 
         // Fail if the solver outputted an invalid move.
         if (!pos.is_move_valid(move)) {
-            std::cout << "Solver gave an invalid move " << move << "." << std::endl;
-            pos.printb();
+            std::cout << "Solver gave an invalid move " << move << "." << std::endl
+                      << pos.display_board();
 
             return false;
         }
@@ -120,8 +120,8 @@ bool self_play_test(Solver &solver, struct test_data test_data) {
         // Fail if the solver changed score while playing.
         if (score != expected_score) {
             std::cout << "Solver changed score during play. Expected " << expected_score << " but got " << score << "."
-                      << std::endl;
-            pos.printb();
+                      << std::endl
+                      << pos.display_board();
 
             return false;
         }
@@ -133,8 +133,8 @@ bool self_play_test(Solver &solver, struct test_data test_data) {
     // Fail if number of moves played does not match the prediction.
     if (expected_moves_left != moves_played) {
         std::cout << "Game ended after unexpected number of moves. Expected " << expected_moves_left << " moves but got "
-                  << moves_played << " moves." << std::endl;
-        pos.printb();
+                  << moves_played << " moves." << std::endl
+                  << pos.display_board();
 
         return false;
     }

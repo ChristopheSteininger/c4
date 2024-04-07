@@ -497,9 +497,8 @@ const char *test_find_dead_stones_returns_subset_of_dead_stones_on_random_games(
         // Play random moves until the game is draw, or the last player won the game.
         while (!pos.has_opponent_won() && !pos.is_draw()) {
             if (!pos.are_dead_stones_valid()) {
-                std::cout << "Trial #" << trial + 1 << ". Found dead stones which may impact the rest of the game."
-                    << std::endl;
-                pos.printb();
+                std::cout << "Trial #" << trial + 1 << ". Found dead stones which may impact the rest of the game." << std::endl
+                          << pos.display_board();
 
                 mu_fail("Dead stone check on random board failed.");
             }

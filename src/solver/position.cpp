@@ -2,7 +2,7 @@
 
 #include <cassert>
 #include <iomanip>
-#include <iostream>
+#include <sstream>
 
 #include "settings.h"
 
@@ -393,9 +393,15 @@ board Position::hash(bool &is_mirrored) const {
     return hash;
 }
 
-void Position::printb() const { print_mask(b0, b1); }
+std::string Position::display_board() const {
+    if ((ply & 1) == 0) {
+        return display_mask(b0, b1);
+    } else {
+        return display_mask(b1, b0);
+    }
+}
 
-void Position::print_mask(board a, board b) const {
+std::string Position::display_mask(board a, board b) const {
     // Allow colors to be switched off if not displaying correctly.
 #ifdef NO_COLOR_OUTPUT
     const char *p0 = " O";
@@ -405,28 +411,32 @@ void Position::print_mask(board a, board b) const {
     const char *p1 = " \x1B[33mX\033[0m";
 #endif
 
+    std::stringstream result;
+
     // Print the board.
     for (int y = BOARD_HEIGHT - 1; y >= 0; y--) {
         for (int x = 0; x < BOARD_WIDTH; x++) {
             int shift = y + x * BOARD_HEIGHT_1;
 
             if ((a >> shift) & 1) {
-                std::cout << p0;
+                result << p0;
             } else if ((b >> shift) & 1) {
-                std::cout << p1;
+                result << p1;
             } else {
-                std::cout << " .";
+                result << " .";
             }
         }
 
-        std::cout << std::endl;
+        result << std::endl;
     }
 
     // Print the column numbers.
     for (int x = 0; x < BOARD_WIDTH; x++) {
-        std::cout << std::setw(2) << std::setfill(' ') << x;
+        result << std::setw(2) << std::setfill(' ') << x;
     }
-    std::cout << std::endl;
+    result << std::endl;
+
+    return result.str();
 }
 
 bool Position::are_dead_stones_valid() const {

@@ -259,7 +259,7 @@ int Search::negamax(Node &node, int alpha, int beta, int score_jitter) {
     table.put(node.hash, node.is_mirrored, best_move_col, type, value);
 
     // Update statistics.
-    stats->node_type(type);
+    stats->new_interior_node(type, node.pos.num_moves());
     if (best_move_index == 0) {
         stats->best_move_guessed();
     } else if (best_move_index == num_moves - 1) {

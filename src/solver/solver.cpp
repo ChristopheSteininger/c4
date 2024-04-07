@@ -130,8 +130,8 @@ int Solver::get_best_move(const Position &pos_orig, int score) {
     }
 
     // This point should never be reached.
-    std::cout << "Error: could not get a best move in this position:" << std::endl;
-    pos.printb();
+    std::cout << "Error: could not get a best move in this position:" << std::endl
+              << pos.display_board();
 
     assert(0);
     return -1;

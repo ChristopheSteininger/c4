@@ -1,6 +1,8 @@
 #ifndef BOARD_H_
 #define BOARD_H_
 
+#include <iostream>
+#include <string>
 #include <vector>
 
 #include "settings.h"
@@ -81,8 +83,9 @@ class Position {
     board hash(bool &is_mirrored) const;
 
     // Print the game to the console.
-    void printb() const;
-    void print_mask(board b0, board b1) const;
+    void print() const { std::cout << display_board(); }
+    std::string display_board() const;
+    std::string display_mask(board b0, board b1) const;
 
     // Only used for testing. Returns true only if every dead stone
     // found cannot impact the rest of the game.

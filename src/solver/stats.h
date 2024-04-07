@@ -2,6 +2,8 @@
 #define STATS_H_
 
 #include <cassert>
+#include <chrono>
+#include <string>
 
 #include "types.h"
 
@@ -13,12 +15,8 @@ class Stats {
 
     // Search stats getters.
     unsigned long long get_num_nodes() const { return num_nodes; }
-    unsigned long long get_num_exact_nodes() const { return num_exact_nodes; }
-    unsigned long long get_num_lower_nodes() const { return num_lower_nodes; }
-    unsigned long long get_num_upper_nodes() const { return num_upper_nodes; }
     double get_best_move_guess_rate() const { return (double)num_best_moves_guessed / get_num_interior_nodes(); }
     double get_worst_move_guess_rate() const { return (double)num_worst_moves_guessed / get_num_interior_nodes(); }
-    unsigned long long get_num_interior_nodes() const { return num_exact_nodes + num_lower_nodes + num_upper_nodes; }
 
     // Lookup stats getters.
     double get_hit_rate() const {
@@ -41,24 +39,25 @@ class Stats {
 
     // Search stats increments.
     void new_node() { num_nodes++; }
-    void node_type(NodeType type) {
+    void new_interior_node(NodeType type, int num_moves) {
         switch (type) {
             case NodeType::EXACT:
-                num_exact_nodes++;
+                num_exact_nodes[num_moves]++;
                 break;
 
             case NodeType::LOWER:
-                num_lower_nodes++;
+                num_lower_nodes[num_moves]++;
                 break;
 
             case NodeType::UPPER:
-                num_upper_nodes++;
+                num_upper_nodes[num_moves]++;
                 break;
 
             default:
                 assert(0);
         }
     }
+
     void best_move_guessed() { num_best_moves_guessed++; }
     void worst_move_guessed() { num_worst_moves_guessed++; }
 
@@ -72,14 +71,18 @@ class Stats {
     void store_overwrite() { num_store_overwrites++; }
     void store_rewrite() { num_store_rewrites++; }
 
+    std::string display_all_stats(std::chrono::nanoseconds search_time) const;
+
    private:
     // Search stats.
     unsigned long long num_nodes{0};
-    unsigned long long num_exact_nodes{0};
-    unsigned long long num_lower_nodes{0};
-    unsigned long long num_upper_nodes{0};
     unsigned long long num_best_moves_guessed{0};
     unsigned long long num_worst_moves_guessed{0};
+
+    // Depth stats.
+    unsigned long long num_exact_nodes[BOARD_WIDTH * BOARD_HEIGHT]{0};
+    unsigned long long num_lower_nodes[BOARD_WIDTH * BOARD_HEIGHT]{0};
+    unsigned long long num_upper_nodes[BOARD_WIDTH * BOARD_HEIGHT]{0};
 
     // Lookup stats.
     unsigned long long num_lookup_success{0};
@@ -90,6 +93,11 @@ class Stats {
     unsigned long long num_store_entries{0};
     unsigned long long num_store_overwrites{0};
     unsigned long long num_store_rewrites{0};
+
+    unsigned long long sum_over_depth(const unsigned long long *depths) const;
+    unsigned long long get_num_interior_nodes() const {
+        return sum_over_depth(num_exact_nodes) + sum_over_depth(num_lower_nodes) + sum_over_depth(num_upper_nodes);
+    }
 };
 
 #endif
