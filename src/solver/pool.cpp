@@ -9,12 +9,13 @@
 #include "settings.h"
 #include "table.h"
 
-Pool::Pool(const Table &parent_table, const std::shared_ptr<Progress> &progress) {
-    result = std::make_shared<SearchResult>();
-
+Pool::Pool(const Table &parent_table, std::shared_ptr<Progress> progress) {
+    this->result = std::make_shared<SearchResult>();
     for (int i = 0; i < NUM_THREADS; i++) {
         workers.push_back(std::make_unique<Worker>(i, parent_table, result, progress));
     }
+
+    this->progress = std::move(progress);
 }
 
 Pool::~Pool() {
@@ -57,8 +58,10 @@ int Pool::search(const Position &pos, int alpha, int beta) {
     // No worker should still be running at this point.
     wait_all();
 
+    Stats search_stats;
+
     result->reset();
-    merged_stats.reset();
+    progress->started_search(alpha, beta);
 
     // Pass the new position to the workers and start searching.
     for (size_t i = 0; i < workers.size(); i++) {
@@ -70,19 +73,14 @@ int Pool::search(const Position &pos, int alpha, int beta) {
     // Block until any of the workers find the solution.
     int score = result->wait_for_result();
 
+    // Update stats by merging together all child stats.
+    merge_stats(search_stats);
+    progress->completed_search(score, search_stats);
+
     // No need for the other workers to do anything else.
     stop_all();
 
-    // Update stats by merging together all child stats.
-    merge_stats();
-
     return score;
-}
-
-void Pool::reset_stats() {
-    for (const std::unique_ptr<Worker> &worker : workers) {
-        worker->reset_stats();
-    }
 }
 
 void Pool::print_pool_stats() const {
@@ -107,8 +105,12 @@ void Pool::stop_all() {
     }
 }
 
-void Pool::merge_stats() {
+void Pool::merge_stats(Stats &search_stats) {
+    // Merge all worker stats to form final stats of the previous search.
     for (const std::unique_ptr<Worker> &worker : workers) {
-        merged_stats.merge(*worker->get_stats());
+        search_stats.merge(*worker->get_stats());
     }
+
+    // Update merged stats with stats of the previous search.
+    merged_stats.merge(search_stats);
 }

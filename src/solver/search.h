@@ -34,8 +34,7 @@ class Search {
     // Create our own copy of the transposition table. This table will use the same
     // underlying storage as parent_table so this thread can benefit from the work
     // other threads have saved in the table.
-    Search(int id, const Table &parent_table, const std::shared_ptr<Stats> stats,
-        const std::shared_ptr<Progress> progress)
+    Search(int id, const Table &parent_table, std::shared_ptr<Stats> stats, std::shared_ptr<Progress> progress)
         : id(id), table(parent_table, stats), stats(std::move(stats)), progress(std::move(progress)), rand(id) {}
 
     void start() { stop_search = false; }

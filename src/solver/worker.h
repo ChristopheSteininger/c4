@@ -29,8 +29,8 @@ class SearchResult {
 
 class Worker {
    public:
-    Worker(int id, const Table &parent_table, const std::shared_ptr<SearchResult> result,
-           const std::shared_ptr<Progress> &progress);
+    Worker(int id, const Table &parent_table, std::shared_ptr<SearchResult> result,
+        std::shared_ptr<Progress> progress);
     ~Worker();
 
     void start(const Position &new_pos, int new_alpha, int new_beta, int new_move_offset);
@@ -38,7 +38,6 @@ class Worker {
     void stop();
 
     const Stats *get_stats() const { return stats.get(); }
-    void reset_stats();
 
     void print_thread_stats();
 

@@ -50,11 +50,11 @@ int SearchResult::wait_for_result() {
 }
 
 Worker::Worker(int id, const Table &parent_table, std::shared_ptr<SearchResult> result,
-               const std::shared_ptr<Progress> &progress) {
+               std::shared_ptr<Progress> progress) {
     this->id = id;
     this->result = std::move(result);
     this->stats = std::make_shared<Stats>();
-    this->search = std::make_unique<Search>(id, parent_table, stats, progress);
+    this->search = std::make_unique<Search>(id, parent_table, stats, std::move(progress));
 
     // Start the thread, which will go to sleep until a position is submitted.
     this->thread = std::thread(&Worker::work, this);
@@ -88,6 +88,9 @@ void Worker::start(const Position &new_pos, int new_alpha, int new_beta, int new
     assert(!is_searching);
     assert(!is_exiting);
 
+    // We are starting a new search, so reset all stats.
+    stats->reset();
+
     // Position is not thread safe, so we must make our own copy.
     pos = Position(new_pos);
     alpha = new_alpha;
@@ -117,10 +120,6 @@ void Worker::stop() {
     if (is_searching) {
         search->stop();
     }
-}
-
-void Worker::reset_stats() {
-    stats->reset();
 }
 
 void Worker::print_thread_stats() {

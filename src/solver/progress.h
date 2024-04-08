@@ -4,12 +4,14 @@
 #include <chrono>
 #include <mutex>
 
+#include "stats.h"
+
 class Progress {
    public:
     void print_progress() { print_progress_enabled = true; }
 
     void started_search(int alpha, int beta);
-    void completed_search(int score);
+    void completed_search(int score, const Stats &stats);
     void completed_node(int id, int num_moves);
 
    private:
@@ -21,7 +23,7 @@ class Progress {
     volatile bool search_running{false};
     volatile int min_num_moves;
 
-    long long seconds_since_search_start();
+    long long milliseconds_since_search_start() const;
 };
 
 #endif

@@ -13,13 +13,11 @@
 // Use this bool to switch between providing a strong or weak solution to the chosen position.
 static inline constexpr bool SOLVE_STRONGLY = true;
 
-static std::string strongly_weakly() { return (SOLVE_STRONGLY) ? "Strongly" : "Weakly"; }
-
 static std::string pretty_print_score(const Position &pos, int score) {
     std::stringstream result;
 
     if (SOLVE_STRONGLY) {
-        result << "Strong score is " << score;
+        result << "Final strong score is " << score;
 
         int last_move = pos.num_moves() + pos.moves_left(score);
         if (score < 0) {
@@ -30,7 +28,7 @@ static std::string pretty_print_score(const Position &pos, int score) {
             result << " (draw).";
         }
     } else {
-        result << "Weak score is " << score;
+        result << "Final weak score is " << score;
 
         if (score < 0) {
             result << " (loss).";
@@ -50,7 +48,7 @@ int main() {
 
     std::cout.imbue(std::locale(""));
     std::cout << Solver::get_settings_string()
-              << strongly_weakly() << " solving:" << std::endl
+              << (SOLVE_STRONGLY ? "Strongly" : "Weakly") << " solving:" << std::endl
               << std::endl
               << pos.display_board()
               << std::endl;
@@ -61,7 +59,8 @@ int main() {
     int score = (SOLVE_STRONGLY) ? solver.solve_strong(pos) : solver.solve_weak(pos);
     auto run_time = std::chrono::steady_clock::now() - start_time;
 
-    std::cout << pretty_print_score(pos, score) << std::endl
+    std::cout << "Search completed!" << std::endl
+              << pretty_print_score(pos, score) << std::endl
               << std::endl
               << solver.get_merged_stats().display_all_stats(run_time) << std::endl;
 

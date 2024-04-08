@@ -68,10 +68,7 @@ int Solver::solve(const Position &pos, int lower, int upper) {
 
     while (alpha < beta) {
         int window = std::max(score, alpha + 1);
-
-        progress->started_search(window - 1, window);
         score = pool.search(pos, window - 1, window);
-        progress->completed_search(score);
 
         if (score < window) {
             beta = score;

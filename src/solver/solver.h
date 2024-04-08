@@ -22,7 +22,6 @@ class Solver {
     int get_principal_variation(const Position &pos, std::vector<int> &moves);
 
     const Stats &get_merged_stats() const { return pool.get_merged_stats(); }
-
     void clear_state();
 
     void print_progress() { progress->print_progress(); }

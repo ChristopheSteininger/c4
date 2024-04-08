@@ -68,8 +68,6 @@ class Table {
     Table();
     Table(const Table &parent, const std::shared_ptr<Stats> stats);
 
-    Table(const Table &table) = delete;
-
     void clear();
 
     void prefetch(board hash);

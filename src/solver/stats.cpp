@@ -50,17 +50,17 @@ std::string Stats::display_all_stats(std::chrono::nanoseconds search_time) const
     result.imbue(std::locale(""));
 
     result << std::fixed << std::setprecision(2)
-           << "Time to solve        = " << run_time_ms / 1000.0 << " s" << std::endl
-           << "Nodes per ms         = " << get_num_nodes() / std::max(1LL, run_time_ms) << std::endl
-           << "Nodes                = " << get_num_nodes() << std::endl
+           << "Time to solve       = " << run_time_ms / 1000.0 << " s" << std::endl
+           << "Nodes per ms        = " << get_num_nodes() / std::max(1LL, run_time_ms) << std::endl
+           << "Nodes               = " << get_num_nodes() << std::endl
            << "Table:" << std::endl
-           << "    Hit rate         = " << get_hit_rate() * 100 << "%" << std::endl
-           << "    Collision rate   = " << get_collision_rate() * 100 << "%" << std::endl
-           << "    New write rate   = " << get_new_write_rate() * 100 << "%" << std::endl
-           << "    Rewrite rate     = " << get_rewrite_rate() * 100 << "%" << std::endl
-           << "    Overwrite rate   = " << get_overwrite_rate() * 100 << "%" << std::endl
-           << "Best moves guessed   = " << get_best_move_guess_rate() * 100 << "%" << std::endl
-           << "Worst moves guessed  = " << get_worst_move_guess_rate() * 100 << "%" << std::endl
+           << "    Hit rate        = " << get_hit_rate() * 100 << "%" << std::endl
+           << "    Collision rate  = " << get_collision_rate() * 100 << "%" << std::endl
+           << "    New write rate  = " << get_new_write_rate() * 100 << "%" << std::endl
+           << "    Rewrite rate    = " << get_rewrite_rate() * 100 << "%" << std::endl
+           << "    Overwrite rate  = " << get_overwrite_rate() * 100 << "%" << std::endl
+           << "Best moves guessed  = " << get_best_move_guess_rate() * 100 << "%" << std::endl
+           << "Worst moves guessed = " << get_worst_move_guess_rate() * 100 << "%" << std::endl
            << std::endl
            << "Interior nodes:" << std::endl
            << std::left
