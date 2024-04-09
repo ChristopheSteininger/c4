@@ -26,7 +26,7 @@ Pool::~Pool() {
 
 static int get_score_jitter(double window_step, size_t i) {
     // clang-format off
-   if (window_step < 0.1) {
+    if (window_step < 0.1) {
         return (i % 3) * BOARD_WIDTH * BOARD_WIDTH * BOARD_WIDTH * BOARD_WIDTH
             + (i % 4) * BOARD_WIDTH * BOARD_WIDTH * BOARD_WIDTH
             + (i % 5) * BOARD_WIDTH * BOARD_WIDTH
@@ -55,13 +55,11 @@ int Pool::search(const Position &pos, int alpha, int beta) {
     assert(!pos.is_game_over());
     assert(!pos.wins_this_move(pos.find_player_threats()));
 
-    // No worker should still be running at this point.
-    wait_all();
-
-    Stats search_stats;
-
     result->reset();
-    progress->started_search(alpha, beta);
+
+    // Start the clock.
+    std::chrono::steady_clock::time_point search_start_time = std::chrono::steady_clock::now();
+    progress->started_search(alpha, beta, search_start_time);
 
     // Pass the new position to the workers and start searching.
     for (size_t i = 0; i < workers.size(); i++) {
@@ -73,12 +71,16 @@ int Pool::search(const Position &pos, int alpha, int beta) {
     // Block until any of the workers find the solution.
     int score = result->wait_for_result();
 
-    // Update stats by merging together all child stats.
-    merge_stats(search_stats);
-    progress->completed_search(score, search_stats);
-
     // No need for the other workers to do anything else.
     stop_all();
+    wait_all();
+
+    // Update stats by merging together all worker stats.
+    Stats search_stats;
+    search_stats.completed_search(search_start_time);
+    merge_stats(search_stats);
+
+    progress->completed_search(score, search_stats);
 
     return score;
 }
@@ -106,7 +108,7 @@ void Pool::stop_all() {
 }
 
 void Pool::merge_stats(Stats &search_stats) {
-    // Merge all worker stats to form final stats of the previous search.
+    // Merge all worker stats to form final stats of only the previous search.
     for (const std::unique_ptr<Worker> &worker : workers) {
         search_stats.merge(*worker->get_stats());
     }

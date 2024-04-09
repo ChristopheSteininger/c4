@@ -307,11 +307,11 @@ bool Position::is_forced_loss_next_turn(board opponent_wins, board non_losing_mo
         return true;
     }
 
-    // If the opponent has no threats next move, then the player cannot loss next turn.
+    // If the opponent has no threats next move, then the player cannot lose next turn.
     if (opponent_wins == 0) {
         return false;
     }
-    
+
     // Otherwise the game is lost if and only if:
     //  * The opponent has multiple threats
     //  * Or, the opponent has two threats on top of each other

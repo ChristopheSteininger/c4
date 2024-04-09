@@ -1,14 +1,9 @@
-#include <assert.h>
-#include <locale.h>
-
-#include <chrono>
 #include <iostream>
 #include <sstream>
 
 #include "solver/position.h"
 #include "solver/settings.h"
 #include "solver/solver.h"
-#include "solver/table.h"
 
 // Use this bool to switch between providing a strong or weak solution to the chosen position.
 static inline constexpr bool SOLVE_STRONGLY = true;
@@ -46,6 +41,8 @@ int main() {
     Position pos;
     Solver solver;
 
+    solver.print_progress();
+
     std::cout.imbue(std::locale(""));
     std::cout << Solver::get_settings_string()
               << (SOLVE_STRONGLY ? "Strongly" : "Weakly") << " solving:" << std::endl
@@ -53,16 +50,14 @@ int main() {
               << pos.display_board()
               << std::endl;
 
-    solver.print_progress();
-
-    auto start_time = std::chrono::steady_clock::now();
-    int score = (SOLVE_STRONGLY) ? solver.solve_strong(pos) : solver.solve_weak(pos);
-    auto run_time = std::chrono::steady_clock::now() - start_time;
+    int score = SOLVE_STRONGLY
+        ? solver.solve_strong(pos)
+        : solver.solve_weak(pos);
 
     std::cout << "Search completed!" << std::endl
               << pretty_print_score(pos, score) << std::endl
               << std::endl
-              << solver.get_merged_stats().display_all_stats(run_time) << std::endl;
+              << solver.get_merged_stats().display_all_stats() << std::endl;
 
     return 0;
 }

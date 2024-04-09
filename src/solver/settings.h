@@ -33,4 +33,8 @@ inline constexpr int ENHANCED_TABLE_CUTOFF_PLIES = BOARD_WIDTH * BOARD_HEIGHT - 
 // threads to desync. Increase jitter with number of threads.
 inline constexpr float MOVE_SCORE_JITTER = (NUM_THREADS > 1) ? 0.3f : 0.0f;
 
+// Settings to control whether the transposition table should be read/written to the file system.
+inline constexpr bool LOAD_TABLE_FILE = false;
+inline constexpr bool SAVE_TABLE_FILE = false;
+
 #endif

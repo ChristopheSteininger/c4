@@ -62,6 +62,8 @@ int Solver::solve(const Position &pos, int lower, int upper) {
         return max_score;
     }
 
+    table.load();
+
     int alpha = std::max(lower, min_score);
     int beta = std::min(upper, max_score);
     int score = (alpha + beta) / 2;
@@ -76,6 +78,8 @@ int Solver::solve(const Position &pos, int lower, int upper) {
             alpha = score;
         }
     }
+
+    table.save();
 
     return score;
 }

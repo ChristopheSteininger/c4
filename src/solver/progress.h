@@ -10,13 +10,12 @@ class Progress {
    public:
     void print_progress() { print_progress_enabled = true; }
 
-    void started_search(int alpha, int beta);
-    void completed_search(int score, const Stats &stats);
+    void started_search(int alpha, int beta, std::chrono::steady_clock::time_point new_search_start_time);
     void completed_node(int id, int num_moves);
+    void completed_search(int score, const Stats &stats);
 
    private:
     bool print_progress_enabled{false};
-
     std::chrono::steady_clock::time_point search_start_time;
 
     std::mutex mutex;

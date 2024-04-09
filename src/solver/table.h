@@ -1,6 +1,7 @@
 #ifndef TABLE_H_
 #define TABLE_H_
 
+#include <filesystem>
 #include <memory>
 #include <string>
 
@@ -12,6 +13,8 @@
 constexpr uint64_t const_log2(const uint64_t n) { return (n <= 1) ? 0 : 1 + const_log2(n / 2); }
 
 class Entry {
+    friend class Table;
+
    public:
     Entry();
     Entry(board hash, int move, NodeType type, int score);
@@ -70,9 +73,12 @@ class Table {
 
     void clear();
 
-    void prefetch(board hash);
-    Entry get(board hash);
+    void prefetch(board hash) const;
+    Entry get(board hash) const;
     void put(board hash, bool is_mirrored, int move, NodeType type, int value);
+
+    void save() const;
+    void load();
 
     static std::string get_table_size();
 
@@ -82,6 +88,8 @@ class Table {
 
     // Stats are only shared with other objects on the same thread.
     std::shared_ptr<Stats> stats;
+
+    std::filesystem::path get_filename(bool add_timestamp) const;
 };
 
 #endif

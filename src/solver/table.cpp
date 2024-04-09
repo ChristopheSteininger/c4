@@ -2,8 +2,10 @@
 
 #include <algorithm>
 #include <cassert>
+#include <chrono>
 #include <cmath>
 #include <cstdint>
+#include <fstream>
 #include <iomanip>
 #include <memory>
 #include <sstream>
@@ -74,14 +76,14 @@ void Table::clear() {
     std::fill(table.get(), table.get() + NUM_TABLE_ENTRIES, empty);
 }
 
-void Table::prefetch(board hash) {
+void Table::prefetch(board hash) const {
     assert(hash != 0);
 
     uint64_t index = hash % NUM_TABLE_ENTRIES;
     os_prefetch(table.get() + index);
 }
 
-Entry Table::get(board hash) {
+Entry Table::get(board hash) const {
     assert(hash != 0);
 
     uint64_t index = hash % NUM_TABLE_ENTRIES;
@@ -131,6 +133,71 @@ void Table::put(board hash, bool is_mirrored, int move, NodeType type, int score
     table[index] = Entry(hash, move, type, score);
 }
 
+void Table::save() const {
+    if (!SAVE_TABLE_FILE) {
+        return;
+    }
+
+    std::filesystem::path filename = get_filename(true);
+    std::ofstream file(filename, std::ios::binary);
+
+    std::cout << "Saving table to " << filename << " . . ." << std::endl;
+    for (int i = 0; i < NUM_TABLE_ENTRIES; i++) {
+        file.write(reinterpret_cast<const char *>(&table[i].data), sizeof(Entry));
+    }
+
+    std::cout << "Done." << std::endl << std::endl;
+}
+
+void Table::load() {
+    if (!LOAD_TABLE_FILE) {
+        return;
+    }
+
+    std::filesystem::path filename = get_filename(false);
+    std::ifstream file(filename, std::ios::binary);
+
+    // Do nothing if the table cannot be found.
+    if (!file) {
+        std::cerr << "Failed to open the table file " << filename << ". No table will be loaded." << std::endl;
+        return;
+    }
+
+    // Do nothing if the table has the wrong number of entries as this will give incorrect results.
+    uintmax_t actual_size = std::filesystem::file_size(filename);
+    uintmax_t expected_size = NUM_TABLE_ENTRIES * sizeof(Entry);
+    if (actual_size != expected_size) {
+        std::cerr << "The table file " << filename << " has size " << actual_size
+            << " B, but expected " << expected_size << " B. No table will be loaded." << std::endl;
+        return;
+    }
+
+    // Load the table into memory.
+    std::cout << "Loading table " << filename << " . . ." << std::endl;
+    for (int i = 0; i < NUM_TABLE_ENTRIES; i++) {
+        uint64_t val;
+
+        // This does not take the endianness of the machine into account. Assumes tables will be saved
+        // and loaded by machines with the same endianness.
+        file.read(reinterpret_cast<char *>(&val), sizeof(uint64_t));
+        table[i].data = val;
+    }
+
+    std::cout << "Done." << std::endl << std::endl;
+}
+
+std::filesystem::path Table::get_filename(bool add_timestamp) const {
+    std::string name = "table-" + std::to_string(BOARD_WIDTH) + "x" + std::to_string(BOARD_HEIGHT)
+        + "-" + std::to_string(NUM_TABLE_ENTRIES) + "-v1";
+
+    if (add_timestamp) {
+        auto now = std::chrono::system_clock::now();
+        name +=  std::format("-created-{:%y-%m-%dT%H-%M}", now);
+    }
+
+    return std::filesystem::path(name);
+}
+
 std::string Table::get_table_size() {
     std::stringstream result;
     result << std::fixed << std::setprecision(2);
@@ -143,7 +210,7 @@ std::string Table::get_table_size() {
     if (kb < 1) {
         result << bytes << " B";
     } else if (mb < 1) {
-        result << kb << " kB";
+        result << kb << " KB";
     } else if (gb < 1) {
         result << mb << " MB";
     } else {
