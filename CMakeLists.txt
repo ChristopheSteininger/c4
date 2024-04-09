@@ -7,8 +7,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# set(CMAKE_VERBOSE_MAKEFILE off)
-
 # The $MODE setting changes compiler options (cmake -DMODE=xyz .):
 #   * OPTIMISE - (default) will produce the fastest binary possible.
 #   * DEBUG    - runs with assertions and debug symbols enabled.

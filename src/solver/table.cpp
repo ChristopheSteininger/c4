@@ -7,6 +7,7 @@
 #include <cstdint>
 #include <fstream>
 #include <iomanip>
+#include <iostream>
 #include <memory>
 #include <sstream>
 #include <stdexcept>
@@ -142,7 +143,7 @@ void Table::save() const {
     std::ofstream file(filename, std::ios::binary);
 
     std::cout << "Saving table to " << filename << " . . ." << std::endl;
-    for (int i = 0; i < NUM_TABLE_ENTRIES; i++) {
+    for (uint64_t i = 0; i < NUM_TABLE_ENTRIES; i++) {
         file.write(reinterpret_cast<const char *>(&table[i].data), sizeof(Entry));
     }
 
@@ -174,7 +175,7 @@ void Table::load() {
 
     // Load the table into memory.
     std::cout << "Loading table " << filename << " . . ." << std::endl;
-    for (int i = 0; i < NUM_TABLE_ENTRIES; i++) {
+    for (uint64_t i = 0; i < NUM_TABLE_ENTRIES; i++) {
         uint64_t val;
 
         // This does not take the endianness of the machine into account. Assumes tables will be saved
@@ -187,15 +188,18 @@ void Table::load() {
 }
 
 std::filesystem::path Table::get_filename(bool add_timestamp) const {
-    std::string name = "table-" + std::to_string(BOARD_WIDTH) + "x" + std::to_string(BOARD_HEIGHT)
-        + "-" + std::to_string(NUM_TABLE_ENTRIES) + "-v1";
+    std::stringstream result;
+
+    result << "table-" << BOARD_WIDTH << "x" << BOARD_HEIGHT << "-" << NUM_TABLE_ENTRIES << "-v1";
 
     if (add_timestamp) {
         auto now = std::chrono::system_clock::now();
-        name +=  std::format("-created-{:%y-%m-%dT%H-%M}", now);
+        auto now_c = std::chrono::system_clock::to_time_t(now);
+
+        result << "-created-" << std::put_time(std::localtime(&now_c), "%y-%m-%dT%H-%M");
     }
 
-    return std::filesystem::path(name);
+    return std::filesystem::path(result.str());
 }
 
 std::string Table::get_table_size() {
