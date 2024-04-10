@@ -402,15 +402,6 @@ std::string Position::display_board() const {
 }
 
 std::string Position::display_mask(board a, board b) const {
-    // Allow colors to be switched off if not displaying correctly.
-#ifdef NO_COLOR_OUTPUT
-    const char *p0 = " O";
-    const char *p1 = " X";
-#else
-    const char *p0 = " \x1B[31mO\033[0m";
-    const char *p1 = " \x1B[33mX\033[0m";
-#endif
-
     std::stringstream result;
 
     // Print the board.
@@ -419,9 +410,9 @@ std::string Position::display_mask(board a, board b) const {
             int shift = y + x * BOARD_HEIGHT_1;
 
             if ((a >> shift) & 1) {
-                result << p0;
+                result << " " << P0_STONE;
             } else if ((b >> shift) & 1) {
-                result << p1;
+                result << " " << P1_STONE;
             } else {
                 result << " .";
             }

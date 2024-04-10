@@ -17,11 +17,13 @@ file(GLOB_RECURSE SRCS "${CMAKE_SOURCE_DIR}/src/solver/*.cpp")
 file(GLOB_RECURSE TSTS "${CMAKE_SOURCE_DIR}/tst/*.cpp")
 
 add_executable(c4 "${CMAKE_SOURCE_DIR}/src/c4.cpp")
+add_executable(play "${CMAKE_SOURCE_DIR}/src/play.cpp")
 add_executable(random "${CMAKE_SOURCE_DIR}/src/random.cpp")
 add_executable(test ${TSTS})
 
 add_library(solver OBJECT ${SRCS})
 target_link_libraries(c4 PRIVATE solver)
+target_link_libraries(play PRIVATE solver)
 target_link_libraries(random PRIVATE solver)
 target_link_libraries(test PRIVATE solver)
 

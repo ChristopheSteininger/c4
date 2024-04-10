@@ -1,3 +1,11 @@
+/*
+
+Use this program to solve a single Connect 4 position.
+Program will print the outcome of the game if both players play perfectly,
+and print all collected search statistics.
+
+*/
+
 #include <iostream>
 #include <sstream>
 
@@ -5,7 +13,14 @@
 #include "solver/settings.h"
 #include "solver/solver.h"
 
-// Use this bool to switch between providing a strong or weak solution to the chosen position.
+// Use this bool to switch between providing a strong or weak solution
+// to the chosen position.
+//   * Weak solution: Will find if either player can force a win or if the game
+//     will be a draw after perfect play.
+//
+//   * Strong solution: Gives the weak solution plus the move on which the
+//     game will end assuming perfect play.
+//     Slower than a weak solution.
 static inline constexpr bool SOLVE_STRONGLY = true;
 
 static std::string pretty_print_score(const Position &pos, int score) {
@@ -16,9 +31,9 @@ static std::string pretty_print_score(const Position &pos, int score) {
 
         int last_move = pos.num_moves() + pos.moves_left(score);
         if (score < 0) {
-            result << " (loss on move #" << last_move << ").";
+            result << " (second player will win on move #" << last_move << ").";
         } else if (score > 0) {
-            result << " (win on move #" << last_move << ").";
+            result << " (first player will win on move #" << last_move << ").";
         } else {
             result << " (draw).";
         }
@@ -26,9 +41,9 @@ static std::string pretty_print_score(const Position &pos, int score) {
         result << "Final weak score is " << score;
 
         if (score < 0) {
-            result << " (loss).";
+            result << " (second player will win).";
         } else if (score > 0) {
-            result << " (win).";
+            result << " (first player will win).";
         } else {
             result << " (draw).";
         }

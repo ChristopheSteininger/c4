@@ -96,6 +96,15 @@ class Position {
     static constexpr int MAX_SCORE = score_win_at(7);
     static constexpr int MIN_SCORE = -MAX_SCORE;
 
+    // Allow colors to be switched off if not displaying correctly.
+#ifdef NO_COLOR_OUTPUT
+    static constexpr const char *P0_STONE = "O";
+    static constexpr const char *P1_STONE = "X";
+#else
+    static constexpr const char *P0_STONE = "\x1B[31mO\033[0m";
+    static constexpr const char *P1_STONE = "\x1B[33mX\033[0m";
+#endif
+
    private:
     // The current and next players position.
     board b0{0};

@@ -18,7 +18,7 @@ using board = uint64_t;
 #endif
 
 static_assert(BOARD_WIDTH * (BOARD_HEIGHT + 1) <= 8 * sizeof(board),
-    "The board must be small enough to fit inside the chosen int type");
+    "The board must be small enough to fit inside the chosen int type.");
 
 // Every position searched will return either an exact score, or a lower/upper bound on the score. Positions which have
 // not been searched yet are a miss.
