@@ -13,8 +13,18 @@
 #include "settings.h"
 #include "table.h"
 
+Solver::Solver()
+    : table(), pool(table, progress) {
+    table.load_table_file();
+    table.load_book_file();
+}
+
+Solver::Solver(Solver& solver)
+    : table(solver.table, std::make_shared<Stats>()), pool(table, progress) {
+}
+
 Solver::~Solver() {
-    // pool.print_pool_stats();
+    table.save();
 }
 
 int Solver::solve_weak(const Position &pos) {
@@ -30,7 +40,7 @@ int Solver::solve_weak(const Position &pos) {
 }
 
 int Solver::solve_strong(const Position &pos) {
-    return solve(pos, pos.score_loss(), pos.score_win());
+    return solve(pos, Position::MIN_SCORE, Position::MAX_SCORE);
 }
 
 int Solver::solve(const Position &pos, int lower, int upper) {
@@ -62,8 +72,6 @@ int Solver::solve(const Position &pos, int lower, int upper) {
         return max_score;
     }
 
-    table.load();
-
     int alpha = std::max(lower, min_score);
     int beta = std::min(upper, max_score);
     int score = (alpha + beta) / 2;
@@ -78,8 +86,6 @@ int Solver::solve(const Position &pos, int lower, int upper) {
             alpha = score;
         }
     }
-
-    table.save();
 
     return score;
 }

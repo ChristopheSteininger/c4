@@ -5,6 +5,27 @@
     {
       "type": "default",
       "project": "CMakeLists.txt",
+      "projectTarget": "book.exe",
+      "name": "Book",
+      "currentDir": "${workspaceRoot}"
+    },
+    {
+      "type": "default",
+      "project": "CMakeLists.txt",
+      "projectTarget": "c4.exe",
+      "name": "c4",
+      "currentDir": "${workspaceRoot}"
+    },
+    {
+      "type": "default",
+      "project": "CMakeLists.txt",
+      "projectTarget": "play.exe",
+      "name": "Play",
+      "currentDir": "${workspaceRoot}"
+    },
+    {
+      "type": "default",
+      "project": "CMakeLists.txt",
       "projectTarget": "test.exe",
       "name": "Tests",
       "isDefaultConfiguration": true,

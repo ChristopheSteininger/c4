@@ -10,11 +10,32 @@
 #include <iostream>
 #include <memory>
 #include <sstream>
+#include <string>
 #include <stdexcept>
 
 #include "position.h"
 #include "settings.h"
 #include "os.h"
+
+static std::filesystem::path get_table_filepath(bool add_timestamp) {
+    std::stringstream result;
+    result << "table-" << BOARD_WIDTH << "x" << BOARD_HEIGHT << "-" << NUM_TABLE_ENTRIES << "-v1";
+
+    if (add_timestamp) {
+        auto now = std::chrono::system_clock::now();
+        auto now_c = std::chrono::system_clock::to_time_t(now);
+
+        result << "-created-" << std::put_time(std::localtime(&now_c), "%y-%m-%dT%H-%M");
+    }
+
+    return std::filesystem::path(result.str());
+}
+
+static std::filesystem::path get_book_filepath() {
+    std::string name = "book-" + std::to_string(BOARD_WIDTH) + "x" + std::to_string(BOARD_HEIGHT) + ".csv";
+
+    return "book" / std::filesystem::path(name);
+}
 
 Entry::Entry() { data = 0; }
 
@@ -139,10 +160,10 @@ void Table::save() const {
         return;
     }
 
-    std::filesystem::path filename = get_filename(true);
-    std::ofstream file(filename, std::ios::binary);
+    std::filesystem::path path = get_table_filepath(true);
+    std::ofstream file(path, std::ios::binary);
 
-    std::cout << "Saving table to " << filename << " . . ." << std::endl;
+    std::cout << "Saving table to " << path << " . . ." << std::endl;
     for (uint64_t i = 0; i < NUM_TABLE_ENTRIES; i++) {
         file.write(reinterpret_cast<const char *>(&table[i].data), sizeof(Entry));
     }
@@ -150,56 +171,74 @@ void Table::save() const {
     std::cout << "Done." << std::endl << std::endl;
 }
 
-void Table::load() {
+void Table::load_table_file() {
     if (!LOAD_TABLE_FILE) {
         return;
     }
 
-    std::filesystem::path filename = get_filename(false);
-    std::ifstream file(filename, std::ios::binary);
+    std::filesystem::path path = get_table_filepath(false);
+    std::ifstream file(path, std::ios::binary);
 
     // Do nothing if the table cannot be found.
     if (!file) {
-        std::cerr << "Failed to open the table file " << filename << ". No table will be loaded." << std::endl;
+        std::cerr << "Failed to open the table file " << path << ". No table will be loaded." << std::endl;
         return;
     }
 
     // Do nothing if the table has the wrong number of entries as this will give incorrect results.
-    uintmax_t actual_size = std::filesystem::file_size(filename);
+    uintmax_t actual_size = std::filesystem::file_size(path);
     uintmax_t expected_size = NUM_TABLE_ENTRIES * sizeof(Entry);
     if (actual_size != expected_size) {
-        std::cerr << "The table file " << filename << " has size " << actual_size
+        std::cerr << "The table file " << path << " has size " << actual_size
             << " B, but expected " << expected_size << " B. No table will be loaded." << std::endl;
         return;
     }
 
     // Load the table into memory.
-    std::cout << "Loading table " << filename << " . . ." << std::endl;
+    std::cout << "Loading table " << path << " . . ." << std::endl;
     for (uint64_t i = 0; i < NUM_TABLE_ENTRIES; i++) {
         uint64_t val;
-
-        // This does not take the endianness of the machine into account. Assumes tables will be saved
-        // and loaded by machines with the same endianness.
         file.read(reinterpret_cast<char *>(&val), sizeof(uint64_t));
+
         table[i].data = val;
     }
 
     std::cout << "Done." << std::endl << std::endl;
 }
 
-std::filesystem::path Table::get_filename(bool add_timestamp) const {
-    std::stringstream result;
-
-    result << "table-" << BOARD_WIDTH << "x" << BOARD_HEIGHT << "-" << NUM_TABLE_ENTRIES << "-v1";
-
-    if (add_timestamp) {
-        auto now = std::chrono::system_clock::now();
-        auto now_c = std::chrono::system_clock::to_time_t(now);
-
-        result << "-created-" << std::put_time(std::localtime(&now_c), "%y-%m-%dT%H-%M");
+void Table::load_book_file() {
+    if (!LOAD_BOOK_FILE) {
+        return;
     }
 
-    return std::filesystem::path(result.str());
+    std::filesystem::path path = get_book_filepath();
+    std::ifstream file(path);
+
+    // Do nothing if the book cannot be found.
+    if (!file) {
+        std::cerr << "Failed to open the book file " << path << ". No book will be loaded." << std::endl;
+        return;
+    }
+
+    std::string line;
+    std::getline(file, line);
+
+    // Load the book into memory.
+    std::cout << "Loading book " << path << " . . ." << std::endl;
+    std::string hash_string, move_string, score_string;
+    while (std::getline(file, hash_string, ',')) {
+        std::getline(file, move_string, ',');
+        std::getline(file, score_string);
+
+        board hash = std::stoull(hash_string);
+        int move = std::stoi(move_string);
+        int score = std::stoi(score_string);
+
+        // Opening books will only contain moves which do not need to be mirrored.
+        put(hash, false, move, NodeType::EXACT, score);
+    }
+
+    std::cout << "Done." << std::endl << std::endl;
 }
 
 std::string Table::get_table_size() {

@@ -31,7 +31,7 @@ static const char *get_next_player_stone(const Position &pos) {
 static int string_to_col(const std::string &str) {
     try {
         return std::stoi(str);
-    } catch (std::exception) {
+    } catch (std::exception const &) {
         return -1;
     }
 }
@@ -44,7 +44,7 @@ static int get_move(const Position &pos) {
         } else {
             std::cout << get_current_player_stone(pos) << "'s move > ";
         }
-        
+
         std::string input;
         std::cin >> input;
 
@@ -121,7 +121,6 @@ int main() {
     Position pos{};
     Solver solver{};
 
-    int moves[BOARD_WIDTH * BOARD_HEIGHT];
     board before_moves[BOARD_WIDTH * BOARD_HEIGHT];
 
     std::cout << Solver::get_settings_string()
@@ -151,7 +150,6 @@ int main() {
         } else if (move == RESET_FLAG) {
             pos = Position();
         } else {
-            moves[num_moves] = move;
             before_moves[num_moves] = pos.move(move);
         }
 

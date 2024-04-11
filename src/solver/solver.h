@@ -12,6 +12,8 @@
 
 class Solver {
    public:
+    Solver();
+    Solver(Solver &solver);
     ~Solver();
 
     int solve_weak(const Position &pos);
@@ -33,9 +35,9 @@ class Solver {
     
     // Every worker will make a copy of this table. This will give
     // each thread access to a shared table with thread local stats.
-    Table table{};
+    Table table;
 
-    Pool pool{table, progress};
+    Pool pool;
 };
 
 #endif

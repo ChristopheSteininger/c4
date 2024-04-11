@@ -46,11 +46,11 @@ class Entry {
 
     static constexpr int MOVE_BITS = 4;
     static constexpr int MOVE_MASK = (1 << MOVE_BITS) - 1;
-    static constexpr int MOVE_SHIFT = SCORE_BITS + TYPE_BITS;
+    static constexpr int MOVE_SHIFT = TYPE_SHIFT + TYPE_BITS;
 
-    static constexpr int HASH_BITS = 8 * sizeof(data) - SCORE_BITS - TYPE_BITS - MOVE_BITS;
+    static constexpr int HASH_BITS = 8 * sizeof(data) - MOVE_SHIFT - MOVE_BITS;
     static constexpr uint64_t HASH_MASK = ((uint64_t)1 << HASH_BITS) - 1;
-    static constexpr int HASH_SHIFT = 8 * sizeof(data) - HASH_BITS;
+    static constexpr int HASH_SHIFT = MOVE_SHIFT + MOVE_BITS;
 
     // Not all bits of the hash are saved, however the hashing will still be unique
     // by the Chinese Remainder Theorem as long as the check below passes.
@@ -78,7 +78,8 @@ class Table {
     void put(board hash, bool is_mirrored, int move, NodeType type, int value);
 
     void save() const;
-    void load();
+    void load_table_file();
+    void load_book_file();
 
     static std::string get_table_size();
 
@@ -88,8 +89,6 @@ class Table {
 
     // Stats are only shared with other objects on the same thread.
     std::shared_ptr<Stats> stats;
-
-    std::filesystem::path get_filename(bool add_timestamp) const;
 };
 
 #endif
