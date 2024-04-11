@@ -14,41 +14,6 @@
 #include "position.h"
 #include "os.h"
 
-void SearchResult::reset() {
-    std::unique_lock<std::mutex> lock(mutex);
-
-    score = SEARCH_STOPPED;
-    found.store(false);
-}
-
-bool SearchResult::notify_result(int result) {
-    std::unique_lock<std::mutex> lock(mutex);
-
-    // Do nothing if another thread already found the solution.
-    if (found.load()) {
-        return false;
-    }
-
-    this->score = result;
-    found.store(true);
-
-    lock.unlock();
-    cond.notify_all();
-
-    return true;
-}
-
-int SearchResult::wait_for_result() {
-    std::unique_lock<std::mutex> lock(mutex);
-
-    while (!found.load()) {
-        cond.wait(lock);
-    }
-
-    assert(score != SEARCH_STOPPED);
-    return score;
-}
-
 Worker::Worker(int id, const Table &parent_table, std::shared_ptr<SearchResult> result,
                std::shared_ptr<Progress> progress) {
     this->id = id;
@@ -62,14 +27,14 @@ Worker::Worker(int id, const Table &parent_table, std::shared_ptr<SearchResult> 
 }
 
 Worker::~Worker() {
-    mutex.lock();
+    std::unique_lock<std::mutex> lock(mutex);
 
     assert(!is_searching);
     assert(!is_exiting);
 
     is_exiting = true;
 
-    mutex.unlock();
+    lock.unlock();
     cond.notify_all();
 
     if (thread.joinable()) {
@@ -80,8 +45,8 @@ Worker::~Worker() {
 void Worker::start(const Position &new_pos, int new_alpha, int new_beta, int new_score_jitter) {
     assert(new_alpha < new_beta);
     assert(new_score_jitter >= 0);
-
-    mutex.lock();
+    
+    std::unique_lock<std::mutex> lock(mutex);
 
     // We should never try to start a search while another search is already
     // running.
@@ -102,7 +67,7 @@ void Worker::start(const Position &new_pos, int new_alpha, int new_beta, int new
     is_searching = true;
     search->start();
 
-    mutex.unlock();
+    lock.unlock();
     cond.notify_all();
 }
 
@@ -120,20 +85,6 @@ void Worker::stop() {
     if (is_searching) {
         search->stop();
     }
-}
-
-void Worker::print_thread_stats() {
-    auto now = std::chrono::steady_clock::now();
-
-    auto active_time_us = std::chrono::duration_cast<std::chrono::microseconds>(active_time);
-    auto total_time_us = std::chrono::duration_cast<std::chrono::microseconds>(now - start_time);
-
-    double utilisation = active_time_us.count() * 100.0 / total_time_us.count();
-
-    std::cout << std::left << std::setw(5) << id
-        << std::right << std::setw(9) << std::fixed << std::setprecision(2) << utilisation << "%"
-        << std::right << std::setw(10) << solutions_found
-        << std::endl;
 }
 
 void Worker::work() {
@@ -156,11 +107,7 @@ void Worker::work() {
 
             // Tell the main thread we've solved the position.
             if (abs(score) != SEARCH_STOPPED) {
-                bool was_first = result->notify_result(score);
-
-                if (was_first) {
-                    solutions_found++;
-                }
+                result->notify_result(score);
             }
         }
 

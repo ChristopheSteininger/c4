@@ -9,23 +9,9 @@
 #include <thread>
 
 #include "position.h"
+#include "result.h"
 #include "search.h"
 #include "stats.h"
-
-// A thread safe wrapper for the result of a search.
-class SearchResult {
-   public:
-    void reset();
-    bool notify_result(int result);
-    int wait_for_result();
-
-   private:
-    int score{SEARCH_STOPPED};
-    std::atomic<bool> found{false};
-
-    std::mutex mutex;
-    std::condition_variable cond;
-};
 
 class Worker {
    public:
@@ -52,8 +38,6 @@ class Worker {
     // Stats tracks the performance of the search on a single thread and is shared
     // only with other objects on the same thread.
     std::shared_ptr<Stats> stats;
-
-    int solutions_found{0};
 
     // The object which is responsible for the single threaded search of a position.
     std::unique_ptr<Search> search;

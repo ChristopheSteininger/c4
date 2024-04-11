@@ -7,6 +7,7 @@
 
 #include "position.h"
 #include "progress.h"
+#include "result.h"
 #include "table.h"
 #include "worker.h"
 
@@ -20,8 +21,6 @@ class Pool {
     const Stats &get_merged_stats() const { return merged_stats; };
     void reset_stats() { merged_stats.reset(); }
 
-    void print_pool_stats() const;
-
    private:
     std::vector<std::unique_ptr<Worker>> workers;
     std::shared_ptr<SearchResult> result{};
@@ -32,8 +31,8 @@ class Pool {
     // were made on a single position.
     Stats merged_stats;
 
-    void wait_all();
     void stop_all();
+    void wait_all();
     void merge_stats(Stats &search_stats);
 };
 

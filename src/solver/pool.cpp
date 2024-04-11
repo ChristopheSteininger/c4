@@ -9,21 +9,6 @@
 #include "settings.h"
 #include "table.h"
 
-Pool::Pool(const Table &parent_table, std::shared_ptr<Progress> progress) {
-    this->result = std::make_shared<SearchResult>();
-    for (int i = 0; i < NUM_THREADS; i++) {
-        workers.push_back(std::make_unique<Worker>(i, parent_table, result, progress));
-    }
-
-    this->progress = std::move(progress);
-}
-
-Pool::~Pool() {
-    // Ensure each worker is idle so the threads can be joined.
-    stop_all();
-    wait_all();
-}
-
 static int get_score_jitter(double window_step, size_t i) {
     // clang-format off
     if (window_step < 0.1) {
@@ -42,6 +27,21 @@ static int get_score_jitter(double window_step, size_t i) {
 
     return (i % 3) * BOARD_WIDTH + (i % 5);
     // clang-format off
+}
+
+Pool::Pool(const Table &parent_table, std::shared_ptr<Progress> progress) {
+    this->result = std::make_shared<SearchResult>();
+    for (int i = 0; i < NUM_THREADS; i++) {
+        workers.push_back(std::make_unique<Worker>(i, parent_table, result, progress));
+    }
+
+    this->progress = std::move(progress);
+}
+
+Pool::~Pool() {
+    // Ensure each worker is idle so the threads can be joined.
+    stop_all();
+    wait_all();
 }
 
 int Pool::search(const Position &pos, int alpha, int beta) {
@@ -85,25 +85,15 @@ int Pool::search(const Position &pos, int alpha, int beta) {
     return score;
 }
 
-void Pool::print_pool_stats() const {
-    std::cout << std::left << std::setw(5) << "ID"
-        << std::right << std::setw(10) << "Active"
-        << std::right << std::setw(10) << "First"
-        << std::endl;
+void Pool::stop_all() {
     for (const std::unique_ptr<Worker> &worker : workers) {
-        worker->print_thread_stats();
+        worker->stop();
     }
 }
 
 void Pool::wait_all() {
     for (const std::unique_ptr<Worker> &worker : workers) {
         worker->wait();
-    }
-}
-
-void Pool::stop_all() {
-    for (const std::unique_ptr<Worker> &worker : workers) {
-        worker->stop();
     }
 }
 
