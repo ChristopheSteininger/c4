@@ -15,9 +15,6 @@
 static inline constexpr int DEPTH = 4;
 static inline constexpr int NUM_SOLVERS = 4;
 
-// Instead of solving one position at a time with n threads, we solve n positions in parallel each with 1 thread.
-static_assert(NUM_THREADS == 1);
-
 // Affinity would pin all solver worker threads to the same core when running multiple solvers in parallel.
 static_assert(!ENABLE_AFFINITY);
 
@@ -77,6 +74,12 @@ static void work(Solver &root_solver, std::mutex &mutex, int &position_index, in
 }
 
 int main() {
+    // Instead of solving one position at a time with n threads, we solve n positions in parallel each with 1 thread.
+    if constexpr (NUM_THREADS != 1) {
+        std::cout << "Number of worker threads (NUM_THREADS) must be 1, but is " << NUM_THREADS << "." << std::endl;
+        return -1;
+    }
+
     std::filesystem::path filepath = get_filepath();
     if (std::filesystem::exists(filepath)) {
         std::cout << "The file " << filepath << " already exists. Move or delete the file, then rerun." << std::endl;
@@ -114,9 +117,10 @@ int main() {
     }
 
     auto run_time = std::chrono::steady_clock::now() - start_time;
+    long long run_time_sec = std::chrono::duration_cast<std::chrono::seconds>(run_time).count();
 
     std::cout << std::endl
-              << "Done! Ran for " << std::chrono::duration_cast<std::chrono::seconds>(run_time) << " s." << std::endl
+              << "Done! Ran for " << run_time_sec << " s." << std::endl
               << std::endl
               << root_solver.get_merged_stats().display_all_stats();
 
