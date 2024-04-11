@@ -20,23 +20,12 @@ class Stats {
     double get_worst_move_guess_rate() const { return (double)num_worst_moves_guessed / get_num_interior_nodes(); }
 
     // Lookup stats getters.
-    double get_hit_rate() const {
-        return (double)num_lookup_success / (num_lookup_success + num_lookup_miss + num_lookup_collision);
-    }
-    double get_collision_rate() const {
-        return (double)num_lookup_collision / (num_lookup_success + num_lookup_miss + num_lookup_collision);
-    }
+    double get_hit_rate() const { return (double)num_lookup_success / (num_lookup_success + num_lookup_miss); }
 
     // Store stats getters.
-    double get_new_write_rate() const {
-        return (double)num_store_entries / (num_store_entries + num_store_rewrites + num_store_overwrites);
-    }
-    double get_rewrite_rate() const {
-        return (double)num_store_rewrites / (num_store_entries + num_store_rewrites + num_store_overwrites);
-    }
-    double get_overwrite_rate() const {
-        return (double)num_store_overwrites / (num_store_entries + num_store_rewrites + num_store_overwrites);
-    }
+    double get_new_write_rate() const { return (double)num_store_entries / get_num_stores(); }
+    double get_rewrite_rate() const { return (double)num_store_rewrites / get_num_stores(); }
+    double get_overwrite_rate() const { return (double)num_store_overwrites / get_num_stores(); }
 
     // Search stats increments.
     void completed_search(std::chrono::steady_clock::time_point search_start_time);
@@ -48,7 +37,6 @@ class Stats {
 
     // Lookup stats increments.
     void lookup_success() { num_lookup_success++; }
-    void lookup_collision() { num_lookup_collision++; }
     void lookup_miss() { num_lookup_miss++; }
 
     // Store stats increments.
@@ -72,7 +60,6 @@ class Stats {
 
     // Lookup stats.
     unsigned long long num_lookup_success{0};
-    unsigned long long num_lookup_collision{0};
     unsigned long long num_lookup_miss{0};
 
     // Store stats.
@@ -84,6 +71,7 @@ class Stats {
     unsigned long long get_num_interior_nodes() const {
         return sum_over_depth(num_exact_nodes) + sum_over_depth(num_lower_nodes) + sum_over_depth(num_upper_nodes);
     }
+    unsigned long long get_num_stores() const { return num_store_entries + num_store_rewrites + num_store_overwrites; }
 };
 
 #endif

@@ -39,7 +39,7 @@ static std::filesystem::path get_book_filepath() {
 
 Entry::Entry() { data = 0; }
 
-Entry::Entry(board hash, int move, NodeType type, int score) {
+Entry::Entry(board hash, int move, NodeType type, int score, int work) {
     int int_type = static_cast<int>(type);
 
     // Shift so we don't store negative numbers in the table.
@@ -52,6 +52,7 @@ Entry::Entry(board hash, int move, NodeType type, int score) {
         = (hash << HASH_SHIFT)  
         | (move << MOVE_SHIFT)
         | (int_type << TYPE_SHIFT)
+        | (work << WORK_SHIFT)
         | (shifted_score << SCORE_SHIFT);
     // clang-format on
 }
@@ -78,6 +79,10 @@ NodeType Entry::get_type() const {
     return static_cast<NodeType>(bits);
 }
 
+int Entry::get_work() const {
+    return (data >> WORK_SHIFT) & WORK_MASK;
+}
+
 Table::Table() {
     Entry *memory = static_cast<Entry *>(allocate_huge_pages(NUM_TABLE_ENTRIES, sizeof(Entry)));
     auto memory_free = [](Entry *memory) { free_huge_pages(memory); };
@@ -88,9 +93,9 @@ Table::Table() {
     clear();
 }
 
-Table::Table(const Table &parent, const std::shared_ptr<Stats> stats) {
-    this->table = parent.table;
-    this->stats = stats;
+Table::Table(const Table &parent, std::shared_ptr<Stats> stats)
+    : table(parent.table), stats(std::move(stats))
+{
 }
 
 void Table::clear() {
@@ -109,50 +114,55 @@ Entry Table::get(board hash) const {
     assert(hash != 0);
 
     uint64_t index = hash % NUM_TABLE_ENTRIES;
-    Entry entry = table[index];
 
-    // If this state has not been seen.
-    if (entry.is_empty()) {
-        stats->lookup_miss();
-        return Entry();
+    // Check if either of the two entries contain the position.
+    Entry entry_1 = table[index];
+    if (entry_1.is_equal(hash)) {
+        stats->lookup_success();
+        return entry_1;
     }
 
-    // If this is a hash collision.
-    if (!entry.is_equal(hash)) {
-        stats->lookup_collision();
-        return Entry();
+    Entry entry_2 = table[index + 1];
+    if (entry_2.is_equal(hash)) {
+        stats->lookup_success();
+        return entry_2;
     }
 
-    // Otherwise we have a hit.
-    stats->lookup_success();
-    return entry;
+    // Otherwise we don't have the position in the table.
+    stats->lookup_miss();
+    return Entry();
 }
 
-void Table::put(board hash, bool is_mirrored, int move, NodeType type, int score) {
+void Table::put(board hash, bool is_mirrored, int move, NodeType type, int score, unsigned long long num_nodes) {
     assert(hash != 0);
     assert(0 <= move && move < BOARD_WIDTH);
     assert(type == NodeType::EXACT || type == NodeType::LOWER || type == NodeType::UPPER);
     assert(Position::MIN_SCORE <= score && score <= Position::MAX_SCORE);
-
-    uint64_t index = hash % NUM_TABLE_ENTRIES;
-    Entry current_entry = table[index];
+    assert(num_nodes > 0);
 
     // Move needs to be mirrored as well if we are storing the mirrored position.
     if (is_mirrored) {
         move = BOARD_WIDTH - move - 1;
     }
 
+    // Overwrite the entry which required the least amount of work to compute.
+    uint64_t index = hash % NUM_TABLE_ENTRIES;
+    int offset = table[index].get_work() > table[index + 1].get_work();
+
+    Entry current = table[index + offset];
+
     // Update table statistics.
-    if (current_entry.is_empty()) {
+    if (current.is_empty()) {
         stats->store_new_entry();
-    } else if (current_entry.is_equal(hash)) {
+    } else if (current.is_equal(hash)) {
         stats->store_rewrite();
     } else {
         stats->store_overwrite();
     }
 
     // Store.
-    table[index] = Entry(hash, move, type, score);
+    int work = num_nodes_to_work(num_nodes);
+    table[index + offset] = Entry(hash, move, type, score, work);
 }
 
 void Table::save() const {
@@ -235,10 +245,21 @@ void Table::load_book_file() {
         int score = std::stoi(score_string);
 
         // Opening books will only contain moves which do not need to be mirrored.
-        put(hash, false, move, NodeType::EXACT, score);
+        put(hash, false, move, NodeType::EXACT, score, Entry::WORK_MASK);
     }
 
     std::cout << "Done." << std::endl << std::endl;
+}
+
+int Table::num_nodes_to_work(unsigned long long num_nodes) {
+    int work = 0;
+
+    while (num_nodes > 1) {
+        work++;
+        num_nodes >>= 1;
+    }
+
+    return std::min(work, Entry::WORK_MASK);
 }
 
 std::string Table::get_table_size() {

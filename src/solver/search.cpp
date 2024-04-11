@@ -208,12 +208,14 @@ int Search::negamax(Node &node, int alpha, int beta, int score_jitter) {
         return node.entry.get_score();
     }
 
+    unsigned long long prev_num_nodes = stats->get_num_nodes();
+
     // Sort moves according to score.
     sort_moves(node.pos, children, opponent_threats, num_moves, moves, score_jitter, table_move);
 
     // If none of the above checks pass, then this is an internal node and we must
     // evaluate the child nodes to determine the score of this node.
-    int best_recursion_value = -INF_SCORE, best_move_index = -1, best_move_col = -1;
+    int best_recursion_value = -INF_SCORE, best_move_col = -1;
     for (int i = 0; i < num_moves && alpha < beta; i++) {
         int col = moves[i];
 
@@ -239,7 +241,6 @@ int Search::negamax(Node &node, int alpha, int beta, int score_jitter) {
 
         // If the current move is the best move we have found so far.
         if (child_score > best_recursion_value) {
-            best_move_index = i;
             best_move_col = col;
             best_recursion_value = child_score;
 
@@ -250,19 +251,19 @@ int Search::negamax(Node &node, int alpha, int beta, int score_jitter) {
 
     assert(best_recursion_value != -INF_SCORE);
     assert(best_move_col != -1);
-    assert(best_move_index != -1);
     assert(alpha >= value);
     assert(value > -INF_SCORE);
 
     // Store the result in the transposition table.
     NodeType type = get_node_type(value, original_alpha, original_beta);
-    table.put(node.hash, node.is_mirrored, best_move_col, type, value);
+    unsigned long long num_child_nodes = stats->get_num_nodes() - prev_num_nodes;
+    table.put(node.hash, node.is_mirrored, best_move_col, type, value, num_child_nodes);
 
     // Update statistics.
     stats->new_interior_node(type, node.pos.num_moves());
-    if (best_move_index == 0) {
+    if (best_move_col == moves[0]) {
         stats->best_move_guessed();
-    } else if (best_move_index == num_moves - 1) {
+    } else if (best_move_col == moves[num_moves - 1]) {
         // Oops.
         stats->worst_move_guessed();
     }

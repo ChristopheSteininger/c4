@@ -25,7 +25,7 @@ const char *test_table_lookup_returns_stored_results() {
             pos1.move(x);
 
             board hash = pos1.hash(is_mirrored);
-            table.put(hash, is_mirrored, x, static_cast<NodeType>((counter % 3) + 1), (counter % 3));
+            table.put(hash, is_mirrored, x, static_cast<NodeType>((counter % 3) + 1), (counter % 3), 0);
             counter++;
         }
     }

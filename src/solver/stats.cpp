@@ -17,7 +17,6 @@ void Stats::merge(const Stats &other) {
     }
 
     this->num_lookup_success += other.num_lookup_success;
-    this->num_lookup_collision += other.num_lookup_collision;
     this->num_lookup_miss += other.num_lookup_miss;
 
     this->num_store_entries += other.num_store_entries;
@@ -38,7 +37,6 @@ void Stats::reset() {
     }
 
     num_lookup_success = 0;
-    num_lookup_collision = 0;
     num_lookup_miss = 0;
 
     num_store_entries = 0;
@@ -82,7 +80,6 @@ std::string Stats::display_all_stats() const {
            << "Nodes               = " << get_num_nodes() << std::endl
            << "Table:" << std::endl
            << "    Hit rate        = " << get_hit_rate() * 100 << "%" << std::endl
-           << "    Collision rate  = " << get_collision_rate() * 100 << "%" << std::endl
            << "    New write rate  = " << get_new_write_rate() * 100 << "%" << std::endl
            << "    Rewrite rate    = " << get_rewrite_rate() * 100 << "%" << std::endl
            << "    Overwrite rate  = " << get_overwrite_rate() * 100 << "%" << std::endl

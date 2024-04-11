@@ -15,9 +15,6 @@
 static inline constexpr int DEPTH = 4;
 static inline constexpr int NUM_SOLVERS = 4;
 
-// Affinity would pin all solver worker threads to the same core when running multiple solvers in parallel.
-static_assert(!ENABLE_AFFINITY);
-
 static std::filesystem::path get_filepath() {
     std::string name = "book-" + std::to_string(BOARD_WIDTH) + "x" + std::to_string(BOARD_HEIGHT) + ".csv";
 
@@ -77,6 +74,12 @@ int main() {
     // Instead of solving one position at a time with n threads, we solve n positions in parallel each with 1 thread.
     if constexpr (NUM_THREADS != 1) {
         std::cout << "Number of worker threads (NUM_THREADS) must be 1, but is " << NUM_THREADS << "." << std::endl;
+        return -1;
+    }
+
+    // Affinity would pin all solver worker threads to the same core when running multiple solvers in parallel.
+    if constexpr (ENABLE_AFFINITY) {
+        std::cout << "Thread affinity must be disabled when running multiple solvers in parallel." << std::endl;
         return -1;
     }
 

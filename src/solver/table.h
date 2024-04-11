@@ -17,7 +17,7 @@ class Entry {
 
    public:
     Entry();
-    Entry(board hash, int move, NodeType type, int score);
+    Entry(board hash, int move, NodeType type, int score, int work);
 
     inline bool is_empty() const { return data == 0; }
     inline bool is_equal(board hash) const { return data != 0 && (hash & HASH_MASK) == (data >> HASH_SHIFT); }
@@ -25,18 +25,20 @@ class Entry {
     int get_move(bool is_mirrored) const;
     int get_score() const;
     NodeType get_type() const;
+    int get_work() const;
 
    private:
     // An entry contains the following information packed in 64 bits.
     //    bits: data
-    //  0 -  7: Score
-    //  8 -  9: Type
-    // 10 - 13: Move
-    // 14 - 64: Parital hash
+    //  0 -  6: Score
+    //  7 -  8: Type
+    //  9 - 12: Move
+    // 13 - 17: Work
+    // 18 - 64: Parital hash
     uint64_t data{0};
 
     // The constants below define where information is packed into each 64 bit entry.
-    static constexpr int SCORE_BITS = 8;
+    static constexpr int SCORE_BITS = 7;
     static constexpr int SCORE_MASK = (1 << SCORE_BITS) - 1;
     static constexpr int SCORE_SHIFT = 0;
 
@@ -48,9 +50,13 @@ class Entry {
     static constexpr int MOVE_MASK = (1 << MOVE_BITS) - 1;
     static constexpr int MOVE_SHIFT = TYPE_SHIFT + TYPE_BITS;
 
-    static constexpr int HASH_BITS = 8 * sizeof(data) - MOVE_SHIFT - MOVE_BITS;
+    static constexpr int WORK_BITS = 5;
+    static constexpr int WORK_MASK = (1 << WORK_BITS) - 1;
+    static constexpr int WORK_SHIFT = MOVE_SHIFT + MOVE_BITS;
+
+    static constexpr int HASH_BITS = 8 * sizeof(data) - WORK_SHIFT - WORK_BITS;
     static constexpr uint64_t HASH_MASK = ((uint64_t)1 << HASH_BITS) - 1;
-    static constexpr int HASH_SHIFT = MOVE_SHIFT + MOVE_BITS;
+    static constexpr int HASH_SHIFT = WORK_SHIFT + WORK_BITS;
 
     // Not all bits of the hash are saved, however the hashing will still be unique
     // by the Chinese Remainder Theorem as long as the check below passes.
@@ -75,7 +81,7 @@ class Table {
 
     void prefetch(board hash) const;
     Entry get(board hash) const;
-    void put(board hash, bool is_mirrored, int move, NodeType type, int value);
+    void put(board hash, bool is_mirrored, int move, NodeType type, int value, unsigned long long num_nodes);
 
     void save() const;
     void load_table_file();
@@ -89,6 +95,8 @@ class Table {
 
     // Stats are only shared with other objects on the same thread.
     std::shared_ptr<Stats> stats;
+
+    int num_nodes_to_work(unsigned long long num_nodes);
 };
 
 #endif
