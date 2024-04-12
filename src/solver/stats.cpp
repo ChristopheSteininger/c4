@@ -5,23 +5,23 @@
 #include <sstream>
 
 void Stats::merge(const Stats &other) {
-    this->search_time_ms += other.search_time_ms;
-    this->num_nodes += other.num_nodes;
-    this->num_best_moves_guessed += other.num_best_moves_guessed;
-    this->num_worst_moves_guessed += other.num_worst_moves_guessed;
+    search_time_ms += other.search_time_ms;
+    num_nodes += other.num_nodes;
+    num_best_moves_guessed += other.num_best_moves_guessed;
+    num_worst_moves_guessed += other.num_worst_moves_guessed;
 
     for (int i = 0; i < BOARD_WIDTH * BOARD_HEIGHT; i++) {
-        this->num_exact_nodes[i] += other.num_exact_nodes[i];
-        this->num_lower_nodes[i] += other.num_lower_nodes[i];
-        this->num_upper_nodes[i] += other.num_upper_nodes[i];
+        num_exact_nodes[i] += other.num_exact_nodes[i];
+        num_lower_nodes[i] += other.num_lower_nodes[i];
+        num_upper_nodes[i] += other.num_upper_nodes[i];
     }
 
-    this->num_lookup_success += other.num_lookup_success;
-    this->num_lookup_miss += other.num_lookup_miss;
+    num_lookup_success += other.num_lookup_success;
+    num_lookup_miss += other.num_lookup_miss;
 
-    this->num_store_entries += other.num_store_entries;
-    this->num_store_overwrites += other.num_store_overwrites;
-    this->num_store_rewrites += other.num_store_rewrites;
+    num_store_entries += other.num_store_entries;
+    num_store_overwrites += other.num_store_overwrites;
+    num_store_rewrites += other.num_store_rewrites;
 }
 
 void Stats::reset() {

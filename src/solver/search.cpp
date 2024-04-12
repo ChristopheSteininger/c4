@@ -62,7 +62,7 @@ void Search::sort_moves(Position &pos, Node *children, board opponent_threats,
 
         // Add some noise to move scores to help threads desync.
         if (score_jitter > 0) {
-            int max_rand = 1 + (score_jitter % BOARD_WIDTH);
+            int max_rand = 1 + (score_jitter % 10);
             children[col].score += MOVE_SCORE_JITTER * (dist(rand) % max_rand);
         }
     }
@@ -219,7 +219,7 @@ int Search::negamax(Node &node, int alpha, int beta, int score_jitter) {
     for (int i = 0; i < num_moves && alpha < beta; i++) {
         int col = moves[i];
 
-        int child_score_jitter = score_jitter / BOARD_WIDTH;
+        int child_score_jitter = score_jitter / 10;
 
         // If the difference in score between this move and the next & previous moves is too
         // large to be affected by score jitter, then pass the move jitter on to the child.

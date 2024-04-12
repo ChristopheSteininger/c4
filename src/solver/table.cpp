@@ -84,7 +84,8 @@ int Entry::get_work() const {
 }
 
 Table::Table() {
-    Entry *memory = static_cast<Entry *>(allocate_huge_pages(NUM_TABLE_ENTRIES, sizeof(Entry)));
+    // Need to allocate +1 entries since each entry can access the next entry.
+    Entry *memory = static_cast<Entry *>(allocate_huge_pages(NUM_TABLE_ENTRIES + 1, sizeof(Entry)));
     auto memory_free = [](Entry *memory) { free_huge_pages(memory); };
 
     this->table = std::shared_ptr<Entry[]>(memory, memory_free);
@@ -100,7 +101,7 @@ Table::Table(const Table &parent, std::shared_ptr<Stats> stats)
 
 void Table::clear() {
     Entry empty{};
-    std::fill(table.get(), table.get() + NUM_TABLE_ENTRIES, empty);
+    std::fill(table.get(), table.get() + NUM_TABLE_ENTRIES + 1, empty);
 }
 
 void Table::prefetch(board hash) const {

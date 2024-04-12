@@ -12,20 +12,21 @@
 static int get_score_jitter(double window_step, size_t i) {
     // clang-format off
     if (window_step < 0.1) {
-        return (i % 3) * BOARD_WIDTH * BOARD_WIDTH * BOARD_WIDTH * BOARD_WIDTH
-            + (i % 4) * BOARD_WIDTH * BOARD_WIDTH * BOARD_WIDTH
-            + (i % 5) * BOARD_WIDTH * BOARD_WIDTH
-            + (i % 6) * BOARD_WIDTH
-            + (i % 7);
+        return (i % 4) * 10000
+            + (i % 5) * 1000
+            + (i % 6) * 100
+            + (i % 7) * 10
+            + (i % 8);
     }
 
     if (window_step < 1.0) {
-        return (i % 2) * BOARD_WIDTH * BOARD_WIDTH
-            + (i % 3) * BOARD_WIDTH
+        return (i % 2) * 100
+            + (i % 3) * 10
             + (i % 4);
     }
 
-    return (i % 3) * BOARD_WIDTH + (i % 5);
+    return (i % 3) * 10
+        + (i % 5);
     // clang-format off
 }
 
