@@ -93,13 +93,12 @@ int main() {
     file << "hash,move,score - This file contains all positions with " << DEPTH
          << " moves on a " << BOARD_WIDTH << "x" << BOARD_HEIGHT << " board." << std::endl;
 
-    Solver root_solver{};
-
     std::cout.imbue(std::locale(""));
     std::cout << Solver::get_settings_string()
               << "Generating opening book " << DEPTH << " moves deep." << std::endl
               << std::endl;
     
+    Solver root_solver{};
     std::thread threads[NUM_SOLVERS];
 
     // Data shared between the solver threads.

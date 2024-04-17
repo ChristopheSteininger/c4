@@ -1,5 +1,10 @@
+__pycache__
+.DS_Store
 .vscode/c_cpp_properties.json
 .vscode/settings.json
 .vs/
+env/
+model/
 out/
-.DS_Store
+src/training/data/
+training/data/
