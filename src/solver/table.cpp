@@ -252,12 +252,12 @@ void Table::load_book_file() {
     std::cout << "Done." << std::endl << std::endl;
 }
 
-int Table::num_nodes_to_work(unsigned long long num_nodes) {
+int Table::num_nodes_to_work(unsigned long long num_nodes) const {
     int work = 0;
 
     while (num_nodes > 1) {
         work++;
-        num_nodes >>= 1;
+        num_nodes >>= 3;
     }
 
     return std::min(work, Entry::WORK_MASK);

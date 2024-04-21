@@ -96,7 +96,7 @@ class Table {
     // Stats are only shared with other objects on the same thread.
     std::shared_ptr<Stats> stats;
 
-    int num_nodes_to_work(unsigned long long num_nodes);
+    int num_nodes_to_work(unsigned long long num_nodes) const;
 };
 
 #endif
