@@ -2,6 +2,7 @@
 
 #include <cassert>
 #include <iomanip>
+#include <iostream>
 #include <sstream>
 
 #include "settings.h"
@@ -192,7 +193,7 @@ board Position::move(int col) {
     b0 = b1;
     b1 = after_move;
 
-    ply++;
+    moves_played++;
 
     assert(is_board_valid());
 
@@ -211,7 +212,7 @@ board Position::move(board mask) {
     b0 = b1;
     b1 = before_move | mask;
 
-    ply++;
+    moves_played++;
 
     assert(is_board_valid());
 
@@ -224,7 +225,7 @@ void Position::unmove(board before_move) {
     b1 = b0;
     b0 = before_move;
 
-    ply--;
+    moves_played--;
 
     assert(is_board_valid());
 }
@@ -352,9 +353,23 @@ bool Position::is_non_losing_move(board non_losing_moves, int col) const {
     return is_move_valid(col) && (move_mask & non_losing_moves);
 }
 
+int Position::score_win(int moves_until_win) const {
+    // A player can never win on the opponent's move, so number of moves must be odd.
+    assert((moves_until_win & 1) == 1);
+
+    return score_win_at(moves_played + moves_until_win);
+}
+
+int Position::score_loss(int moves_until_loss) const {
+    // A player can never lose on their own move, so number of moves must be even.
+    assert((moves_until_loss & 1) == 0);
+
+    return -score_win_at(moves_played + moves_until_loss);
+}
+
 int Position::moves_left(int score) const {
     // Run the calculation from the perspective of the first player.
-    if (ply & 1) {
+    if (moves_played & 1) {
         score *= -1;
     }
 
@@ -369,7 +384,7 @@ int Position::moves_left(int score) const {
         last_move = max_moves;
     }
 
-    return last_move - ply;
+    return last_move - moves_played;
 }
 
 board Position::hash(bool &is_mirrored) const {
@@ -393,8 +408,10 @@ board Position::hash(bool &is_mirrored) const {
     return hash;
 }
 
+void Position::print() const { std::cout << display_board(); }
+
 std::string Position::display_board() const {
-    if ((ply & 1) == 0) {
+    if ((moves_played & 1) == 0) {
         return display_mask(b0, b1);
     } else {
         return display_mask(b1, b0);

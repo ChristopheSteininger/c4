@@ -1,16 +1,18 @@
 #ifndef BOARD_H_
 #define BOARD_H_
 
-#include <iostream>
 #include <string>
 #include <vector>
 
 #include "settings.h"
 #include "types.h"
 
-inline static constexpr int score_win_at(const int ply) { return (BOARD_WIDTH * BOARD_HEIGHT - ply + 1) / 2; }
-
-inline static constexpr int score_loss_at(const int ply) { return -score_win_at(ply + 1); }
+// Wins are scored higher if fewer moves were played. The minimum win score
+// of +1 occurs when a player wins on their last move. The maximum score
+// occurs if a player wins on their first move.
+inline static constexpr int score_win_at(const int num_moves) {
+    return 1 + (BOARD_WIDTH * BOARD_HEIGHT - num_moves) / 2;
+}
 
 class Position {
    public:
@@ -24,7 +26,7 @@ class Position {
     void unmove(board before_move);
 
     // Returns the number of moves played.
-    inline int num_moves() const { return ply; };
+    inline int num_moves() const { return moves_played; };
 
     // Return true only if the game over conditions are met.
     bool has_player_won() const;
@@ -70,20 +72,20 @@ class Position {
     bool is_non_losing_move(board opponent_threats, int col) const;
 
     // Returns the score if the game were won/lost after the given number of turns.
-    inline int score_win(int turns = 0) const { return score_win_at(ply + turns); }
-    inline int score_loss(int turns = 0) const { return score_loss_at(ply + turns); }
+    int score_win(int moves_until_win = 1) const;
+    int score_loss(int moves_until_loss = 2) const;
 
     // Decode a score into number of remaining moves if both players are optimal.
     // The inverse of the `score_win` and `score_loss` functions.
     int moves_left(int score) const;
 
-    inline bool is_same_player(const Position &other) const { return (ply & 1) == (other.ply & 1); }
+    inline bool is_same_player(const Position &other) const { return (moves_played & 1) == (other.moves_played & 1); }
 
     // Return a hash guaranteed to be unique to the position.
     board hash(bool &is_mirrored) const;
 
     // Print the game to the console.
-    void print() const { std::cout << display_board(); }
+    void print() const;
     std::string display_board() const;
     std::string display_mask(board b0, board b1) const;
 
@@ -110,7 +112,7 @@ class Position {
     board b0{0};
     board b1{0};
 
-    int ply{0};
+    int moves_played{0};
 
     // Returns the input board reflected along the middle column.
     board mirror(board hash) const;

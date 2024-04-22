@@ -123,8 +123,8 @@ int Search::negamax(Node &node, int alpha, int beta, int score_jitter) {
 
     // This function will never be called on a position that can be statically evaluated, so we
     // know it is not possible to win or lose in the next two turns, so tighten bounds.
-    alpha = std::max(alpha, node.pos.score_loss(2));
-    beta = std::min(beta, node.pos.score_win(2));
+    alpha = std::max(alpha, node.pos.score_loss(4));
+    beta = std::min(beta, node.pos.score_win(3));
     if (alpha >= beta) {
         return beta;
     }
@@ -172,7 +172,7 @@ int Search::negamax(Node &node, int alpha, int beta, int score_jitter) {
 
     // At this point we know it is not possible to win in the next four turns, so tighten
     // bounds further.
-    beta = std::min(beta, node.pos.score_win(4));
+    beta = std::min(beta, node.pos.score_win(5));
     if (alpha >= beta) {
         return beta;
     }
@@ -303,8 +303,8 @@ int Search::static_search(Node &node, int alpha, int beta, bool &is_static) {
     }
 
     // At this point we know it is not possible to win or lose in the next two turns, so tighten bounds.
-    alpha = std::max(alpha, node.pos.score_loss(2));
-    beta = std::min(beta, node.pos.score_win(2));
+    alpha = std::max(alpha, node.pos.score_loss(4));
+    beta = std::min(beta, node.pos.score_win(3));
     if (alpha >= beta) {
         is_static = true;
         return alpha;

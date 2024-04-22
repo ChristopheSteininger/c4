@@ -48,10 +48,10 @@ int Solver::solve(const Position &pos, int lower, int upper) {
 
     // Check if the game is already over before launching the full search.
     if (pos.has_opponent_won()) {
-        return pos.score_loss(-2);
+        return pos.score_loss(0);
     }
     if (pos.has_player_won()) {
-        return pos.score_win(-2);
+        return pos.score_win(-1);
     }
     if (pos.is_draw()) {
         return 0;
