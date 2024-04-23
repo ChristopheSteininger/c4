@@ -74,5 +74,9 @@ int main() {
               << std::endl
               << solver.get_merged_stats().display_all_stats() << std::endl;
 
+    // Prevent console closing immediately after finishing on Windows.
+    std::cout << "Press enter to exit." << std::endl;
+    std::cin.get();
+
     return 0;
 }

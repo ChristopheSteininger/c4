@@ -27,14 +27,14 @@ Writer::~Writer() {
 }
 
 void Writer::add_line(const std::string &line) {
-	std::unique_lock<std::mutex> lock(mutex);
+    std::unique_lock<std::mutex> lock(mutex);
 
     lines_in_active_buffer++;
-	if (active_buffer == 0) {
-		buffer0 << line << std::endl;
-	} else {
-		buffer1 << line << std::endl;
-	}
+    if (active_buffer == 0) {
+        buffer0 << line << std::endl;
+    } else {
+        buffer1 << line << std::endl;
+    }
     
     // Trigger a write to disk.
     if (should_write_to_disk()) {
@@ -57,20 +57,20 @@ void Writer::save_to_file(const std::filesystem::path &file_path) {
     }
 
     std::unique_lock<std::mutex> lock(mutex);
-	
-	while (is_running) {
+    
+    while (is_running) {
         // We avoid writing lines one by one, so wait until we have enough data to save.
         while (is_running && !should_write_to_disk()) {
             cond.wait(lock);
         }
 
-		// Swap buffers and unlock so search threads are not blocked on writing to disk.
-		active_buffer = 1 - active_buffer;
+        // Swap buffers and unlock so search threads are not blocked on writing to disk.
+        active_buffer = 1 - active_buffer;
         lines_in_active_buffer = 0;
         last_write = std::chrono::steady_clock::now();
         lock.unlock();
 
-		// Save the inactive buffer to disk.
+        // Save the inactive buffer to disk.
         if (active_buffer == 0) {
             file << buffer1.str();
             buffer1.str(std::string());

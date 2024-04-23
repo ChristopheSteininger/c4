@@ -178,5 +178,9 @@ int main() {
         std::cout << i << ": " << remaining_moves[i] << std::endl;
     }
 
+    // Prevent console closing immediately after finishing on Windows.
+    std::cout << "Press enter to exit." << std::endl;
+    std::cin.get();
+
     return 0;
 }
