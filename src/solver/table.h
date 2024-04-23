@@ -9,6 +9,7 @@
 #include "settings.h"
 #include "stats.h"
 #include "types.h"
+#include "writer.h"
 
 constexpr uint64_t const_log2(const uint64_t n) { return (n <= 1) ? 0 : 1 + const_log2(n / 2); }
 
@@ -75,7 +76,8 @@ class Entry {
 class Table {
    public:
     Table();
-    Table(const Table &parent, const std::shared_ptr<Stats> stats);
+    Table(const Table &parent, std::shared_ptr<Stats> stats)
+        : table(parent.table), stats(std::move(stats)), table_writer(parent.table_writer) {}
 
     void clear();
 
@@ -83,7 +85,6 @@ class Table {
     Entry get(board hash) const;
     void put(board hash, bool is_mirrored, int move, NodeType type, int value, unsigned long long num_nodes);
 
-    void save() const;
     void load_table_file();
     void load_book_file();
 
@@ -96,6 +97,10 @@ class Table {
     // Stats are only shared with other objects on the same thread.
     std::shared_ptr<Stats> stats;
 
+    // The writer is shared across all threads and is used to save significant results.
+    std::shared_ptr<Writer> table_writer;
+
+    void store(board hash, Entry entry);
     int num_nodes_to_work(unsigned long long num_nodes) const;
 };
 

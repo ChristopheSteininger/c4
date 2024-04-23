@@ -19,12 +19,8 @@ Solver::Solver()
     table.load_book_file();
 }
 
-Solver::Solver(Solver& solver)
+Solver::Solver(const Solver& solver)
     : table(solver.table, std::make_shared<Stats>()), pool(table, progress) {
-}
-
-Solver::~Solver() {
-    table.save();
 }
 
 int Solver::solve_weak(const Position &pos) {

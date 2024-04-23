@@ -92,9 +92,10 @@ static board find_threats_in_direction(const board b, const Direction dir) {
 }
 
 static board find_threats(const board b) {
-    return find_threats_in_direction(b, Direction::VERTICAL) | find_threats_in_direction(b, Direction::HORIZONTAL) |
-           find_threats_in_direction(b, Direction::NEGATIVE_DIAGONAL) |
-           find_threats_in_direction(b, Direction::POSITIVE_DIAGONAL);
+    return find_threats_in_direction(b, Direction::VERTICAL)
+         | find_threats_in_direction(b, Direction::HORIZONTAL)
+         | find_threats_in_direction(b, Direction::NEGATIVE_DIAGONAL)
+         | find_threats_in_direction(b, Direction::POSITIVE_DIAGONAL);
 }
 
 static board dead_stones_in_direction(const board b0, const board b1, const Direction dir, const board border) {
@@ -341,10 +342,10 @@ board Position::find_forced_move(board opponent_wins, board non_losing_moves) co
 bool Position::is_move_valid(int col) const {
     assert(0 <= col && col < BOARD_WIDTH);
 
-    board moves_played = b0 | b1;
+    board moves = b0 | b1;
     board move_mask = FIRST_COLUMN << (BOARD_HEIGHT_1 * col);
 
-    return (moves_played & move_mask) != move_mask;
+    return (moves & move_mask) != move_mask;
 }
 
 bool Position::is_non_losing_move(board non_losing_moves, int col) const {

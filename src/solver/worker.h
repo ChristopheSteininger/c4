@@ -25,8 +25,6 @@ class Worker {
 
     const Stats *get_stats() const { return stats.get(); }
 
-    void print_thread_stats();
-
    private:
     int id;
     std::thread thread;
