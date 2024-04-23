@@ -70,6 +70,23 @@ static void work(Solver &root_solver, std::mutex &mutex, int &position_index, in
     }
 }
 
+static void load_previous_positions(std::filesystem::path filepath, std::set<board> &seen) {
+    std::ifstream file(filepath);
+    std::string line;
+
+    std::getline(file, line);
+    
+    while (std::getline(file, line, ',')) {
+        board hash = std::stoull(line);
+        seen.insert(hash);
+        
+        // Consume the rest of the line.
+        std::getline(file, line);
+    }
+
+    std::cout << "Read " << seen.size() << " positions from " << filepath << "." << std::endl;
+}
+
 int main() {
     // Instead of solving one position at a time with n threads, we solve n positions in parallel each with 1 thread.
     if constexpr (NUM_THREADS != 1) {
@@ -83,29 +100,28 @@ int main() {
         return -1;
     }
 
-    std::filesystem::path filepath = get_filepath();
-    if (std::filesystem::exists(filepath)) {
-        std::cout << "The file " << filepath << " already exists. Move or delete the file, then rerun." << std::endl;
-        return -1;
-    }
-
-    std::ofstream file(filepath);
-    file << "hash,move,score - This file contains all positions with " << DEPTH
-         << " moves on a " << BOARD_WIDTH << "x" << BOARD_HEIGHT << " board." << std::endl;
-
-    std::cout.imbue(std::locale(""));
-    std::cout << Solver::get_settings_string()
-              << "Generating opening book " << DEPTH << " moves deep." << std::endl
-              << std::endl;
-    
-    Solver root_solver{};
-    std::thread threads[NUM_SOLVERS];
-
     // Data shared between the solver threads.
     std::mutex mutex;
     int position_index = 0;
     int solved_positions = 0;
     std::set<board> seen{};
+
+    std::cout.imbue(std::locale(""));
+    std::cout << Solver::get_settings_string() << "Generating opening book " << DEPTH << " moves deep." << std::endl
+              << std::endl;
+
+    // Read in any previously saved data.
+    std::filesystem::path filepath = get_filepath();
+    if (std::filesystem::exists(filepath)) {
+        load_previous_positions(filepath, seen);
+    }
+
+    std::ofstream file(filepath, std::ios::app);
+    file << "hash,move,score - This file contains all positions with " << DEPTH << " moves on a " << BOARD_WIDTH << "x"
+         << BOARD_HEIGHT << " board." << std::endl;
+
+    Solver root_solver{};
+    std::thread threads[NUM_SOLVERS];
 
     auto start_time = std::chrono::steady_clock::now();
 
