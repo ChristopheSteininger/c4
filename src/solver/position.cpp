@@ -81,25 +81,33 @@ static constexpr board TOO_SHORT_POSITIVE_DIAGONAL = too_short(Direction::POSITI
 
 // Helper methods.
 
-static board find_threats_in_direction(const board b, const Direction dir) {
-    int shift = static_cast<int>(dir);
+template <Direction dir>
+static board find_threats_in_direction(const board b) {
+    constexpr int shift = static_cast<int>(dir);
 
     board doubles = b & (b << shift);
     board triples = doubles & (doubles << shift);
 
-    return ((b >> shift) & (doubles << shift)) | ((b << shift) & (doubles >> 2 * shift)) | (triples << shift) |
-           (triples >> 3 * shift);
+    if constexpr (dir == Direction::VERTICAL) {
+        return triples << 1;
+    } else {
+        return ((b >> shift) & (doubles << shift))
+            | ((b << shift) & (doubles >> 2 * shift))
+            | (triples << shift)
+            | (triples >> 3 * shift);
+    }
 }
 
 static board find_threats(const board b) {
-    return find_threats_in_direction(b, Direction::VERTICAL)
-         | find_threats_in_direction(b, Direction::HORIZONTAL)
-         | find_threats_in_direction(b, Direction::NEGATIVE_DIAGONAL)
-         | find_threats_in_direction(b, Direction::POSITIVE_DIAGONAL);
+    return find_threats_in_direction<Direction::VERTICAL>(b)
+         | find_threats_in_direction<Direction::HORIZONTAL>(b)
+         | find_threats_in_direction<Direction::NEGATIVE_DIAGONAL>(b)
+         | find_threats_in_direction<Direction::POSITIVE_DIAGONAL>(b);
 }
 
-static board dead_stones_in_direction(const board b0, const board b1, const Direction dir, const board border) {
-    int shift = static_cast<int>(dir);
+template <Direction dir>
+static board dead_stones_in_direction(const board b0, const board b1, const board border) {
+    constexpr int shift = static_cast<int>(dir);
 
     board played_positions = b0 | b1;
     board empty_positions = VALID_CELLS & ~played_positions;
@@ -164,18 +172,18 @@ static board find_winning_stones(const board b) {
            find_winning_stones_in_direction(b, Direction::POSITIVE_DIAGONAL);
 }
 
-static board has_won_in_direction(const board b, const Direction dir) {
+static bool has_won_in_direction(const board b, const Direction dir) {
     int shift = static_cast<int>(dir);
 
     board pairs = b & (b << 2 * shift);
-    return pairs & (pairs << shift);
+    return (pairs & (pairs << shift)) != 0;
 }
 
-static board has_won(const board b) {
+static bool has_won(const board b) {
     return has_won_in_direction(b, Direction::VERTICAL)
-        | has_won_in_direction(b, Direction::HORIZONTAL)
-        | has_won_in_direction(b, Direction::NEGATIVE_DIAGONAL)
-        | has_won_in_direction(b, Direction::POSITIVE_DIAGONAL);
+        || has_won_in_direction(b, Direction::HORIZONTAL)
+        || has_won_in_direction(b, Direction::NEGATIVE_DIAGONAL)
+        || has_won_in_direction(b, Direction::POSITIVE_DIAGONAL);
 }
 
 // Public functions.
@@ -231,16 +239,11 @@ void Position::unmove(board before_move) {
     assert(is_board_valid());
 }
 
-bool Position::has_player_won() const { return has_won(b0) != 0; }
+bool Position::has_player_won() const { return has_won(b0); }
 
-bool Position::has_opponent_won() const { return has_won(b1) != 0; }
+bool Position::has_opponent_won() const { return has_won(b1); }
 
-bool Position::is_draw() const {
-    assert(!has_player_won());
-    assert(!has_opponent_won());
-
-    return (b0 | b1) == VALID_CELLS;
-}
+bool Position::is_draw() const { return (b0 | b1) == VALID_CELLS; }
 
 bool Position::is_game_over() const { return has_player_won() || has_opponent_won() || is_draw(); }
 
@@ -396,7 +399,7 @@ board Position::hash(bool &is_mirrored) const {
 
     // The hash is a 1 on all positions played by player 0, and a 1 on top
     // of each column. This hash uniquely identifies the state.
-    board column_headers = (b0 | b1 | dead_stones) + BOTTOM_ROW;
+    board column_headers = (b0 | b1) + BOTTOM_ROW;
     board hash = b0 | dead_stones | column_headers;
 
     // Return the same hash for mirrored states.
@@ -473,11 +476,23 @@ bool Position::are_dead_stones_valid() const {
 // Private functions
 
 board Position::find_dead_stones() const {
-    board vertical = dead_stones_in_direction(b0, b1, Direction::VERTICAL, BORDER_VERTICAL);
-    board horizontal = dead_stones_in_direction(b0, b1, Direction::HORIZONTAL, BORDER_HORIZONTAL);
-    board pos_diag = dead_stones_in_direction(b0, b1, Direction::POSITIVE_DIAGONAL, BORDER_POSITIVE_DIAGONAL)
+    board vertical = dead_stones_in_direction<Direction::VERTICAL>(b0, b1, BORDER_VERTICAL);
+    if (vertical == 0) {
+        return 0;
+    }
+
+    board horizontal = dead_stones_in_direction<Direction::HORIZONTAL>(b0, b1, BORDER_HORIZONTAL);
+    if (horizontal == 0) {
+        return 0;
+    }
+
+    board pos_diag = dead_stones_in_direction<Direction::POSITIVE_DIAGONAL>(b0, b1, BORDER_POSITIVE_DIAGONAL)
         | TOO_SHORT_POSITIVE_DIAGONAL;
-    board neg_diag = dead_stones_in_direction(b0, b1, Direction::NEGATIVE_DIAGONAL, BORDER_NEGATIVE_DIAGONAL)
+    if (pos_diag == 0) {
+        return 0;
+    }
+
+    board neg_diag = dead_stones_in_direction<Direction::NEGATIVE_DIAGONAL>(b0, b1, BORDER_NEGATIVE_DIAGONAL)
         | TOO_SHORT_NEGATIVE_DIAGONAL;
 
     return vertical & horizontal & pos_diag & neg_diag;

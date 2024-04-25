@@ -37,8 +37,8 @@ void Progress::completed_node(int id, int num_moves) {
 
     if (print_progress_enabled && run_time_ms > 1000) {
         std::cout << std::fixed << std::setprecision(2)
-                  << "  Thread " << id << " finished a position at depth " << num_moves
-                  << " after " << (run_time_ms / 1000.0) << " s." << std::endl;
+                  << "  Thread " << id << " solved a position with " << num_moves
+                  << " moves after " << (run_time_ms / 1000.0) << " s." << std::endl;
     }
 }
 
