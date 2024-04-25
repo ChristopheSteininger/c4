@@ -45,7 +45,7 @@ Entry::Entry(board hash, int move, NodeType type, int score, int work) {
     // hash % 2^HASH_BITS.
     // clang-format off
     data
-        = (hash << HASH_SHIFT)  
+        = static_cast<uint64_t>(hash << HASH_SHIFT)  
         | (move << MOVE_SHIFT)
         | (int_type << TYPE_SHIFT)
         | (work << WORK_SHIFT)
@@ -102,14 +102,14 @@ void Table::clear() {
 void Table::prefetch(board hash) const {
     assert(hash != 0);
 
-    uint64_t index = hash % NUM_TABLE_ENTRIES;
+    uint64_t index = static_cast<uint64_t>(hash % NUM_TABLE_ENTRIES);
     os_prefetch(table.get() + index);
 }
 
 Entry Table::get(board hash) const {
     assert(hash != 0);
 
-    uint64_t index = hash % NUM_TABLE_ENTRIES;
+    uint64_t index = static_cast<uint64_t>(hash % NUM_TABLE_ENTRIES);
 
     // Check if either of the two entries contain the position.
     Entry entry_1 = table[index];
@@ -234,7 +234,7 @@ void Table::load_book_file() {
 
 void Table::store(board hash, Entry entry) {
     // Overwrite the entry which required the least amount of work to compute.
-    uint64_t index = hash % NUM_TABLE_ENTRIES;
+    uint64_t index = static_cast<uint64_t>(hash % NUM_TABLE_ENTRIES);
     int offset = (table[index + 1].is_equal(hash) || table[index + 1].get_work() < table[index].get_work()) &&
                  !table[index].is_equal(hash);
 
