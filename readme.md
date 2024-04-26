@@ -6,13 +6,16 @@
  perfectly on different board sizes. An entry like "1<sup>st</sup> (53)"
  for the 8x7 board means the 1<sup>st</sup> player can force a win on
  move #53 if the second player plays perfectly. If the second player in
- a 8x7 game is not perfect, then the first player can force a win before move
+ an 8x7 game is not perfect, then the first player can force a win before move
  #53.
 
  All results below were found by running the solver in this repo. The solution of
- board sizes where $width + height \leq 15$, as well as the 8x8 board was already
- found by [previous solvers](https://tromp.github.io/c4/c4.html), but the solution
+ board sizes where $width + height \leq 15$ as well as the 8x8 board has already
+ been found by [another solver](https://tromp.github.io/c4/c4.html), but the solution
  to all other board sizes is new.
+
+ The exact move on which the game will end assuming perfect play is a new result
+ for all board sizes as previous solvers output only a win/draw/loss outcome.
 
 | Width &rarr; <br> Height &darr; |    4 |    5 |                   6 |                   7 |                   8 |                   9 |                  10 |                  11 |                  12 |
 | ------------------------------- | ---- | ---- | ------------------- | ------------------- | ------------------- | ------------------- | ------------------- | ------------------- | ------------------- |
