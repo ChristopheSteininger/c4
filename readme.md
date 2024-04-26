@@ -10,9 +10,9 @@
  #53.
 
  All results below were found by running the solver in this repo. The solution of
- board sizes where $width + height \leq 15$ was already found by
- [previous solvers][https://tromp.github.io/c4/c4.html], but the solution to all
- other board sizes is new.
+ board sizes where $width + height \leq 15$, as well as the 8x8 board was already
+ found by [previous solvers](https://tromp.github.io/c4/c4.html), but the solution
+ to all other board sizes is new.
 
 | Width &rarr; <br> Height &darr; |    4 |    5 |                            6 |                            7 |                            8 |                            9 |                           10 |                           11 |                           12 |
 | ------------------------------- | ---- | ---- | ---------------------------- | ---------------------------- | ---------------------------- | ---------------------------- | ---------------------------- | ---------------------------- | ---------------------------- |
@@ -30,5 +30,5 @@
 ## Credits
 
 This solver expands on the work of two others:
-1. [John Tromp][https://tromp.github.io/c4/c4.html]
-1. [Pascal Pons][http://blog.gamesolver.org/solving-connect-four/01-introduction/]
+1. [John Tromp](https://tromp.github.io/c4/c4.html)
+1. [Pascal Pons](http://blog.gamesolver.org/solving-connect-four/01-introduction/)
