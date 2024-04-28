@@ -57,14 +57,10 @@ static constexpr board border_stones_in_direction(const Direction dir) {
 
     return ~center_stones;
 }
-static constexpr board BORDER_VERTICAL = border_stones_in_direction(Direction::VERTICAL);
-static constexpr board BORDER_HORIZONTAL = border_stones_in_direction(Direction::HORIZONTAL);
-static constexpr board BORDER_NEGATIVE_DIAGONAL = border_stones_in_direction(Direction::NEGATIVE_DIAGONAL);
-static constexpr board BORDER_POSITIVE_DIAGONAL = border_stones_in_direction(Direction::POSITIVE_DIAGONAL);
 
 // These patterns occur at the corners of the board when checking the diagonals.
 // All stones in these positions are dead.
-static constexpr board too_short(const Direction dir) {
+static constexpr board too_short_in_direction(const Direction dir) {
     int shift = static_cast<int>(dir);
 
     board pairs = (VALID_CELLS >> shift) & VALID_CELLS;
@@ -76,8 +72,6 @@ static constexpr board too_short(const Direction dir) {
 
     return VALID_CELLS & ~possible_wins;
 }
-static constexpr board TOO_SHORT_NEGATIVE_DIAGONAL = too_short(Direction::NEGATIVE_DIAGONAL);
-static constexpr board TOO_SHORT_POSITIVE_DIAGONAL = too_short(Direction::POSITIVE_DIAGONAL);
 
 // Helper methods.
 
@@ -106,8 +100,11 @@ static board find_threats(const board b) noexcept {
 }
 
 template <Direction dir>
-static board dead_stones_in_direction(const board b0, const board b1, const board border) noexcept {
+static board dead_stones_in_direction(const board b0, const board b1) noexcept {
     constexpr int shift = static_cast<int>(dir);
+
+    constexpr board border = border_stones_in_direction(dir);
+    constexpr board too_short = too_short_in_direction(dir);
 
     board played_positions = b0 | b1;
     board empty_positions = VALID_CELLS & ~played_positions;
@@ -150,11 +147,12 @@ static board dead_stones_in_direction(const board b0, const board b1, const boar
     //                      ^           ^
     board pinned = border & played_positions & ((between >> 2 * shift) | (between << 2 * shift));
 
-    return covered_stones | pinned;
+    return covered_stones | pinned | too_short;
 }
 
-static board find_winning_stones_in_direction(const board b, const Direction dir) noexcept {
-    int shift = static_cast<int>(dir);
+template<Direction dir>
+static board find_winning_stones_in_direction(const board b) noexcept {
+    constexpr int shift = static_cast<int>(dir);
 
     board pairs = b & (b << 2 * shift);
     board quads = pairs & (pairs << shift);
@@ -166,24 +164,25 @@ static board find_winning_stones_in_direction(const board b, const Direction dir
 
 // Returns a 1 in any cell which is part of a 4 in a row.
 static board find_winning_stones(const board b) noexcept {
-    return find_winning_stones_in_direction(b, Direction::VERTICAL) |
-           find_winning_stones_in_direction(b, Direction::HORIZONTAL) |
-           find_winning_stones_in_direction(b, Direction::NEGATIVE_DIAGONAL) |
-           find_winning_stones_in_direction(b, Direction::POSITIVE_DIAGONAL);
+    return find_winning_stones_in_direction<Direction::VERTICAL>(b)
+         | find_winning_stones_in_direction<Direction::HORIZONTAL>(b)
+         | find_winning_stones_in_direction<Direction::NEGATIVE_DIAGONAL>(b)
+         | find_winning_stones_in_direction<Direction::POSITIVE_DIAGONAL>(b);
 }
 
-static bool has_won_in_direction(const board b, const Direction dir) noexcept {
-    int shift = static_cast<int>(dir);
+template<Direction dir>
+static bool has_won_in_direction(const board b) noexcept {
+    constexpr int shift = static_cast<int>(dir);
 
     board pairs = b & (b << 2 * shift);
     return (pairs & (pairs << shift)) != 0;
 }
 
 static bool has_won(const board b) noexcept {
-    return has_won_in_direction(b, Direction::VERTICAL)
-        || has_won_in_direction(b, Direction::HORIZONTAL)
-        || has_won_in_direction(b, Direction::NEGATIVE_DIAGONAL)
-        || has_won_in_direction(b, Direction::POSITIVE_DIAGONAL);
+    return has_won_in_direction<Direction::VERTICAL>(b)
+        || has_won_in_direction<Direction::HORIZONTAL>(b)
+        || has_won_in_direction<Direction::NEGATIVE_DIAGONAL>(b)
+        || has_won_in_direction<Direction::POSITIVE_DIAGONAL>(b);
 }
 
 // Public functions.
@@ -197,10 +196,9 @@ board Position::move(int col) noexcept {
     board mask = FIRST_COLUMN << (BOARD_HEIGHT_1 * col);
 
     board before_move = b0;
-    board after_move = b0 | (valid_moves & mask);
 
     b0 = b1;
-    b1 = after_move;
+    b1 = before_move | (valid_moves & mask);
 
     moves_played++;
 
@@ -476,24 +474,22 @@ bool Position::are_dead_stones_valid() const noexcept {
 // Private functions
 
 board Position::find_dead_stones() const noexcept {
-    board vertical = dead_stones_in_direction<Direction::VERTICAL>(b0, b1, BORDER_VERTICAL);
+    board vertical = dead_stones_in_direction<Direction::VERTICAL>(b0, b1);
     if (vertical == 0) {
         return 0;
     }
 
-    board horizontal = dead_stones_in_direction<Direction::HORIZONTAL>(b0, b1, BORDER_HORIZONTAL);
+    board horizontal = dead_stones_in_direction<Direction::HORIZONTAL>(b0, b1);
     if (horizontal == 0) {
         return 0;
     }
 
-    board pos_diag = dead_stones_in_direction<Direction::POSITIVE_DIAGONAL>(b0, b1, BORDER_POSITIVE_DIAGONAL)
-        | TOO_SHORT_POSITIVE_DIAGONAL;
+    board pos_diag = dead_stones_in_direction<Direction::POSITIVE_DIAGONAL>(b0, b1);
     if (pos_diag == 0) {
         return 0;
     }
 
-    board neg_diag = dead_stones_in_direction<Direction::NEGATIVE_DIAGONAL>(b0, b1, BORDER_NEGATIVE_DIAGONAL)
-        | TOO_SHORT_NEGATIVE_DIAGONAL;
+    board neg_diag = dead_stones_in_direction<Direction::NEGATIVE_DIAGONAL>(b0, b1);
 
     return vertical & horizontal & pos_diag & neg_diag;
 }

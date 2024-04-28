@@ -2,7 +2,6 @@
 #define BOARD_H_
 
 #include <string>
-#include <vector>
 
 #include "settings.h"
 #include "types.h"
