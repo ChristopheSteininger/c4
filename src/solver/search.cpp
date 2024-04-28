@@ -30,7 +30,7 @@ static int count_bits(board b) {
     return result;
 }
 
-static float heuristic(const Position &pos, board opponent_threats, int col, bool is_table_move) {
+static float heuristic(const Position &pos, board opponent_threats, int col, bool is_table_move) noexcept {
     // Opponent and player are swapped, since a move was just played.
     board player_threats = pos.find_opponent_threats();
     board threats = pos.find_useful_threats(player_threats, opponent_threats);
@@ -47,7 +47,7 @@ static float heuristic(const Position &pos, board opponent_threats, int col, boo
 }
 
 void Search::sort_moves(Position &pos, Node *children, board opponent_threats,
-        int num_moves, int *moves, int score_jitter, int table_move) {
+        int num_moves, int *moves, int score_jitter, int table_move) noexcept {
     assert(num_moves > 0);
     assert(score_jitter >= 0);
     assert(table_move == -1 || (0 <= table_move && table_move < BOARD_WIDTH));
@@ -93,7 +93,7 @@ int Search::search(Position &pos, int alpha, int beta, int score_jitter) {
     }
 }
 
-int Search::negamax(Node &node, int alpha, int beta, int score_jitter) {
+int Search::negamax(Node &node, int alpha, int beta, int score_jitter) noexcept {
     assert(alpha < beta);
     assert(!node.pos.is_game_over());
     assert(!node.pos.wins_this_move(node.pos.find_player_threats()));
@@ -274,7 +274,7 @@ int Search::negamax(Node &node, int alpha, int beta, int score_jitter) {
     return value;
 }
 
-int Search::static_search(Node &node, int alpha, int beta, bool &is_static) {
+int Search::static_search(Node &node, int alpha, int beta, bool &is_static) noexcept {
     assert(alpha < beta);
     assert(!is_static);
     assert(!node.pos.is_game_over());

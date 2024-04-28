@@ -17,16 +17,16 @@ class Entry {
     friend class Table;
 
    public:
-    Entry();
-    Entry(board hash, int move, NodeType type, int score, int work);
+    Entry() noexcept {};
+    Entry(board hash, int move, NodeType type, int score, int work) noexcept;
 
-    inline bool is_empty() const { return data == 0; }
-    inline bool is_equal(board hash) const { return data != 0 && (hash & HASH_MASK) == (data >> HASH_SHIFT); }
+    inline bool is_empty() const noexcept { return data == 0; }
+    inline bool is_equal(board hash) const noexcept { return data != 0 && (hash & HASH_MASK) == (data >> HASH_SHIFT); }
 
-    int get_move(bool is_mirrored) const;
-    int get_score() const;
-    NodeType get_type() const;
-    int get_work() const;
+    int get_move(bool is_mirrored) const noexcept;
+    int get_score() const noexcept;
+    NodeType get_type() const noexcept;
+    int get_work() const noexcept;
 
    private:
     // An entry contains the following information packed in 64 bits.
@@ -81,9 +81,9 @@ class Table {
 
     void clear();
 
-    void prefetch(board hash) const;
-    Entry get(board hash) const;
-    void put(board hash, bool is_mirrored, int move, NodeType type, int value, unsigned long long num_nodes);
+    void prefetch(board hash) const noexcept;
+    Entry get(board hash) const noexcept;
+    void put(board hash, bool is_mirrored, int move, NodeType type, int value, unsigned long long num_nodes) noexcept;
 
     void load_table_file();
     void load_book_file();
@@ -100,8 +100,8 @@ class Table {
     // The writer is shared across all threads and is used to save significant results.
     std::shared_ptr<Writer> table_writer;
 
-    void store(board hash, Entry entry);
-    int num_nodes_to_work(unsigned long long num_nodes) const;
+    void store(board hash, Entry entry) noexcept;
+    int num_nodes_to_work(unsigned long long num_nodes) const noexcept;
 };
 
 #endif

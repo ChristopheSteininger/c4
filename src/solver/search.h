@@ -54,11 +54,11 @@ class Search {
 
     bool stop_search{false};
 
-    int negamax(Node &node, int alpha, int beta, int score_jitter);
+    int negamax(Node &node, int alpha, int beta, int score_jitter) noexcept;
 
     void sort_moves(Position &pos, Node *children, board opponent_threats,
-        int num_moves, int *moves, int score_jitter, int table_move);
-    int static_search(Node &node, int alpha, int beta, bool &is_static);
+        int num_moves, int *moves, int score_jitter, int table_move) noexcept;
+    int static_search(Node &node, int alpha, int beta, bool &is_static) noexcept;
 };
 
 #endif

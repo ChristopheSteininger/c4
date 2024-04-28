@@ -28,9 +28,7 @@ static std::filesystem::path get_book_filepath() {
     return "data" / std::filesystem::path(name);
 }
 
-Entry::Entry() { data = 0; }
-
-Entry::Entry(board hash, int move, NodeType type, int score, int work) {
+Entry::Entry(board hash, int move, NodeType type, int score, int work) noexcept {
     assert(0 <= move && move < BOARD_WIDTH);
     assert(type == NodeType::EXACT || type == NodeType::LOWER || type == NodeType::UPPER);
     assert(Position::MIN_SCORE <= score && score <= Position::MAX_SCORE);
@@ -53,7 +51,7 @@ Entry::Entry(board hash, int move, NodeType type, int score, int work) {
     // clang-format on
 }
 
-int Entry::get_move(bool is_mirrored) const {
+int Entry::get_move(bool is_mirrored) const noexcept {
     int bits = (data >> MOVE_SHIFT) & MOVE_MASK;
 
     // The position may have been mirrored for the table lookup,
@@ -61,7 +59,7 @@ int Entry::get_move(bool is_mirrored) const {
     return (is_mirrored) ? BOARD_WIDTH - bits - 1 : bits;
 }
 
-int Entry::get_score() const {
+int Entry::get_score() const noexcept {
     int bits = (data >> SCORE_SHIFT) & SCORE_MASK;
 
     // We don't store negative numbers in the table, so scores
@@ -69,13 +67,13 @@ int Entry::get_score() const {
     return bits + Position::MIN_SCORE;
 }
 
-NodeType Entry::get_type() const {
+NodeType Entry::get_type() const noexcept {
     int bits = (data >> TYPE_SHIFT) & TYPE_MASK;
 
     return static_cast<NodeType>(bits);
 }
 
-int Entry::get_work() const {
+int Entry::get_work() const noexcept {
     return (data >> WORK_SHIFT) & WORK_MASK;
 }
 
@@ -99,14 +97,14 @@ void Table::clear() {
     std::fill(table.get(), table.get() + NUM_TABLE_ENTRIES + 1, empty);
 }
 
-void Table::prefetch(board hash) const {
+void Table::prefetch(board hash) const noexcept {
     assert(hash != 0);
 
     uint64_t index = static_cast<uint64_t>(hash % NUM_TABLE_ENTRIES);
     os_prefetch(table.get() + index);
 }
 
-Entry Table::get(board hash) const {
+Entry Table::get(board hash) const noexcept {
     assert(hash != 0);
 
     uint64_t index = static_cast<uint64_t>(hash % NUM_TABLE_ENTRIES);
@@ -129,7 +127,7 @@ Entry Table::get(board hash) const {
     return Entry();
 }
 
-void Table::put(board hash, bool is_mirrored, int move, NodeType type, int score, unsigned long long num_nodes) {
+void Table::put(board hash, bool is_mirrored, int move, NodeType type, int score, unsigned long long num_nodes) noexcept {
     assert(hash != 0);
     assert(0 <= move && move < BOARD_WIDTH);
     assert(type == NodeType::EXACT || type == NodeType::LOWER || type == NodeType::UPPER);
@@ -232,7 +230,7 @@ void Table::load_book_file() {
     std::cout << "Done." << std::endl << std::endl;
 }
 
-void Table::store(board hash, Entry entry) {
+void Table::store(board hash, Entry entry) noexcept {
     // Overwrite the entry which required the least amount of work to compute.
     uint64_t index = static_cast<uint64_t>(hash % NUM_TABLE_ENTRIES);
     int offset = (table[index + 1].is_equal(hash) || table[index + 1].get_work() < table[index].get_work()) &&
@@ -253,7 +251,7 @@ void Table::store(board hash, Entry entry) {
     table[index + offset] = entry;
 }
 
-int Table::num_nodes_to_work(unsigned long long num_nodes) const {
+int Table::num_nodes_to_work(unsigned long long num_nodes) const noexcept {
     int work = 0;
 
     while (num_nodes > 1) {

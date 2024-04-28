@@ -82,7 +82,7 @@ static constexpr board TOO_SHORT_POSITIVE_DIAGONAL = too_short(Direction::POSITI
 // Helper methods.
 
 template <Direction dir>
-static board find_threats_in_direction(const board b) {
+static board find_threats_in_direction(const board b) noexcept {
     constexpr int shift = static_cast<int>(dir);
 
     board doubles = b & (b << shift);
@@ -98,7 +98,7 @@ static board find_threats_in_direction(const board b) {
     }
 }
 
-static board find_threats(const board b) {
+static board find_threats(const board b) noexcept {
     return find_threats_in_direction<Direction::VERTICAL>(b)
          | find_threats_in_direction<Direction::HORIZONTAL>(b)
          | find_threats_in_direction<Direction::NEGATIVE_DIAGONAL>(b)
@@ -106,7 +106,7 @@ static board find_threats(const board b) {
 }
 
 template <Direction dir>
-static board dead_stones_in_direction(const board b0, const board b1, const board border) {
+static board dead_stones_in_direction(const board b0, const board b1, const board border) noexcept {
     constexpr int shift = static_cast<int>(dir);
 
     board played_positions = b0 | b1;
@@ -153,7 +153,7 @@ static board dead_stones_in_direction(const board b0, const board b1, const boar
     return covered_stones | pinned;
 }
 
-static board find_winning_stones_in_direction(const board b, const Direction dir) {
+static board find_winning_stones_in_direction(const board b, const Direction dir) noexcept {
     int shift = static_cast<int>(dir);
 
     board pairs = b & (b << 2 * shift);
@@ -165,21 +165,21 @@ static board find_winning_stones_in_direction(const board b, const Direction dir
 }
 
 // Returns a 1 in any cell which is part of a 4 in a row.
-static board find_winning_stones(const board b) {
+static board find_winning_stones(const board b) noexcept {
     return find_winning_stones_in_direction(b, Direction::VERTICAL) |
            find_winning_stones_in_direction(b, Direction::HORIZONTAL) |
            find_winning_stones_in_direction(b, Direction::NEGATIVE_DIAGONAL) |
            find_winning_stones_in_direction(b, Direction::POSITIVE_DIAGONAL);
 }
 
-static bool has_won_in_direction(const board b, const Direction dir) {
+static bool has_won_in_direction(const board b, const Direction dir) noexcept {
     int shift = static_cast<int>(dir);
 
     board pairs = b & (b << 2 * shift);
     return (pairs & (pairs << shift)) != 0;
 }
 
-static bool has_won(const board b) {
+static bool has_won(const board b) noexcept {
     return has_won_in_direction(b, Direction::VERTICAL)
         || has_won_in_direction(b, Direction::HORIZONTAL)
         || has_won_in_direction(b, Direction::NEGATIVE_DIAGONAL)
@@ -188,7 +188,7 @@ static bool has_won(const board b) {
 
 // Public functions.
 
-board Position::move(int col) {
+board Position::move(int col) noexcept {
     assert(is_board_valid());
     assert(is_move_valid(col));
     assert(0 <= col && col < BOARD_WIDTH);
@@ -209,7 +209,7 @@ board Position::move(int col) {
     return before_move;
 }
 
-board Position::move(board mask) {
+board Position::move(board mask) noexcept {
     assert(is_board_valid());
     assert(!(mask & (mask - 1)));
     assert(!(mask & b0));
@@ -228,7 +228,7 @@ board Position::move(board mask) {
     return before_move;
 }
 
-void Position::unmove(board before_move) {
+void Position::unmove(board before_move) noexcept {
     assert(is_board_valid());
 
     b1 = b0;
@@ -239,27 +239,27 @@ void Position::unmove(board before_move) {
     assert(is_board_valid());
 }
 
-bool Position::has_player_won() const { return has_won(b0); }
+bool Position::has_player_won() const noexcept { return has_won(b0); }
 
-bool Position::has_opponent_won() const { return has_won(b1); }
+bool Position::has_opponent_won() const noexcept { return has_won(b1); }
 
-bool Position::is_draw() const { return (b0 | b1) == VALID_CELLS; }
+bool Position::is_draw() const noexcept { return (b0 | b1) == VALID_CELLS; }
 
-bool Position::is_game_over() const { return has_player_won() || has_opponent_won() || is_draw(); }
+bool Position::is_game_over() const noexcept { return has_player_won() || has_opponent_won() || is_draw(); }
 
-bool Position::can_player_win() const {
+bool Position::can_player_win() const noexcept {
     board empty_positions = VALID_CELLS & ~(b0 | b1);
 
     return has_won(b0 | empty_positions);
 }
 
-bool Position::can_opponent_win() const {
+bool Position::can_opponent_win() const noexcept {
     board empty_positions = VALID_CELLS & ~(b0 | b1);
 
     return has_won(b1 | empty_positions);
 }
 
-board Position::find_player_threats() const {
+board Position::find_player_threats() const noexcept {
     assert(!has_player_won());
     assert(!has_opponent_won());
     assert(!is_draw());
@@ -268,7 +268,7 @@ board Position::find_player_threats() const {
     return find_threats(b0) & ~b1 & VALID_CELLS;
 }
 
-board Position::find_opponent_threats() const {
+board Position::find_opponent_threats() const noexcept {
     assert(!has_player_won());
     assert(!has_opponent_won());
     assert(!is_draw());
@@ -277,14 +277,14 @@ board Position::find_opponent_threats() const {
     return find_threats(b1) & ~b0 & VALID_CELLS;
 }
 
-board Position::find_next_turn_threats(board threats) const {
+board Position::find_next_turn_threats(board threats) const noexcept {
     board valid_moves = ((b0 | b1) + BOTTOM_ROW) & VALID_CELLS;
     board next_valid_moves = valid_moves << 1;
 
     return threats & next_valid_moves;
 }
 
-board Position::find_next_next_turn_threats(board threats) const {
+board Position::find_next_next_turn_threats(board threats) const noexcept {
     board valid_moves = ((b0 | b1) + BOTTOM_ROW) & VALID_CELLS;
     board next_valid_moves = (valid_moves << 1) & VALID_CELLS;
     board next_next_valid_moves = next_valid_moves << 1;
@@ -292,21 +292,21 @@ board Position::find_next_next_turn_threats(board threats) const {
     return threats & next_next_valid_moves;
 }
 
-board Position::wins_this_move(board threats) const {
+board Position::wins_this_move(board threats) const noexcept {
     board next_valid_moves = (b0 | b1) + BOTTOM_ROW;
 
     // Exclude any threat which cannot be played immediately.
     return threats & next_valid_moves;
 }
 
-board Position::find_non_losing_moves(board opponent_threats) const {
+board Position::find_non_losing_moves(board opponent_threats) const noexcept {
     board below_threats = opponent_threats >> 1;
     board valid_moves = (b0 | b1) + BOTTOM_ROW;
 
     return valid_moves & ~below_threats & VALID_CELLS;
 }
 
-bool Position::is_forced_loss_next_turn(board opponent_wins, board non_losing_moves) const {
+bool Position::is_forced_loss_next_turn(board opponent_wins, board non_losing_moves) const noexcept {
     // If the player can only move below the opponents threats, the player will lose.
     if (non_losing_moves == 0) {
         return true;
@@ -323,7 +323,7 @@ bool Position::is_forced_loss_next_turn(board opponent_wins, board non_losing_mo
     return (opponent_wins & (opponent_wins - 1)) || !(opponent_wins & non_losing_moves);
 }
 
-board Position::find_forced_move(board opponent_wins, board non_losing_moves) const {
+board Position::find_forced_move(board opponent_wins, board non_losing_moves) const noexcept {
     assert(!is_forced_loss_next_turn(opponent_wins, non_losing_moves));
 
     // A move is forced if the opponent could win next turn.
@@ -342,7 +342,7 @@ board Position::find_forced_move(board opponent_wins, board non_losing_moves) co
     return 0;
 }
 
-bool Position::is_move_valid(int col) const {
+bool Position::is_move_valid(int col) const noexcept {
     assert(0 <= col && col < BOARD_WIDTH);
 
     board moves = b0 | b1;
@@ -351,27 +351,27 @@ bool Position::is_move_valid(int col) const {
     return (moves & move_mask) != move_mask;
 }
 
-bool Position::is_non_losing_move(board non_losing_moves, int col) const {
+bool Position::is_non_losing_move(board non_losing_moves, int col) const noexcept {
     board move_mask = FIRST_COLUMN << (BOARD_HEIGHT_1 * col);
 
     return is_move_valid(col) && (move_mask & non_losing_moves);
 }
 
-int Position::score_win(int moves_until_win) const {
+int Position::score_win(int moves_until_win) const noexcept {
     // A player can never win on the opponent's move, so number of moves must be odd.
     assert((moves_until_win & 1) == 1);
 
     return score_win_at(moves_played + moves_until_win);
 }
 
-int Position::score_loss(int moves_until_loss) const {
+int Position::score_loss(int moves_until_loss) const noexcept {
     // A player can never lose on their own move, so number of moves must be even.
     assert((moves_until_loss & 1) == 0);
 
     return -score_win_at(moves_played + moves_until_loss);
 }
 
-int Position::moves_left(int score) const {
+int Position::moves_left(int score) const noexcept {
     // Run the calculation from the perspective of the first player.
     if (moves_played & 1) {
         score *= -1;
@@ -391,7 +391,7 @@ int Position::moves_left(int score) const {
     return last_move - moves_played;
 }
 
-board Position::hash(bool &is_mirrored) const {
+board Position::hash(bool &is_mirrored) const noexcept {
     // Find any stones which cannot impact the rest of the game and assume
     // player 0 played these stones. This prevents these stones from
     // influencing the hash.
@@ -412,9 +412,9 @@ board Position::hash(bool &is_mirrored) const {
     return hash;
 }
 
-void Position::print() const { std::cout << display_board(); }
+void Position::print() const noexcept { std::cout << display_board(); }
 
-std::string Position::display_board() const {
+std::string Position::display_board() const noexcept {
     if ((moves_played & 1) == 0) {
         return display_mask(b0, b1);
     } else {
@@ -422,7 +422,7 @@ std::string Position::display_board() const {
     }
 }
 
-std::string Position::display_mask(board a, board b) const {
+std::string Position::display_mask(board a, board b) const noexcept {
     std::stringstream result;
 
     // Print the board.
@@ -451,7 +451,7 @@ std::string Position::display_mask(board a, board b) const {
     return result.str();
 }
 
-bool Position::are_dead_stones_valid() const {
+bool Position::are_dead_stones_valid() const noexcept {
     board dead_stones = find_dead_stones();
     board empty_positions = VALID_CELLS & ~(b0 | b1);
 
@@ -475,7 +475,7 @@ bool Position::are_dead_stones_valid() const {
 
 // Private functions
 
-board Position::find_dead_stones() const {
+board Position::find_dead_stones() const noexcept {
     board vertical = dead_stones_in_direction<Direction::VERTICAL>(b0, b1, BORDER_VERTICAL);
     if (vertical == 0) {
         return 0;
@@ -498,7 +498,7 @@ board Position::find_dead_stones() const {
     return vertical & horizontal & pos_diag & neg_diag;
 }
 
-board Position::mirror(board b) const {
+board Position::mirror(board b) const noexcept {
     board mirror = 0;
 
     for (int col = 0; col <= (BOARD_WIDTH - 1) / 2; col++) {
@@ -514,4 +514,4 @@ board Position::mirror(board b) const {
     return mirror;
 }
 
-bool Position::is_board_valid() const { return !(b0 & ~VALID_CELLS) && !(b1 & ~VALID_CELLS) && !(b0 & b1); }
+bool Position::is_board_valid() const noexcept { return !(b0 & ~VALID_CELLS) && !(b1 & ~VALID_CELLS) && !(b0 & b1); }
