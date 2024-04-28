@@ -4,7 +4,7 @@
 #include <condition_variable>
 #include <mutex>
 
-#include "search.h"
+#include "../search.h"
 
 // A thread safe wrapper for the result of a search.
 class SearchResult {

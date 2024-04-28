@@ -2,16 +2,15 @@
 #define WORKER_H_
 
 #include <atomic>
-#include <chrono>
 #include <condition_variable>
 #include <memory>
 #include <mutex>
 #include <thread>
 
-#include "position.h"
+#include "../position.h"
+#include "../search.h"
+#include "../stats.h"
 #include "result.h"
-#include "search.h"
-#include "stats.h"
 
 class Worker {
    public:
@@ -53,11 +52,6 @@ class Worker {
     int beta;
     int score_jitter;
     // End shared search data.
-
-    // Used to measure time the worker is active
-    // vs time waiting for work.
-    std::chrono::steady_clock::time_point start_time;
-    std::chrono::steady_clock::duration active_time{};
 
     void work();
 };

@@ -233,8 +233,8 @@ void Table::load_book_file() {
 void Table::store(board hash, Entry entry) noexcept {
     // Overwrite the entry which required the least amount of work to compute.
     uint64_t index = static_cast<uint64_t>(hash % NUM_TABLE_ENTRIES);
-    int offset = (table[index + 1].is_equal(hash) || table[index + 1].get_work() < table[index].get_work()) &&
-                 !table[index].is_equal(hash);
+    int offset = (table[index + 1].is_equal(hash) || table[index + 1].get_work() < table[index].get_work())
+        && !table[index].is_equal(hash);
 
     Entry current = table[index + offset];
 

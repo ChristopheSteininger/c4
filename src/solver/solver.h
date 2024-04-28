@@ -4,7 +4,7 @@
 #include <string>
 #include <memory>
 
-#include "pool.h"
+#include "parallel/pool.h"
 #include "position.h"
 #include "progress.h"
 #include "settings.h"

@@ -2,7 +2,6 @@
 
 #include <atomic>
 #include <cassert>
-#include <chrono>
 #include <condition_variable>
 #include <iostream>
 #include <iomanip>
@@ -11,8 +10,8 @@
 #include <string>
 #include <thread>
 
-#include "position.h"
-#include "os.h"
+#include "../position.h"
+#include "../os.h"
 
 Worker::Worker(int id, const Table &parent_table, std::shared_ptr<SearchResult> result,
                std::shared_ptr<Progress> progress) {
@@ -89,7 +88,6 @@ void Worker::stop() {
 
 void Worker::work() {
     std::unique_lock<std::mutex> lock(mutex);
-    start_time = std::chrono::steady_clock::now();
 
     while (!is_exiting) {
         // Sleep until we have something to do.
@@ -99,10 +97,7 @@ void Worker::work() {
 
         // We have a new position to search.
         if (is_searching) {
-            auto search_start = std::chrono::steady_clock::now();
             int score = search->search(pos, alpha, beta, score_jitter);
-            active_time += std::chrono::steady_clock::now() - search_start;
-
             is_searching = false;
 
             // Tell the main thread we've solved the position.

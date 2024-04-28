@@ -2,7 +2,7 @@
 
 #include <cassert>
 
-#include "search.h"
+#include "../search.h"
 
 void SearchResult::reset() {
     std::unique_lock<std::mutex> lock(mutex);

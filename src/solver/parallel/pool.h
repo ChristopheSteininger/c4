@@ -5,10 +5,10 @@
 #include <thread>
 #include <vector>
 
-#include "position.h"
-#include "progress.h"
+#include "../position.h"
+#include "../progress.h"
+#include "../table.h"
 #include "result.h"
-#include "table.h"
 #include "worker.h"
 
 class Pool {

@@ -6,8 +6,8 @@
 #include <iomanip>
 #include <vector>
 
-#include "settings.h"
-#include "table.h"
+#include "../settings.h"
+#include "../table.h"
 
 static int get_score_jitter(double window_step, size_t i) {
     // clang-format off
