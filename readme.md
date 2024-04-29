@@ -1,21 +1,23 @@
 [![Build](https://github.com/ChristopheSteininger/c4/actions/workflows/build-and-test.yml/badge.svg?branch=master)](https://github.com/ChristopheSteininger/c4/actions/workflows/build-and-test.yml?query=branch%3Amaster)
 
+Connect 4 on a 7x6 board was first
+[solved](https://en.wikipedia.org/wiki/Solved_game) in 1988 independently by
+James D. Allen and Victor Allis. John Tromp solved the game for all board sizes where
+width + height $\leq$ 15 in 2006, and solved the 8x8 case in 2015.
+
+I decided to extend these results by solving the game on larger board sizes, and by
+finding the exact move on which the game will end assuming perfect play.
+
  ## Results
 
  The table below shows the outcome of a game of Connect 4 if both players play
- perfectly on different board sizes. An entry like "1<sup>st</sup> (53)"
+ perfectly on different board sizes. An entry such as "1<sup>st</sup> (53)"
  for the 8x7 board means the 1<sup>st</sup> player can force a win on
  move #53 if the second player plays perfectly. If the second player in
- an 8x7 game is not perfect, then the first player can force a win before move
- #53.
+ an 8x7 game is not perfect, then the first player can always force a win before
+ move #53.
 
- All results below were found by running the solver in this repo. The solution of
- board sizes where $width + height \leq 15$ as well as the 8x8 board has already
- been found by [another solver](https://tromp.github.io/c4/c4.html), but the solution
- to all other board sizes is new.
-
- The exact move on which the game will end assuming perfect play is a new result
- for all board sizes as previous solvers output only a win/draw/loss outcome.
+ All results below were found by running the solver in this repo.
 
 | Width &rarr; <br> Height &darr; |    4 |    5 |                   6 |                   7 |                   8 |                   9 |                  10 |                  11 |                  12 |
 | ------------------------------- | ---- | ---- | ------------------- | ------------------- | ------------------- | ------------------- | ------------------- | ------------------- | ------------------- |
@@ -33,5 +35,5 @@
 ## Credits
 
 This solver expands on the work of two others:
-1. [John Tromp](https://tromp.github.io/c4/c4.html)
-1. [Pascal Pons](http://blog.gamesolver.org/solving-connect-four/01-introduction/)
+* [John Tromp](https://tromp.github.io/c4/c4.html)
+* [Pascal Pons](http://blog.gamesolver.org/solving-connect-four/01-introduction/)
