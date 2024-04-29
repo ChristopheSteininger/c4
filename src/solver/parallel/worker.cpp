@@ -11,7 +11,7 @@
 #include <thread>
 
 #include "../position.h"
-#include "../os.h"
+#include "../util/os.h"
 
 Worker::Worker(int id, const Table &parent_table, std::shared_ptr<SearchResult> result,
                std::shared_ptr<Progress> progress) {

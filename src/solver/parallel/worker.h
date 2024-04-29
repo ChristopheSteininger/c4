@@ -9,7 +9,7 @@
 
 #include "../position.h"
 #include "../search.h"
-#include "../stats.h"
+#include "../util/stats.h"
 #include "result.h"
 
 class Worker {

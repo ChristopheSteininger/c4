@@ -4,9 +4,9 @@
 #include <random>
 
 #include "position.h"
-#include "progress.h"
-#include "stats.h"
 #include "table.h"
+#include "util/progress.h"
+#include "util/stats.h"
 
 // Jitter is only needed for multiple threads.
 static_assert((NUM_THREADS == 1) == (MOVE_SCORE_JITTER == 0));

@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-#include "settings.h"
+#include "../settings.h"
 
 #ifdef _WIN32
 #include <windows.h>

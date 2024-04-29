@@ -14,7 +14,7 @@
 
 #include "position.h"
 #include "settings.h"
-#include "os.h"
+#include "util/os.h"
 
 static std::filesystem::path get_table_filepath() {
     std::string name = "table-" + std::to_string(BOARD_WIDTH) + "x" + std::to_string(BOARD_HEIGHT) + ".csv";
@@ -26,55 +26,6 @@ static std::filesystem::path get_book_filepath() {
     std::string name = "book-" + std::to_string(BOARD_WIDTH) + "x" + std::to_string(BOARD_HEIGHT) + ".csv";
 
     return "data" / std::filesystem::path(name);
-}
-
-Entry::Entry(board hash, int move, NodeType type, int score, int work) noexcept {
-    assert(0 <= move && move < BOARD_WIDTH);
-    assert(type == NodeType::EXACT || type == NodeType::LOWER || type == NodeType::UPPER);
-    assert(Position::MIN_SCORE <= score && score <= Position::MAX_SCORE);
-    assert(0 <= work && work <= Entry::WORK_MASK);
-
-    int int_type = static_cast<int>(type);
-
-    // Shift so we don't store negative numbers in the table.
-    int shifted_score = score - Position::MIN_SCORE;
-
-    // Only the partial hash needs to be stored. This is equivalent to:
-    // hash % 2^HASH_BITS.
-    // clang-format off
-    data
-        = static_cast<uint64_t>(hash << HASH_SHIFT)  
-        | (move << MOVE_SHIFT)
-        | (int_type << TYPE_SHIFT)
-        | (work << WORK_SHIFT)
-        | (shifted_score << SCORE_SHIFT);
-    // clang-format on
-}
-
-int Entry::get_move(bool is_mirrored) const noexcept {
-    int bits = (data >> MOVE_SHIFT) & MOVE_MASK;
-
-    // The position may have been mirrored for the table lookup,
-    // so mirror the best move if necessary.
-    return (is_mirrored) ? BOARD_WIDTH - bits - 1 : bits;
-}
-
-int Entry::get_score() const noexcept {
-    int bits = (data >> SCORE_SHIFT) & SCORE_MASK;
-
-    // We don't store negative numbers in the table, so scores
-    // are shifted by the minimum possible score.
-    return bits + Position::MIN_SCORE;
-}
-
-NodeType Entry::get_type() const noexcept {
-    int bits = (data >> TYPE_SHIFT) & TYPE_MASK;
-
-    return static_cast<NodeType>(bits);
-}
-
-int Entry::get_work() const noexcept {
-    return (data >> WORK_SHIFT) & WORK_MASK;
 }
 
 Table::Table() {
@@ -140,8 +91,7 @@ void Table::put(board hash, bool is_mirrored, int move, NodeType type, int score
     }
 
     // Store.
-    int work = num_nodes_to_work(num_nodes);
-    store(hash, Entry(hash, move, type, score, work));
+    store(hash, Entry(hash, move, type, score, num_nodes));
 
     // Save significant results to the table file.
     if constexpr (UPDATE_TABLE_FILE) {
@@ -186,7 +136,7 @@ void Table::load_table_file() {
             std::stoi(move_string),
             static_cast<NodeType>(std::stoi(type_string)),
             std::stoi(score_string),
-            num_nodes_to_work(std::stoi(num_nodes_string)));
+            std::stoull(num_nodes_string));
 
         store(hash, entry);
         num_entries++;
@@ -223,8 +173,7 @@ void Table::load_book_file() {
         int move = std::stoi(move_string);
         int score = std::stoi(score_string);
 
-        // Opening books will only contain moves which do not need to be mirrored.
-        store(hash, Entry(hash, move, NodeType::EXACT, score, Entry::WORK_MASK));
+        store(hash, Entry(hash, move, NodeType::EXACT, score, 1ull << 30));
     }
 
     std::cout << "Done." << std::endl << std::endl;
@@ -249,17 +198,6 @@ void Table::store(board hash, Entry entry) noexcept {
 
     // Store.
     table[index + offset] = entry;
-}
-
-int Table::num_nodes_to_work(unsigned long long num_nodes) const noexcept {
-    int work = 0;
-
-    while (num_nodes > 1) {
-        work++;
-        num_nodes >>= 3;
-    }
-
-    return std::min(work, Entry::WORK_MASK);
 }
 
 std::string Table::get_table_size() {

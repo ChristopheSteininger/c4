@@ -4,7 +4,7 @@
 #include <iomanip>
 #include <iostream>
 
-#include "settings.h"
+#include "../settings.h"
 
 void Progress::started_search(int alpha, int beta, std::chrono::steady_clock::time_point new_search_start_time) {
     std::unique_lock<std::mutex> lock(mutex);

@@ -6,8 +6,8 @@
 #include <vector>
 
 #include "../position.h"
-#include "../progress.h"
 #include "../table.h"
+#include "../util/progress.h"
 #include "result.h"
 #include "worker.h"
 

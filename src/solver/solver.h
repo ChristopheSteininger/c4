@@ -6,9 +6,9 @@
 
 #include "parallel/pool.h"
 #include "position.h"
-#include "progress.h"
 #include "settings.h"
 #include "table.h"
+#include "util/progress.h"
 
 class Solver {
    public:
