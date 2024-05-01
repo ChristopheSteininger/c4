@@ -40,11 +40,20 @@ static constexpr board FIRST_COLUMN_1 = set_ones(BOARD_HEIGHT_1);
 // 1 at the bottom of each column.
 static constexpr board BOTTOM_ROW = set_ones(BOARD_HEIGHT_1 * BOARD_WIDTH) / set_ones(BOARD_HEIGHT_1);
 
-// 1 in each column header.
+// 1 at each column header.
 static constexpr board COLUMN_HEADERS = BOTTOM_ROW << BOARD_HEIGHT;
 
-// 1 on each playable posiition.
+// 1 at each playable posiition.
 static constexpr board VALID_CELLS = COLUMN_HEADERS - BOTTOM_ROW;
+
+// 1 at each odd row cell in the first column.
+static constexpr board ODD_FIRST_COLUMN = set_ones(BOARD_HEIGHT + (BOARD_HEIGHT % 2)) / 3;
+
+// 1 at each odd cell.
+static constexpr board ODD_CELLS = ODD_FIRST_COLUMN * BOTTOM_ROW;
+
+// 1 at each even cell.
+static constexpr board EVEN_CELLS = ODD_CELLS << 1;
 
 // 1 on each stone next to an edge in each possible direction.
 static constexpr board border_stones_in_direction(const Direction dir) {
@@ -171,18 +180,18 @@ static board find_winning_stones(const board b) noexcept {
 }
 
 template<Direction dir>
-static bool has_won_in_direction(const board b) noexcept {
+static board has_won_in_direction(const board b) noexcept {
     constexpr int shift = static_cast<int>(dir);
 
     board pairs = b & (b << 2 * shift);
-    return (pairs & (pairs << shift)) != 0;
+    return pairs & (pairs << shift);
 }
 
 static bool has_won(const board b) noexcept {
-    return has_won_in_direction<Direction::VERTICAL>(b)
-        || has_won_in_direction<Direction::HORIZONTAL>(b)
-        || has_won_in_direction<Direction::NEGATIVE_DIAGONAL>(b)
-        || has_won_in_direction<Direction::POSITIVE_DIAGONAL>(b);
+    return (has_won_in_direction<Direction::VERTICAL>(b) != 0)
+        || (has_won_in_direction<Direction::HORIZONTAL>(b) != 0)
+        || (has_won_in_direction<Direction::NEGATIVE_DIAGONAL>(b) != 0)
+        || (has_won_in_direction<Direction::POSITIVE_DIAGONAL>(b) != 0);
 }
 
 // Public functions.
@@ -340,6 +349,49 @@ board Position::find_forced_move(board opponent_wins, board non_losing_moves) co
     return 0;
 }
 
+int Position::upper_bound_from_evens_strategy() const noexcept {
+    assert((moves_played & 1) == 0);
+    assert((BOARD_HEIGHT & 1) == 0);
+
+    board valid_moves = (b0 | b1) + BOTTOM_ROW;
+
+    // Assume the opponent takes all remaining even cells which are not valid moves this
+    // turn, and assume the current player takes all other cells.
+    board opponent_evens = b1 | (EVEN_CELLS & ~b0 & ~valid_moves);
+    board player_odds = VALID_CELLS & ~opponent_evens;
+
+    if (has_won_in_direction<Direction::VERTICAL>(player_odds) != 0) {
+        return MAX_SCORE;
+    }
+
+    board opponent_hori = has_won_in_direction<Direction::HORIZONTAL>(opponent_evens);
+    board opponent_neg_diag = has_won_in_direction<Direction::NEGATIVE_DIAGONAL>(opponent_evens);
+    board opponent_pos_diag = has_won_in_direction<Direction::POSITIVE_DIAGONAL>(opponent_evens);
+
+    board player_hori = has_won_in_direction<Direction::HORIZONTAL>(player_odds);
+    board player_neg_diag = has_won_in_direction<Direction::NEGATIVE_DIAGONAL>(player_odds);
+    board player_pos_diag = has_won_in_direction<Direction::POSITIVE_DIAGONAL>(player_odds);
+
+    constexpr board BELOW_COLUMNS = COLUMN_HEADERS + 1;
+
+    // If the current player could win horizontally below the opponent's
+    // horizontal even threat, then the evens strategy will not work.
+    if (player_hori & (opponent_hori - BELOW_COLUMNS)) {
+        return MAX_SCORE;
+    }
+
+    // Repeat the same check for the two diagonal directions.
+    if (player_neg_diag & (opponent_neg_diag - BELOW_COLUMNS)) {
+        return MAX_SCORE;
+    }
+
+    if (player_pos_diag & (opponent_pos_diag - BELOW_COLUMNS)) {
+        return MAX_SCORE;
+    }
+
+    return (opponent_hori | opponent_neg_diag | opponent_pos_diag) ? -1 : 0;
+}
+
 bool Position::is_move_valid(int col) const noexcept {
     assert(0 <= col && col < BOARD_WIDTH);
 
@@ -411,6 +463,8 @@ board Position::hash(bool &is_mirrored) const noexcept {
 }
 
 void Position::print() const noexcept { std::cout << display_board(); }
+
+void Position::print_mask(board a, board b) const noexcept { std::cout << display_mask(a, b);  }
 
 std::string Position::display_board() const noexcept {
     if ((moves_played & 1) == 0) {

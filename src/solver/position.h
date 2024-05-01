@@ -64,6 +64,10 @@ class Position {
     // Otherwise returns 0.
     board find_forced_move(board opponent_wins, board non_losing_moves) const noexcept;
 
+    // See if the opponent could force a win by playing only on even cells. If so return an upper
+    // bound on the score of the position.
+    int upper_bound_from_evens_strategy() const noexcept;
+
     // Returns true only if the current player is allowed to play the given move.
     bool is_move_valid(int col) const noexcept;
 
@@ -87,6 +91,7 @@ class Position {
 
     // Print the game to the console.
     void print() const noexcept;
+    void print_mask(board b0, board b1) const noexcept;
     std::string display_board() const noexcept;
     std::string display_mask(board b0, board b1) const noexcept;
 

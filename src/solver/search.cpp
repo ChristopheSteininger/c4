@@ -282,7 +282,7 @@ int Search::static_search(Node &node, int alpha, int beta, bool &is_static) noex
 
     // If there are too few empty spaces left on the board for the player to win, then the best
     // score possible is a draw.
-    if (!node.pos.can_player_win()) {
+    if (beta > 0 && !node.pos.can_player_win()) {
         beta = std::min(beta, 0);
 
         if (alpha >= beta) {
@@ -330,36 +330,51 @@ int Search::static_search(Node &node, int alpha, int beta, bool &is_static) noex
 
     // If we do not have a forced move then this position cannot be statically evaluated.
     // Do a table lookup to see if we can tighten search bounds.
-    else if (node.pos.num_moves() < ENHANCED_TABLE_CUTOFF_PLIES) {
-        node.did_lookup = true;
-        node.hash = node.pos.hash(node.is_mirrored);
+    else {
+        // If the board has an even number of columns, see if the opponent could force a
+        // win by playing only on even cells.
+        if constexpr ((BOARD_HEIGHT & 1) == 0) {
+            if (beta >= 0 && (node.pos.num_moves() & 1) == 0) {
+                beta = std::min(beta, node.pos.upper_bound_from_evens_strategy());
 
-        // Check if this state has already been seen.
-        node.entry = table.get(node.hash);
-
-        switch (node.entry.get_type()) {
-            case NodeType::MISS:
-                break;
-
-            case NodeType::EXACT:
-                is_static = true;
-                return node.entry.get_score();
-
-            case NodeType::LOWER:
-                alpha = std::max(alpha, node.entry.get_score());
                 if (alpha >= beta) {
                     is_static = true;
-                    return node.entry.get_score();
+                    return beta;
                 }
-                break;
+            }
+        }
 
-            case NodeType::UPPER:
-                beta = std::min(beta, node.entry.get_score());
-                if (alpha >= beta) {
+        if (node.pos.num_moves() < ENHANCED_TABLE_CUTOFF_PLIES) {
+            node.did_lookup = true;
+            node.hash = node.pos.hash(node.is_mirrored);
+
+            // Check if this state has already been seen.
+            node.entry = table.get(node.hash);
+
+            switch (node.entry.get_type()) {
+                case NodeType::MISS:
+                    break;
+
+                case NodeType::EXACT:
                     is_static = true;
                     return node.entry.get_score();
-                }
-                return beta;
+
+                case NodeType::LOWER:
+                    alpha = std::max(alpha, node.entry.get_score());
+                    if (alpha >= beta) {
+                        is_static = true;
+                        return node.entry.get_score();
+                    }
+                    break;
+
+                case NodeType::UPPER:
+                    beta = std::min(beta, node.entry.get_score());
+                    if (alpha >= beta) {
+                        is_static = true;
+                        return node.entry.get_score();
+                    }
+                    return beta;
+            }
         }
     }
 
