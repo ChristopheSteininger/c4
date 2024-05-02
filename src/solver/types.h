@@ -6,13 +6,13 @@
 
 #include "settings.h"
 
-static constexpr bool use_128bit = (BOARD_HEIGHT + 1) * BOARD_WIDTH > 64;
+constexpr bool IS_128_BIT_BOARD = (BOARD_HEIGHT + 1) * BOARD_WIDTH > 64;
 
 #ifdef __SIZEOF_INT128__
 // A number wide enough to store one bit for each cell on the board and the column headers.
-using board = std::conditional_t<use_128bit, __uint128_t, uint64_t>;
+using board = std::conditional_t<IS_128_BIT_BOARD, __uint128_t, uint64_t>;
 #else
-static_assert(!use_128bit, "Board requires 128 bit support.");
+static_assert(!IS_128_BIT_BOARD, "Board requires 128 bit support.");
 
 using board = uint64_t;
 #endif

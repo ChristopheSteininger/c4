@@ -94,19 +94,29 @@ void Table::put(board hash, bool is_mirrored, int move, NodeType type, int score
     store(hash, Entry(hash, move, type, score, num_nodes));
 
     // Save significant results to the table file.
-    if constexpr (UPDATE_TABLE_FILE) {
-        if (num_nodes > MIN_NODES_FOR_TABLE_FILE) {
-            table_writer->add_line(std::to_string(hash) + ","
+    if (UPDATE_TABLE_FILE && num_nodes > MIN_NODES_FOR_TABLE_FILE) {
+        std::string line;
+        if constexpr (IS_128_BIT_BOARD) {
+            line = std::to_string(static_cast<uint64_t>(hash >> 64)) + ","
+                + std::to_string(static_cast<uint64_t>(hash)) + ","
                 + std::to_string(move) + ","
                 + std::to_string(static_cast<int>(type)) + ","
                 + std::to_string(score) + ","
-                + std::to_string(num_nodes));
+                + std::to_string(num_nodes);
+        } else {
+            line = std::to_string(static_cast<uint64_t>(hash)) + ","
+                + std::to_string(move) + ","
+                + std::to_string(static_cast<int>(type)) + ","
+                + std::to_string(score) + ","
+                + std::to_string(num_nodes);
         }
+
+        table_writer->add_line(line);
     }
 }
 
 void Table::load_table_file() {
-    if (!LOAD_TABLE_FILE) {
+    if constexpr (!LOAD_TABLE_FILE) {
         return;
     }
 
@@ -123,14 +133,26 @@ void Table::load_table_file() {
     std::cout << "Loading table " << path << " . . ." << std::endl;
 
     int num_entries = 0;
-    std::string hash_string, move_string, type_string, score_string, num_nodes_string;
-    while (std::getline(file, hash_string, ',')) {
+    std::string hash1_string, hash2_string, move_string, type_string, score_string, num_nodes_string;
+    while (std::getline(file, hash1_string, ',')) {
+        if constexpr (IS_128_BIT_BOARD) {
+            std::getline(file, hash2_string, ',');
+        }
+
         std::getline(file, move_string, ',');
         std::getline(file, type_string, ',');
         std::getline(file, score_string, ',');
         std::getline(file, num_nodes_string);
 
-        board hash = std::stoull(hash_string);
+        board hash;
+        if constexpr (IS_128_BIT_BOARD) {
+            board hash1 = static_cast<board>(std::stoull(hash1_string));
+            board hash2 = static_cast<board>(std::stoull(hash2_string));
+
+            hash = (hash1 << 64) | hash2;
+        } else {
+            hash = std::stoull(hash1_string);
+        }
 
         Entry entry(hash,
             std::stoi(move_string),
@@ -146,7 +168,7 @@ void Table::load_table_file() {
 }
 
 void Table::load_book_file() {
-    if (!LOAD_BOOK_FILE) {
+    if constexpr (!LOAD_BOOK_FILE) {
         return;
     }
 

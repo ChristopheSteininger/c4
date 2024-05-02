@@ -8,10 +8,16 @@
 #include <mutex>
 #include <string>
 
+#include "../settings.h"
+
 static inline constexpr int MAX_LINES_IN_BUFFER = 1000;
 static inline constexpr std::chrono::steady_clock::duration MAX_TIME_BETWEEN_WRITES = std::chrono::seconds(1);
 
 Writer::Writer(const std::filesystem::path &file_path) {
+    if constexpr (!UPDATE_TABLE_FILE) {
+        return;
+    }
+
     this->file_thread = std::thread(&Writer::save_to_file, this, file_path);
 }
 
@@ -27,6 +33,10 @@ Writer::~Writer() {
 }
 
 void Writer::add_line(const std::string &line) {
+    if constexpr (!UPDATE_TABLE_FILE) {
+        return;
+    }
+
     std::unique_lock<std::mutex> lock(mutex);
 
     lines_in_active_buffer++;
