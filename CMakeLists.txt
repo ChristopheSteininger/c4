@@ -53,7 +53,7 @@ else()
     
     if (MODE MATCHES "OPTIMISE")
         target_compile_definitions(solver PUBLIC NDEBUG)
-        target_compile_options(solver PUBLIC -Wall -O3 -flto=full)
+        target_compile_options(solver PUBLIC -Wall -O3 -flto)
         target_link_options(solver PUBLIC -flto=full)
     elseif(MODE MATCHES "DEBUG")
         target_compile_definitions(solver PUBLIC NO_COLOR_OUTPUT)
