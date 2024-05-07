@@ -34,7 +34,7 @@ Worker::~Worker() {
     is_exiting = true;
 
     lock.unlock();
-    cond.notify_all();
+    cond.notify_one();
 
     if (thread.joinable()) {
         thread.join();
@@ -66,8 +66,7 @@ void Worker::start(const Position &new_pos, int new_alpha, int new_beta, int new
     is_searching = true;
     search->start();
 
-    lock.unlock();
-    cond.notify_all();
+    cond.notify_one();
 }
 
 void Worker::wait() {
@@ -81,9 +80,7 @@ void Worker::wait() {
 }
 
 void Worker::stop() {
-    if (is_searching) {
-        search->stop();
-    }
+    search->stop();
 }
 
 void Worker::work() {
@@ -106,6 +103,6 @@ void Worker::work() {
             }
         }
 
-        cond.notify_all();
+        cond.notify_one();
     }
 }

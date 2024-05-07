@@ -19,8 +19,8 @@ class Progress {
     std::chrono::steady_clock::time_point search_start_time;
 
     std::mutex mutex;
-    volatile bool search_running{false};
-    volatile int min_num_moves;
+    bool search_running{false};
+    int min_num_moves;
 
     long long milliseconds_since_search_start() const;
 };
