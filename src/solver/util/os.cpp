@@ -2,13 +2,17 @@
 
 #include <iostream>
 
-#include "../settings.h"
-
-#ifdef _WIN32
+#if defined(_WIN32)
 #include <windows.h>
+#elif defined(__linux__)
+#include <sys/mman.h>
 #endif
 
-#ifdef _WIN32
+#include "../settings.h"
+
+#if defined(_WIN32)
+#define WINDOWS_HUGE_PAGES
+
 static void *windows_allocate_huge_pages(size_t count, size_t size) {
     size_t large_page_size = GetLargePageMinimum();
     if (!large_page_size) {
@@ -58,6 +62,20 @@ static void *windows_allocate_huge_pages(size_t count, size_t size) {
 
     return mem_with_huge_pages;
 }
+#elif defined(MADV_HUGEPAGE)
+#define UNIX_HUGE_PAGES
+
+static void *unix_allocate_huge_pages(size_t count, size_t size) {
+    constexpr size_t large_page_size = 2 * 1024 * 1024;
+
+    // Round up to the nearest large page size.
+    size_t allocate_size = (count * size + large_page_size - 1) & ~(large_page_size - 1);
+
+    void *memory = std::aligned_alloc(large_page_size, allocate_size);
+    madvise(memory, allocate_size, MADV_HUGEPAGE);
+
+    return memory;
+}
 #endif
 
 void *allocate_huge_pages(size_t count, size_t size) {
@@ -65,17 +83,20 @@ void *allocate_huge_pages(size_t count, size_t size) {
         return calloc(count, size);
     }
 
-#ifdef _WIN32
+#if defined(WINDOWS_HUGE_PAGES)
     void *mem_with_huge_pages = windows_allocate_huge_pages(count, size);
+#elif defined(UNIX_HUGE_PAGES)
+    void *mem_with_huge_pages = unix_allocate_huge_pages(count, size);
+#else
+    std::cerr << "Error huge pages requested but not implemented." << std::endl;
+    void *mem_with_huge_pages = nullptr;
+#endif
+
     if (!mem_with_huge_pages) {
         return calloc(count, size);
     }
 
     return mem_with_huge_pages;
-#else
-    std::cerr << "Error huge pages requested but not implemented." << std::endl;
-    return calloc(count, size);
-#endif
 }
 
 void free_huge_pages(void *memory) {
