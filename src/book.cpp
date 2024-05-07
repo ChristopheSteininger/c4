@@ -61,9 +61,15 @@ static void work(Solver &root_solver, std::mutex &mutex, int &position_index, in
             lock.lock();
 
             solved_positions++;
-
-            file << hash << "," << move << "," << score << std::endl << std::flush;
             std::cout << "\rSolved " << solved_positions << " positions.";
+
+            // Save the solved position to disk.
+            if constexpr (IS_128_BIT_BOARD) {
+                file << static_cast<uint64_t>(hash >> 64) << "," << static_cast<uint64_t>(hash);
+            } else {
+                file << static_cast<uint64_t>(hash);
+            }
+            file << "," << move << "," << score << std::endl;
         }
 
         position_index++;
