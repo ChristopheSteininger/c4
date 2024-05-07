@@ -22,7 +22,7 @@ finding the exact move on which the game will end assuming perfect play.
 | Width &rarr; <br> Height &darr; |    4 |    5 |                   6 |                   7 |                   8 |                   9 |                  10 |                  11 |                  12 |
 | ------------------------------- | ---- | ---- | ------------------- | ------------------- | ------------------- | ------------------- | ------------------- | ------------------- | ------------------- |
 |                           **4** | Draw | Draw | 2<sup>nd</sup> (24) |                Draw | 2<sup>nd</sup> (32) | 2<sup>nd</sup> (36) | 2<sup>nd</sup> (40) | 2<sup>nd</sup> (44) | 2<sup>nd</sup> (48) |
-|                           **5** | Draw | Draw |                Draw |                Draw | 1<sup>st</sup> (39) | 1<sup>st</sup> (41) | 1<sup>st</sup> (47) |
+|                           **5** | Draw | Draw |                Draw |                Draw | 1<sup>st</sup> (39) | 1<sup>st</sup> (41) | 1<sup>st</sup> (47) | 1<sup>st</sup> (51) |
 |                           **6** | Draw | Draw | 2<sup>nd</sup> (36) | 1<sup>st</sup> (41) | 2<sup>nd</sup> (48) | 2<sup>nd</sup> (52)
 |                           **7** | Draw | Draw | 1<sup>st</sup> (41) |                Draw | 1<sup>st</sup> (53) |
 |                           **8** | Draw | Draw | 2<sup>nd</sup> (48) | 1<sup>st</sup> (55) |
