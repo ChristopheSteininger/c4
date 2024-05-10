@@ -27,7 +27,7 @@ inline constexpr bool ENABLE_AFFINITY = false;
 
 // At depths higher than this value, the search will do a transposition table
 // lookup for each child in hope of tightening bounds or finding a cut off.
-inline constexpr int ENHANCED_TABLE_CUTOFF_PLIES = BOARD_WIDTH * BOARD_HEIGHT - 12;
+inline constexpr int ENHANCED_TABLE_CUTOFF_PLIES = BOARD_WIDTH * BOARD_HEIGHT - 15;
 
 // Determines how much noise to add to move scores near the root of the search tree. This noise helps
 // threads to desync. Increase jitter with number of threads.
