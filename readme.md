@@ -5,7 +5,7 @@ Connect 4 on a 7x6 board was first
 James D. Allen and Victor Allis. John Tromp solved the game for all board sizes where
 width + height $\leq$ 15 in 2006, and solved the 8x8 case in 2015.
 
-I decided to extend these results by solving the game on larger board sizes, and by
+I've extended these results by solving the game on larger board sizes, and by
 finding the exact move on which the game will end assuming perfect play.
 
  ## Results
