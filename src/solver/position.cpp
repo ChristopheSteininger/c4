@@ -360,7 +360,7 @@ int Position::upper_bound_from_evens_strategy() const noexcept {
     board opponent_evens = b1 | (EVEN_CELLS & ~b0 & ~valid_moves);
     board player_odds = VALID_CELLS & ~opponent_evens;
 
-    if (has_won_in_direction<Direction::VERTICAL>(player_odds) != 0) {
+    if (has_won_in_direction<Direction::VERTICAL>(player_odds)) {
         return MAX_SCORE;
     }
 
@@ -376,20 +376,44 @@ int Position::upper_bound_from_evens_strategy() const noexcept {
 
     // If the current player could win horizontally below the opponent's
     // horizontal even threat, then the evens strategy will not work.
-    if (player_hori & (opponent_hori - BELOW_COLUMNS)) {
-        return MAX_SCORE;
-    }
-
     // Repeat the same check for the two diagonal directions.
-    if (player_neg_diag & (opponent_neg_diag - BELOW_COLUMNS)) {
+    if ((player_hori & (opponent_hori - BELOW_COLUMNS))
+            || (player_neg_diag & (opponent_neg_diag - BELOW_COLUMNS))
+            || (player_pos_diag & (opponent_pos_diag - BELOW_COLUMNS))) {
         return MAX_SCORE;
     }
 
-    if (player_pos_diag & (opponent_pos_diag - BELOW_COLUMNS)) {
-        return MAX_SCORE;
+    // If neither player can win with this strategy, then the best outcome for the current
+    // player is a draw.
+    if (!opponent_hori && !opponent_neg_diag && !opponent_pos_diag) {
+        return 0;
     }
 
-    return (opponent_hori | opponent_neg_diag | opponent_pos_diag) ? -1 : 0;
+    // If second player can win by taking even squares, find the last move on which the second
+    // player could win horizontally.
+    if (opponent_hori) {
+        for (int row = BOARD_HEIGHT / 2; row > 1; row--) {
+            if (opponent_hori & (COLUMN_HEADERS >> (2 * row - 1))) {
+                return -row;
+            }
+        }
+    }
+
+    // If the second player cannot win horizontally, find the last move on which the second
+    // player could win diagonally.
+    else {
+        board diag_losses = ~(b0 | b1)
+            & (find_winning_stones_in_direction<Direction::POSITIVE_DIAGONAL>(opponent_evens)
+            | find_winning_stones_in_direction<Direction::NEGATIVE_DIAGONAL>(opponent_evens));
+
+        for (int row = 1; row <= BOARD_HEIGHT / 2; row++) {
+            if (diag_losses & (COLUMN_HEADERS >> (2 * row - 1))) {
+                return -row;
+            }
+        }
+    }
+
+    return -1;
 }
 
 bool Position::is_move_valid(int col) const noexcept {

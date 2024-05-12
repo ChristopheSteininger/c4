@@ -325,16 +325,14 @@ int Search::static_search(Node &node, int alpha, int beta, bool &is_static) noex
         return INF_SCORE;
     }
 
-    // If the board has an even number of columns, see if the opponent could force a
+    // If the board has an even number of rows, see if the opponent could force a
     // win by playing only on even cells.
-    if constexpr ((BOARD_HEIGHT & 1) == 0) {
-        if (beta >= 0 && (node.pos.num_moves() & 1) == 0) {
-            beta = std::min(beta, node.pos.upper_bound_from_evens_strategy());
+    if ((BOARD_HEIGHT & 1) == 0 && (node.pos.num_moves() & 1) == 0) {
+        beta = std::min(beta, node.pos.upper_bound_from_evens_strategy());
 
-            if (alpha >= beta) {
-                is_static = true;
-                return beta;
-            }
+        if (alpha >= beta) {
+            is_static = true;
+            return beta;
         }
     }
 
