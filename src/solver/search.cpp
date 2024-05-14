@@ -279,7 +279,7 @@ int Search::negamax(Node &node, int alpha, int beta, int score_jitter) noexcept 
     }
 
     // Possibly print a progress message for long running searches.
-    progress->completed_node(id, node.pos.num_moves());
+    progress->completed_node(node.pos.num_moves());
 
     return value;
 }

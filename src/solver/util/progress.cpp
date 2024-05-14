@@ -14,31 +14,45 @@ void Progress::started_search(int alpha, int beta, std::chrono::steady_clock::ti
 
     search_start_time = new_search_start_time;
     min_num_moves = BOARD_WIDTH * BOARD_HEIGHT;
+    num_positions_at_min = 0;
 
     if (print_progress_enabled) {
         std::cout << "Searching in range [" << alpha << ", " << beta << "] . . ." << std::endl;
     }
 }
 
-void Progress::completed_node(int id, int num_moves) {
-    if (num_moves >= min_num_moves || !search_running) {
+void Progress::completed_node(int num_moves) {
+    if (num_moves > min_num_moves || !search_running) {
         return;
     }
 
     std::unique_lock<std::mutex> lock(mutex);
     
-    // Check again now that we have the lock if this thread was the first to solve a new depth.
-    if (num_moves >= min_num_moves || !search_running) {
+    // Check again now that we have the lock if this thread improved or matched the min depth.
+    if (num_moves > min_num_moves || !search_running) {
         return;
     }
 
-    min_num_moves = num_moves;
-    long long run_time_ms = milliseconds_since_search_start();
+    if (num_moves < min_num_moves) {
+        min_num_moves = num_moves;
+        num_positions_at_min = 1;
+    } else {
+        num_positions_at_min++;
+    }
 
+    // Only print an update if console output enabled, and enough time has passed to solve all trival positions.
+    long long run_time_ms = milliseconds_since_search_start();
     if (print_progress_enabled && run_time_ms > 1000) {
+        if (num_positions_at_min == 1) {
+            std::cout << std::endl;
+        } else {
+            std::cout << "\r";
+        }
+
         std::cout << std::fixed << std::setprecision(2)
-                  << "  Thread " << id << " solved a position with " << num_moves
-                  << " moves after " << (run_time_ms / 1000.0) << " s." << std::endl;
+                  << "  Solved " << num_positions_at_min << " positions with " << num_moves
+                  << " moves after " << (run_time_ms / 1000.0) << " s."
+                  << std::flush;
     }
 }
 
@@ -50,6 +64,7 @@ void Progress::completed_search(int score, const Stats &stats) {
 
     if (print_progress_enabled) {
         std::cout << std::fixed << std::setprecision(2)
+                  << std::endl
                   << "Search took " << (stats.get_search_time_ms() / 1000.0) << " s and explored "
                   << stats.get_num_nodes() << " nodes (" << stats.get_nodes_per_ms() << " nodes per ms)." << std::endl
                   << "Score is " << score << "." << std::endl
