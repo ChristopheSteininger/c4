@@ -9,12 +9,22 @@
 
 static constexpr int INF_SCORE = 10000;
 
-static NodeType get_node_type(int value, int alpha, int beta) {
+static NodeType get_node_type(int value, int alpha, int beta, Entry entry) {
     if (value <= alpha) {
+        // Change bound type to exact if we know value <= true score <= value.
+        if (entry.get_type() == NodeType::LOWER && value == entry.get_score()) {
+            return NodeType::EXACT;
+        }
+
         return NodeType::UPPER;
     }
 
     if (value >= beta) {
+        // Similar check to switch to exact bound.
+        if (entry.get_type() == NodeType::UPPER && value == entry.get_score()) {
+            return NodeType::EXACT;
+        }
+
         return NodeType::LOWER;
     }
 
@@ -255,7 +265,7 @@ int Search::negamax(Node &node, int alpha, int beta, int score_jitter) noexcept 
     assert(value > -INF_SCORE);
 
     // Store the result in the transposition table.
-    NodeType type = get_node_type(value, original_alpha, original_beta);
+    NodeType type = get_node_type(value, original_alpha, original_beta, node.entry);
     unsigned long long num_child_nodes = stats->get_num_nodes() - prev_num_nodes;
     table.put(node.hash, node.is_mirrored, best_move_col, type, value, num_child_nodes);
 

@@ -214,6 +214,11 @@ void Table::store(board hash, Entry entry) noexcept {
         stats->store_new_entry();
     } else if (current.is_equal(hash)) {
         stats->store_rewrite();
+
+        // If the position is already stored as an exact entry, then there is no more information we could add.
+        if (current.get_type() == NodeType::EXACT) {
+            return;
+        }
     } else {
         stats->store_overwrite();
     }
