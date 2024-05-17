@@ -57,7 +57,7 @@ static void print_game(const Position &pos, int moves[], int score) {
     std::cout << "\33[2K\r";
 
     for (int i = 0; i < pos.num_moves(); i++) {
-        std::cout << (1 + moves[i]);
+        std::cout << moves[i];
     }
 
     std::cout << " " << score << std::endl;
