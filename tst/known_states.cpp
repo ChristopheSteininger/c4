@@ -44,7 +44,7 @@ struct test_data read_line(std::string &line) {
     // Reconstruct the board.
     int i = 0;
     for (; line.at(i) != ' '; i++) {
-        pos.move(line.at(i) - '1');
+        pos.move(line.at(i) - '0');
     }
 
     int expected = std::stoi(line.substr(i));
