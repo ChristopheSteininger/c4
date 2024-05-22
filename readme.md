@@ -29,7 +29,7 @@ I've extended these results by solving the game on all board sizes where width +
 |                           **9** | Draw | Draw | 1<sup>st</sup> (53) |                Draw |
 |                          **10** | Draw | Draw | 2<sup>nd</sup> (60) |
 |                          **11** | Draw | Draw |
-|                          **12** | Draw |
+|                          **12** | Draw | Draw |
 |                          **13** | Draw |
 
 ## Credits
