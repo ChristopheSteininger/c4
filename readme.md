@@ -5,10 +5,13 @@ Connect 4 on a 7x6 board was first
 James D. Allen and Victor Allis. John Tromp solved the game for all board sizes where
 width + height $\leq$ 15 in 2006, and solved the 8x8 case in 2015.
 
-I've extended these results by solving the game on all board sizes where width + height
-= 16, and by finding the exact move on which the game will end assuming perfect play.
+I've extended these results by solving the game on all board sizes where $w$ + $h$
+= 16, as well as some board sizes where $w$ + $h$ = 17.
 
- ## Results
+The results below also give the exact move on which the game will end assuming perfect
+play for each board size, which was not known before to the best of my knowledge.
+
+## Results
 
  The table below shows the outcome of a game of Connect 4 if both players play
  perfectly on different board sizes. An entry such as "1<sup>st</sup> (53)"
@@ -28,7 +31,7 @@ I've extended these results by solving the game on all board sizes where width +
 |                           **8** | Draw | Draw | 2<sup>nd</sup> (48) | 1<sup>st</sup> (55) | 2<sup>nd</sup> (62)
 |                           **9** | Draw | Draw | 1<sup>st</sup> (53) |                Draw |
 |                          **10** | Draw | Draw | 2<sup>nd</sup> (60) |
-|                          **11** | Draw | Draw |
+|                          **11** | Draw | Draw | 1<sup>st</sup> (63) |
 |                          **12** | Draw | Draw |
 |                          **13** | Draw |
 
