@@ -6,10 +6,10 @@ James D. Allen and Victor Allis. John Tromp solved the game for all board sizes 
 width + height $\leq$ 15 in 2006, and solved the 8x8 case in 2015.
 
 I've extended these results by solving the game on all board sizes where $w$ + $h$
-= 16, as well as some board sizes where $w$ + $h$ = 17.
+= 16, as well as some board sizes where $w$ + $h$ $\geq$ 17.
 
-The results below also give the exact move on which the game will end assuming perfect
-play for each board size, which was not known before to the best of my knowledge.
+The results below include the exact number of moves until the end of the game assuming
+perfect play for each board size, which was not previously known to the best of my knowledge.
 
 ## Results
 
@@ -32,7 +32,7 @@ play for each board size, which was not known before to the best of my knowledge
 |                           **9** | Draw | Draw | 1<sup>st</sup> (53) |                Draw |
 |                          **10** | Draw | Draw | 2<sup>nd</sup> (60) |
 |                          **11** | Draw | Draw | 1<sup>st</sup> (63) |
-|                          **12** | Draw | Draw |
+|                          **12** | Draw | Draw | 2<sup>nd</sup> (72) |
 |                          **13** | Draw |
 
 ## Credits
