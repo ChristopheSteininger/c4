@@ -35,8 +35,32 @@ perfect play for each board size, which was not previously known to the best of 
 |                          **12** | Draw | Draw | 2<sup>nd</sup> (72) |
 |                          **13** | Draw | Draw |
 
+## Building
+
+Build using CMake. Run these commands in the root dir to compile and solve
+Connect 4 on the standard 7x6 board:
+
+```
+$ cmake --preset optimise
+$ cmake --build --preset optimise
+$ out/optimise/c4
+```
+
+On Windows, the repo can be imported as a Visual Studio CMake project.
+
+Compiling will generate five executables:
+1. **c4**: Solves a single position then prints the result and search statistics.
+2. **play**: Interactive program to play against the solver.
+3. **test**: Runs unit tests, then tests and benchmarks the solver using positions
+with independently verified scores.
+4. **book**: Generates an opening book by solving all positions up to a set depth.
+5. **random**: Generates random games for testing and benchmarking.
+
+Adjust the values in [src/solver/settings.h](./src/solver/settings.h) to set the
+size of the board, number of threads, memory usage, and more.
+
 ## Credits
 
 This solver expands on the work of two others:
 * [John Tromp](https://tromp.github.io/c4/c4.html)
-* [Pascal Pons](http://blog.gamesolver.org/solving-connect-four/01-introduction/)
+* [Pascal Pons](https://github.com/PascalPons/connect4)
