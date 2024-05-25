@@ -33,8 +33,6 @@ static_assert(MAX_MOVES <= 1 + BOARD_WIDTH * BOARD_HEIGHT - MIN_MOVES_LEFT);
 static std::mt19937 engine{0};
 static std::uniform_int_distribution<uint16_t> dist{};
 
-static Solver solver{};
-
 
 static bool sanity_test(const Position& pos, int score) {
     if (pos.num_moves() < MIN_MOVES || pos.num_moves() >= MAX_MOVES) {
@@ -63,7 +61,7 @@ static void print_game(const Position &pos, int moves[], int score) {
     std::cout << " " << score << std::endl;
 }
 
-static bool is_game_over_in_n_moves(const Position &pos, int min_moves, int max_moves) {
+static bool is_game_over_in_n_moves(Solver &solver, const Position &pos, int min_moves, int max_moves) {
     int min_move_score = pos.score_win(min_moves);
     int max_move_score = pos.score_win(max_moves);
 
@@ -85,7 +83,7 @@ static bool is_game_over_in_n_moves(const Position &pos, int min_moves, int max_
     return (-min_move_score < loss_score && loss_score < -max_move_score);
 }
 
-static int get_random_move(Position &pos) {
+static int get_random_move(Solver &solver, Position &pos) {
     int possible_moves[BOARD_WIDTH];
     int num_valid_moves = 0;
     
@@ -96,7 +94,7 @@ static int get_random_move(Position &pos) {
             // Do not play any move where we can force a win in the next turn.
             // Similarly, do not play any move where the opponent can force a win
             // in one turn.
-            if (!is_game_over_in_n_moves(pos, 0, 2)) {
+            if (!is_game_over_in_n_moves(solver, pos, 0, 2)) {
                 possible_moves[num_valid_moves] = i;
                 num_valid_moves++;
             }
@@ -113,13 +111,13 @@ static int get_random_move(Position &pos) {
     return possible_moves[move_index];
 }
 
-static bool try_random_game(int num_moves, int remaining_moves[]) {
+static bool try_random_game(Solver &solver, int num_moves, int remaining_moves[]) {
     Position pos{};
     int moves[BOARD_WIDTH * BOARD_HEIGHT];
 
     for (int i = 0; i < num_moves; i++) {
-        int move = get_random_move(pos);
-        
+        int move = get_random_move(solver, pos);
+
         // Cannot keep playing if we could not find a move to play.
         if (move == -1) {
             return false;
@@ -130,7 +128,7 @@ static bool try_random_game(int num_moves, int remaining_moves[]) {
     }
 
     // Check that the game has the right level of complexity.
-    if (is_game_over_in_n_moves(pos, MIN_MOVES_LEFT, MAX_MOVES_LEFT - 1)) {
+    if (is_game_over_in_n_moves(solver, pos, MIN_MOVES_LEFT, MAX_MOVES_LEFT - 1)) {
         int score = solver.solve_strong(pos);
 
         if (sanity_test(pos, score)) {
@@ -146,19 +144,21 @@ static bool try_random_game(int num_moves, int remaining_moves[]) {
 
 int main() {
     std::cout.imbue(std::locale(""));
-    std::cout << solver.get_settings_string()
+
+    Solver solver{};
+    int game_lengths[BOARD_WIDTH * BOARD_HEIGHT]{};
+    int remaining_moves[BOARD_WIDTH * BOARD_HEIGHT]{};
+
+    std::cout << Solver::get_settings_string()
               << std::endl
               << "Searching for games with " << MIN_MOVES << " <= moves played < " << MAX_MOVES << ", and "
               << MIN_MOVES_LEFT << " <= moves left < " << MAX_MOVES_LEFT << "." << std::endl
               << "Generating " << NUM_GAMES << " random games:" << std::endl;
 
-    int game_lengths[BOARD_WIDTH * BOARD_HEIGHT]{};
-    int remaining_moves[BOARD_WIDTH * BOARD_HEIGHT]{};
-
     for (int i = 0; i < NUM_GAMES; i++) {
         int num_moves = (dist(engine) % (MAX_MOVES - MIN_MOVES)) + MIN_MOVES;
         
-        for (int j = 0; !try_random_game(num_moves, remaining_moves); j++) {
+        for (int j = 0; !try_random_game(solver, num_moves, remaining_moves); j++) {
             std::cout << "\rGenerating game #" << (i + 1) << " with " << num_moves << " moves. Attempt #" << (j + 1);
         }
 

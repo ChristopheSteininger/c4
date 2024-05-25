@@ -55,8 +55,8 @@ static std::string pretty_print_score(const Position &pos, int score) {
 int main() {
     std::cout.imbue(std::locale(""));
 
-    Position pos;
-    Solver solver;
+    Position pos{};
+    Solver solver{};
 
     std::cout << Solver::get_settings_string()
               << (SOLVE_STRONGLY ? "Strongly" : "Weakly") << " solving:" << std::endl

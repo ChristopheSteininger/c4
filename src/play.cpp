@@ -118,6 +118,8 @@ static void print_result(const Position &pos) {
 }
 
 int main() {
+    std::cout.imbue(std::locale(""));
+
     Position pos{};
     Solver solver{};
 

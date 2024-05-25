@@ -38,7 +38,7 @@ perfect play for each board size, which was not previously known to the best of 
 ## Building
 
 Build using CMake. Run these commands in the root dir to compile and solve
-Connect 4 on the standard 7x6 board:
+Connect 4 on the standard 7x6 board. This should only take a few seconds.
 
 ```
 $ cmake --preset optimise
