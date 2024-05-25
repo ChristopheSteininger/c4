@@ -1,3 +1,5 @@
+#include "test_position.h"
+
 #include <cstdlib>
 #include <iostream>
 
@@ -491,7 +493,7 @@ static bool test_find_dead_stones_returns_subset_of_dead_stones_on_random_games(
 //     return 0;
 // }
 
-bool all_board_tests() {
+bool all_position_tests() {
     run_test(test_has_won_with_vertical());
     run_test(test_has_won_with_horizontal());
     run_test(test_has_won_with_positive_diagonal());

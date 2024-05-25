@@ -4,7 +4,7 @@
 #include "../src/solver/settings.h"
 #include "../src/solver/solver.h"
 #include "known_states.h"
-#include "test_board.h"
+#include "test_position.h"
 #include "test_table.h"
 #include "unit_test.h"
 
@@ -17,7 +17,7 @@ static bool all_tests_successful(bool light_mode) {
     }
 
     std::cout << "Running unit tests . . ." << std::endl;
-    run_test(all_board_tests());
+    run_test(all_position_tests());
     run_test(all_table_tests());
 
     // Test against states with known scores.
