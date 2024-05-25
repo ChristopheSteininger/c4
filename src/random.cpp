@@ -20,7 +20,7 @@ static inline constexpr int MAX_MOVES_LEFT = 14;
 
 // Range of moves play in each generated game. Min is inclusive, max is exclusive.
 static inline constexpr int MIN_MOVES = 6;
-static inline constexpr int MAX_MOVES = 15;
+static inline constexpr int MAX_MOVES = 14;
 
 
 static_assert(MIN_MOVES_LEFT < MAX_MOVES_LEFT);

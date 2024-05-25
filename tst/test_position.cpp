@@ -63,10 +63,11 @@ static bool test_has_won_with_horizontal() {
     Position pos2{};
 
     // Player 1; Player 2
-    pos2.move(0); pos2.move(BOARD_WIDTH - 1);
-    pos2.move(BOARD_WIDTH - 1); pos2.move(BOARD_WIDTH - 2);
-    pos2.move(BOARD_WIDTH - 2); pos2.move(BOARD_WIDTH - 3);
-    pos2.move(BOARD_WIDTH - 3); pos2.move(BOARD_WIDTH - 4);
+    pos2.move(0); pos2.move(0);
+    pos2.move(1); pos2.move(1);
+    pos2.move(2); pos2.move(2);
+    pos2.move(0); pos2.move(3);
+    pos2.move(0); pos2.move(3);
 
     expect_true("no first row win for player 1", !pos2.has_player_won());
     expect_true("first row win for player 2", pos2.has_opponent_won());
@@ -174,7 +175,7 @@ static bool test_find_threats_on_games_with_horizontal_threat() {
     pos1.move(2); pos1.move(2);
 
     expect_true("Player 1 has a horizontal threat to the right", pos1.find_player_threats() == set_bit(3, 0));
-    expect_true("Player 2 has no horizontal threat", pos1.find_opponent_threats() == set_bit(3, 1));
+    expect_true("Player 2 has a horizontal threat to the right", pos1.find_opponent_threats() == set_bit(3, 1));
 
     Position pos2{};
 
@@ -184,8 +185,14 @@ static bool test_find_threats_on_games_with_horizontal_threat() {
     pos2.move(2); pos2.move(2);
     pos2.move(3); pos2.move(3);
 
-    expect_true("Player 1 has a double horizontal threat", pos2.find_player_threats() == (set_bit(0, 0) | set_bit(4, 0)));
-    expect_true("Player 2 has no horizontal threat", pos2.find_opponent_threats() == (set_bit(0, 1) | set_bit(4, 1)));
+    // Double horizontal threats cannot exist on 4 wide boards.
+    if constexpr (BOARD_WIDTH == 4) {
+        expect_true("Player 1 has a horizontal threat", pos2.find_player_threats() == set_bit(0, 0));
+        expect_true("Player 2 has a horizontal threat", pos2.find_opponent_threats() == set_bit(0, 1));
+    } else {
+        expect_true("Player 1 has a double horizontal threat", pos2.find_player_threats() == (set_bit(0, 0) | set_bit(4, 0)));
+        expect_true("Player 2 has a double horizontal threat", pos2.find_opponent_threats() == (set_bit(0, 1) | set_bit(4, 1)));
+    }
 
     Position pos3{};
 
@@ -195,9 +202,8 @@ static bool test_find_threats_on_games_with_horizontal_threat() {
     pos3.move(BOARD_WIDTH - 2); pos3.move(BOARD_WIDTH - 2);
     pos3.move(BOARD_WIDTH - 1); pos3.move(BOARD_WIDTH - 1);
 
-    expect_true("Player 1 has a horizontal threat to the left",
-              pos3.find_player_threats() == set_bit(BOARD_WIDTH - 4, 0));
-    expect_true("Player 2 has no horizontal threat", pos3.find_opponent_threats() == set_bit(BOARD_WIDTH - 4, 1));
+    expect_true("Player 1 has a horizontal threat to the left", pos3.find_player_threats() == set_bit(BOARD_WIDTH - 4, 0));
+    expect_true("Player 2 has a horizontal threat to the left", pos3.find_opponent_threats() == set_bit(BOARD_WIDTH - 4, 1));
 
     Position pos4{};
 
@@ -207,8 +213,8 @@ static bool test_find_threats_on_games_with_horizontal_threat() {
     pos4.move(2); pos4.move(2);
     pos4.move(3); pos4.move(3);
 
-    expect_true("Player 1 has a horizontal threat to the left middle", pos4.find_player_threats() == set_bit(1, 0));
-    expect_true("Player 2 has no horizontal threat", pos4.find_opponent_threats() == set_bit(1, 1));
+    expect_true("Player 1 has a horizontal threat on the left middle", pos4.find_player_threats() == set_bit(1, 0));
+    expect_true("Player 2 has a horizontal threat on the left middle", pos4.find_opponent_threats() == set_bit(1, 1));
 
     Position pos5{};
 
@@ -218,8 +224,8 @@ static bool test_find_threats_on_games_with_horizontal_threat() {
     pos5.move(1); pos5.move(1);
     pos5.move(3); pos5.move(3);
 
-    expect_true("Player 1 has a horizontal threat to the left middle", pos5.find_player_threats() == set_bit(2, 0));
-    expect_true("Player 2 has no horizontal threat", pos5.find_opponent_threats() == set_bit(2, 1));
+    expect_true("Player 1 has a horizontal threat to the right middle", pos5.find_player_threats() == set_bit(2, 0));
+    expect_true("Player 2 has a horizontal threat on the right middle", pos5.find_opponent_threats() == set_bit(2, 1));
 
     return true;
 }
@@ -248,8 +254,13 @@ static bool test_find_threats_on_games_with_positive_diagonal_threat() {
     pos2.move(2); pos2.move(3);
     pos2.move(3);
 
-    expect_true("Player 1 has a positive diagonal threat for the lowest stone",
-              pos2.find_opponent_threats() == (set_bit(0, 0) | set_bit(4, 4)));
+    if constexpr (BOARD_WIDTH > 4 && BOARD_HEIGHT > 4) {
+        expect_true("Player 1 has a positive double diagonal threat",
+                pos2.find_opponent_threats() == (set_bit(0, 0) | set_bit(4, 4)));
+    } else {
+        expect_true("Player 1 has a positive diagonal threat for the lowest stone",
+                pos2.find_opponent_threats() == set_bit(0, 0));
+    }
     expect_true("Player 2 has no positive diagonal threat", pos2.find_player_threats() == 0);
 
     Position pos4{};
@@ -285,13 +296,12 @@ static bool test_find_threats_on_games_with_positive_diagonal_threat() {
 
     // Test a threat blocked by the left edge of the board
     // Player 1 ; Player 2
-    pos6.move(2); pos6.move(0);
     pos6.move(0); pos6.move(1);
-    pos6.move(1); pos6.move(2);
-    pos6.move(1); pos6.move(2);
+    pos6.move(2); pos6.move(2);
+    pos6.move(1); pos6.move(3);
     pos6.move(2);
 
-    expect_true("Player 1 has no positive diagonal threat", pos6.find_opponent_threats() == set_bit(3, 4));
+    expect_true("Player 1 has no positive diagonal threat", pos6.find_opponent_threats() == set_bit(3, 3));
     expect_true("Player 2 has no positive diagonal threat", pos6.find_player_threats() == 0);
 
     return true;
@@ -358,14 +368,13 @@ static bool test_find_threats_on_games_with_negative_diagonal_threat() {
 
     // // Test a threat blocked by the right edge of the board
     // Player 1               ; Player 2
-    pos5.move(BOARD_WIDTH - 3); pos5.move(BOARD_WIDTH - 1);
     pos5.move(BOARD_WIDTH - 1); pos5.move(BOARD_WIDTH - 2);
-    pos5.move(BOARD_WIDTH - 3); pos5.move(BOARD_WIDTH - 2);
-    pos5.move(BOARD_WIDTH - 2); pos5.move(BOARD_WIDTH - 3);
+    pos5.move(BOARD_WIDTH - 3); pos5.move(BOARD_WIDTH - 3);
+    pos5.move(BOARD_WIDTH - 2); pos5.move(BOARD_WIDTH - 4);
     pos5.move(BOARD_WIDTH - 3);
 
-    expect_true("Player 1 has no negative diagonal threat", pos5.find_opponent_threats() == set_bit(BOARD_WIDTH - 4, 4));
-    expect_true("Player 2 has no negative diagonal threat", pos5.find_player_threats() == set_bit(BOARD_WIDTH - 4, 3));
+    expect_true("Player 1 has a negative diagonal threat", pos5.find_opponent_threats() == set_bit(BOARD_WIDTH - 4, 3));
+    expect_true("Player 2 has no negative diagonal threat", pos5.find_player_threats() == 0);
 
     return true;
 }

@@ -242,7 +242,7 @@ bool all_known_states_tests(bool light_mode) {
     if (!fs::is_directory(test_dir)) {
         std::cout << "Could not find a directory with test data for this board size: '"
             << test_dir << "'." << std::endl;
-        return 0;
+        return true;
     }
 
     // clang-format off
