@@ -12,16 +12,18 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 #   * DEBUG    - runs with assertions and debug symbols enabled.
 set(MODE "OPTIMISE" CACHE STRING "Goal for the project build: OPTIMISE, DEBUG")
 
-# Setup targets
+# Find source files.
 file(GLOB_RECURSE SRCS "${CMAKE_SOURCE_DIR}/src/solver/*.cpp")
 file(GLOB_RECURSE TSTS "${CMAKE_SOURCE_DIR}/tst/*.cpp")
 
+# Setup targets.
 add_executable(book "${CMAKE_SOURCE_DIR}/src/book.cpp")
 add_executable(c4 "${CMAKE_SOURCE_DIR}/src/c4.cpp")
 add_executable(play "${CMAKE_SOURCE_DIR}/src/play.cpp")
 add_executable(random "${CMAKE_SOURCE_DIR}/src/random.cpp")
 add_executable(test ${TSTS})
 
+# All executables need to be linked with the solver lib.
 add_library(solver OBJECT ${SRCS})
 target_link_libraries(book PRIVATE solver)
 target_link_libraries(c4 PRIVATE solver)

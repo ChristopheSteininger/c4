@@ -11,7 +11,7 @@
 #include "../src/solver/settings.h"
 #include "../src/solver/solver.h"
 #include "../src/solver/table.h"
-#include "minunit.h"
+#include "unit_test.h"
 
 namespace fs = std::filesystem;
 
@@ -142,7 +142,7 @@ bool self_play_test(Solver &solver, struct test_data test_data) {
     return true;
 }
 
-bool run_test(Solver &solver, struct test_data test_data, TestType type) {
+bool test_with_position(Solver &solver, struct test_data test_data, TestType type) {
     switch (type) {
         case WEAK:
             return weak_test(solver, test_data);
@@ -210,7 +210,7 @@ bool test_with_file(const fs::path &file, TestType type, Solver &solver) {
 
         // Run the test.
         auto start_time = std::chrono::steady_clock::now();
-        bool result = run_test(solver, test_data, type);
+        bool result = test_with_position(solver, test_data, type);
         total_run_time += std::chrono::steady_clock::now() - start_time;
 
         num_tests++;
@@ -234,7 +234,7 @@ bool test_with_file(const fs::path &file, TestType type, Solver &solver) {
     return true;
 }
 
-const char *all_known_states_tests(bool light_mode) {
+bool all_known_states_tests(bool light_mode) {
     std::string dir_name = std::to_string(BOARD_WIDTH) + "x" + std::to_string(BOARD_HEIGHT);
     fs::path test_dir = fs::path("tst") / "data" / dir_name;
 
@@ -246,8 +246,6 @@ const char *all_known_states_tests(bool light_mode) {
     }
 
     // clang-format off
-    std::cout.imbue(std::locale(""));
-    std::cout << "Running known state tests . . ." << std::endl;
     std::cout << '\t' << std::left << std::setw(35) << "Test"
               << std::setw(10) << "Type"
               << std::right << std::setw(15) << "Mean nodes"
@@ -271,12 +269,12 @@ const char *all_known_states_tests(bool light_mode) {
 
     Solver solver{};
     for (fs::path file : test_files) {
-        mu_assert("Known state test failed.", test_with_file(file, WEAK, solver));
-        mu_assert("Known state test failed.", test_with_file(file, STRONG, solver));
-        mu_assert("Known state test failed.", test_with_file(file, SELF_PLAY, solver));
+        expect_true("Known state test failed in weak mode", test_with_file(file, WEAK, solver));
+        expect_true("Known state test failed in strong mode", test_with_file(file, STRONG, solver));
+        expect_true("Known state test failed in self play mode", test_with_file(file, SELF_PLAY, solver));
 
         std::cout << std::endl;
     }
 
-    return 0;
+    return true;
 }
