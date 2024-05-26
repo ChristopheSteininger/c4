@@ -38,7 +38,8 @@ perfect play for each board size, which was not previously known to the best of 
 ## Building
 
 Build using CMake. Run these commands in the root dir to compile and solve
-Connect 4 on the standard 7x6 board. This should only take a few seconds.
+Connect 4 on the standard 7x6 board from scratch (i.e. no precomputed data).
+This will only take a few seconds.
 
 ```
 $ cmake --preset optimise
@@ -48,6 +49,11 @@ $ out/optimise/c4
 
 On Windows, the repo can be imported as a Visual Studio CMake project.
 
+Adjust the values in [src/solver/settings.h](./src/solver/settings.h) then recompile
+to set the size of the board, number of threads, memory usage, and more. Increasing
+number of threads and memory usage to the maximum available on your machine will reduce
+solve time significantly.
+
 Compiling will generate five executables:
 1. **c4**: Solves a single position then prints the result and search statistics.
 2. **play**: Interactive program to play against the solver.
@@ -55,9 +61,6 @@ Compiling will generate five executables:
 with independently verified scores.
 4. **book**: Generates an opening book by solving all positions up to a set depth.
 5. **random**: Generates random games for testing and benchmarking.
-
-Adjust the values in [src/solver/settings.h](./src/solver/settings.h) to set the
-size of the board, number of threads, memory usage, and more.
 
 ## Credits
 
