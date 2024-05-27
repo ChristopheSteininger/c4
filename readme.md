@@ -30,7 +30,7 @@ perfect play for each board size, which was not previously known to the best of 
 |                           **7** | Draw | Draw | 1<sup>st</sup> (41) |                Draw | 1<sup>st</sup> (53) | 1<sup>st</sup> (55) |
 |                           **8** | Draw | Draw | 2<sup>nd</sup> (48) | 1<sup>st</sup> (55) | 2<sup>nd</sup> (62)
 |                           **9** | Draw | Draw | 1<sup>st</sup> (53) |                Draw |
-|                          **10** | Draw | Draw | 2<sup>nd</sup> (60) |
+|                          **10** | Draw | Draw | 2<sup>nd</sup> (60) | 1<sup>st</sup> (69) |
 |                          **11** | Draw | Draw | 1<sup>st</sup> (63) |
 |                          **12** | Draw | Draw | 2<sup>nd</sup> (72) |
 |                          **13** | Draw | Draw |
