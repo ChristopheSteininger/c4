@@ -15,7 +15,7 @@ inline constexpr int NUM_THREADS = 4;
 
 // The transposition table uses the Chinese Remainer Theorem to reduce the number of bits per entry.
 // For this to work, the size of the table must be odd. The size of the table should be a prime
-// number for fewer collions.
+// number for fewer collisons.
 // Some example prime numbers for table sizes, with the memory requirements:
 //  * 8388617    : 64 MB
 //  * 134217757  :  1 GB

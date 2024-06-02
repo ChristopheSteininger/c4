@@ -13,14 +13,13 @@ perfect play for each board size, which was not previously known to the best of 
 
 ## Results
 
- The table below shows the outcome of a game of Connect 4 if both players play
- perfectly on different board sizes. An entry such as "1<sup>st</sup> (53)"
- for the 8x7 board means the 1<sup>st</sup> player can force a win on
- move #53 if the second player plays perfectly. If the second player in
- an 8x7 game is not perfect, then the first player can always force a win before
- move #53.
+The table below shows the outcome of a game of Connect 4 if both players play
+perfectly on different board sizes.
 
- All results below were found by running the solver in this repo.
+An entry such as "1<sup>st</sup> (53)" for the 8x7 board means the 1<sup>st</sup>
+player can force a win on move #53 if the second player plays perfectly. If the second
+player in an 8x7 game is not perfect, then the first player can always force a win
+before move #53.
 
 | Width &rarr; <br> Height &darr; |    4 |    5 |                   6 |                   7 |                   8 |                   9 |                  10 |                  11 |                  12 |
 | ------------------------------- | ---- | ---- | ------------------- | ------------------- | ------------------- | ------------------- | ------------------- | ------------------- | ------------------- |
@@ -55,7 +54,8 @@ number of threads and memory usage to the maximum available on your machine will
 solve time significantly.
 
 Compiling will generate five executables:
-1. **c4**: Solves a single position then prints the result and search statistics.
+1. **c4**: Solves a single position then prints the result and search statistics. Used
+to generate the table above.
 2. **play**: Interactive program to play against the solver.
 3. **test**: Runs unit tests, then tests and benchmarks the solver using positions
 with independently verified scores.
