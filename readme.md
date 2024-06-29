@@ -8,31 +8,50 @@ width + height $\leq$ 15 in 2006, and solved the 8x8 case in 2015.
 I've extended these results by solving the game on all board sizes where $w$ + $h$
 = 16, as well as some board sizes where $w$ + $h$ $\geq$ 17.
 
-The results below include the exact number of moves until the end of the game assuming
-perfect play for each board size, which was not previously known to the best of my knowledge.
-
 ## Results
 
-The table below shows the outcome of a game of Connect 4 if both players play
-perfectly on different board sizes.
+### Outcome
 
-An entry such as "1<sup>st</sup> (53)" for the 8x7 board means the 1<sup>st</sup>
-player can force a win on move #53 if the second player plays perfectly. If the second
+The table below shows which player will win of a game of Connect 4 if both players play
+perfectly on different board sizes. 1<sup>st</sup> means the first player to move can
+guarantee a win, while 2<sup>nd</sup> means the second player to move can guarantee a win.
+On some board sizes, neither player will be able to force a win, in which case the outcome
+will be a draw.
+
+| Width &rarr; <br> Height &darr; |    4 |    5 |              6 |              7 |              8 |              9 |             10 |             11 |             12 |
+| ------------------------------- | ---- | ---- | -------------- | -------------- | -------------- | -------------- | -------------- | -------------- | -------------- |
+|                           **4** | Draw | Draw | 2<sup>nd</sup> | Draw           | 2<sup>nd</sup> | 2<sup>nd</sup> | 2<sup>nd</sup> | 2<sup>nd</sup> | 2<sup>nd</sup> |
+|                           **5** | Draw | Draw | Draw           | Draw           | 1<sup>st</sup> | 1<sup>st</sup> | 1<sup>st</sup> | 1<sup>st</sup> |
+|                           **6** | Draw | Draw | 2<sup>nd</sup> | 1<sup>st</sup> | 2<sup>nd</sup> | 2<sup>nd</sup> | 1<sup>st</sup> |
+|                           **7** | Draw | Draw | 1<sup>st</sup> | Draw           | 1<sup>st</sup> | 1<sup>st</sup> |
+|                           **8** | Draw | Draw | 2<sup>nd</sup> | 1<sup>st</sup> | 2<sup>nd</sup> |
+|                           **9** | Draw | Draw | 1<sup>st</sup> | Draw           |
+|                          **10** | Draw | Draw | 2<sup>nd</sup> | 1<sup>st</sup> |
+|                          **11** | Draw | Draw | 1<sup>st</sup> |
+|                          **12** | Draw | Draw | 2<sup>nd</sup> |
+|                          **13** | Draw | Draw |
+
+### Last Move
+
+The table below shows the *move* on which the game will end if both players are perfect.
+An entry such as "53" for the 8x7 board means the game will end on the 53<sup>rd</sup>
+move. With the results from the above table, this means the 1<sup>st</sup>
+player can always force a win on move #53 if the second player plays perfectly. If the second
 player in an 8x7 game is not perfect, then the first player can always force a win
 before move #53.
 
-| Width &rarr; <br> Height &darr; |    4 |    5 |                   6 |                   7 |                   8 |                   9 |                  10 |                  11 |                  12 |
-| ------------------------------- | ---- | ---- | ------------------- | ------------------- | ------------------- | ------------------- | ------------------- | ------------------- | ------------------- |
-|                           **4** | Draw | Draw | 2<sup>nd</sup> (24) |                Draw | 2<sup>nd</sup> (32) | 2<sup>nd</sup> (36) | 2<sup>nd</sup> (40) | 2<sup>nd</sup> (44) | 2<sup>nd</sup> (48) |
-|                           **5** | Draw | Draw |                Draw |                Draw | 1<sup>st</sup> (39) | 1<sup>st</sup> (41) | 1<sup>st</sup> (47) | 1<sup>st</sup> (51) |
-|                           **6** | Draw | Draw | 2<sup>nd</sup> (36) | 1<sup>st</sup> (41) | 2<sup>nd</sup> (48) | 2<sup>nd</sup> (52) | 1<sup>st</sup> (59)
-|                           **7** | Draw | Draw | 1<sup>st</sup> (41) |                Draw | 1<sup>st</sup> (53) | 1<sup>st</sup> (55) |
-|                           **8** | Draw | Draw | 2<sup>nd</sup> (48) | 1<sup>st</sup> (55) | 2<sup>nd</sup> (62)
-|                           **9** | Draw | Draw | 1<sup>st</sup> (53) |                Draw |
-|                          **10** | Draw | Draw | 2<sup>nd</sup> (60) | 1<sup>st</sup> (69) |
-|                          **11** | Draw | Draw | 1<sup>st</sup> (63) |
-|                          **12** | Draw | Draw | 2<sup>nd</sup> (72) |
-|                          **13** | Draw | Draw |
+| Width &rarr; <br> Height &darr; |  4 |  5 |  6 |  7 |  8 |  9 | 10 | 11 | 12 |
+| ------------------------------- | -- | -- | -- | -- | -- | -- | -- | -- | -- |
+|                           **4** | 16 | 20 | 24 | 28 | 32 | 36 | 40 | 44 | 48 |
+|                           **5** | 20 | 25 | 30 | 35 | 39 | 41 | 47 | 51 |
+|                           **6** | 24 | 30 | 36 | 41 | 48 | 52 | 59 |
+|                           **7** | 28 | 35 | 41 | 49 | 53 | 55 |
+|                           **8** | 32 | 40 | 48 | 55 | 62 |
+|                           **9** | 36 | 45 | 53 | 63 |
+|                          **10** | 40 | 50 | 60 | 69 |
+|                          **11** | 44 | 55 | 63 |
+|                          **12** | 48 | 60 | 72 |
+|                          **13** | 52 | 65 |
 
 ## Building
 
