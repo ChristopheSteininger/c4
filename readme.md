@@ -25,7 +25,7 @@ will be a draw.
 |                           **6** | Draw | Draw | 2<sup>nd</sup> | 1<sup>st</sup> | 2<sup>nd</sup> | 2<sup>nd</sup> | 1<sup>st</sup> |
 |                           **7** | Draw | Draw | 1<sup>st</sup> | Draw           | 1<sup>st</sup> | 1<sup>st</sup> |
 |                           **8** | Draw | Draw | 2<sup>nd</sup> | 1<sup>st</sup> | 2<sup>nd</sup> |
-|                           **9** | Draw | Draw | 1<sup>st</sup> | Draw           |
+|                           **9** | Draw | Draw | 1<sup>st</sup> | Draw           | 1<sup>st</sup> |
 |                          **10** | Draw | Draw | 2<sup>nd</sup> | 1<sup>st</sup> |
 |                          **11** | Draw | Draw | 1<sup>st</sup> |
 |                          **12** | Draw | Draw | 2<sup>nd</sup> |
