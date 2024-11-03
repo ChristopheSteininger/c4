@@ -25,6 +25,15 @@
               "MODE": "DEBUG",
               "CMAKE_BUILD_TYPE": "Debug"
             }
+          },
+          {
+            "name": "wasm",
+            "inherits": "default",
+            "description": "WASM build configuration",
+            "cacheVariables": {
+              "MODE": "WASM",
+              "CMAKE_BUILD_TYPE": "Release"
+            }
           }
     ],
     "buildPresets": [
@@ -35,6 +44,10 @@
       {
         "name": "debug",
         "configurePreset": "debug"
+      },
+      {
+        "name": "wasm",
+        "configurePreset": "wasm"
       }
     ]
 }

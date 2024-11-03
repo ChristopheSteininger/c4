@@ -19,6 +19,8 @@ class Solver {
     int solve_strong(const Position &pos);
     int solve(const Position &pos, int lower, int upper);
 
+    void cancel() { pool.cancel(); }
+
     int get_best_move(const Position &pos, int score);
     int get_principal_variation(const Position &pos, std::vector<int> &moves);
 

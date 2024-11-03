@@ -1,0 +1,66 @@
+body {
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+#container {
+    margin: 20px auto;
+    width: max-content;
+}
+
+/* Styles for the Connect 4 grid. */
+
+#board {
+    display: grid;
+    grid-auto-flow: column;
+}
+
+.column {
+    display: grid;
+    row-gap: 5px;
+    padding: 0px 2.5px;
+    cursor: pointer;
+}
+
+.best-column {
+    background-color: gold;
+}
+
+.cell {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background-color: lightgray;
+    box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.5);
+}
+
+.player-1 {
+    background-color: red;
+}
+
+.player-2 {
+    background-color: yellow;
+}
+
+/* Styles for the move preview at the top of each column. */
+
+.column:hover .preview.player-1 {
+    visibility: visible;
+}
+
+.column:hover .preview.player-2 {
+    visibility: visible;
+}
+
+.preview {
+    visibility: hidden;
+}
+
+/* Styles for the controls below the board. */
+
+#controls {
+    margin-top: 30px;
+}
+
+#undo {
+    margin-top: 20px;
+}

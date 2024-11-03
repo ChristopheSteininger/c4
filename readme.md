@@ -1,3 +1,5 @@
+**Web UI: https://christophesteininger.github.io/c4**
+
 [![Build](https://github.com/ChristopheSteininger/c4/actions/workflows/build-and-test.yml/badge.svg?branch=master)](https://github.com/ChristopheSteininger/c4/actions/workflows/build-and-test.yml?query=branch%3Amaster)
 
 Connect 4 on a 7x6 board was first
@@ -86,3 +88,4 @@ with independently verified scores.
 This solver expands on the work of two others:
 * [John Tromp](https://tromp.github.io/c4/c4.html)
 * [Pascal Pons](https://github.com/PascalPons/connect4)
+* [Guido Zuidhof](https://github.com/gzuidhof/coi-serviceworker) - COOP and COEP workaround for GitHub pages.

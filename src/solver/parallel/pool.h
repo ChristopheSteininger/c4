@@ -2,6 +2,7 @@
 #define POOL_H_
 
 #include <memory>
+#include <mutex>
 #include <thread>
 #include <vector>
 
@@ -17,6 +18,7 @@ class Pool {
     ~Pool();
 
     int search(const Position &pos, int alpha, int beta);
+    void cancel();
 
     const Stats &get_merged_stats() const { return merged_stats; };
     void reset_stats() { merged_stats.reset(); }
@@ -25,6 +27,9 @@ class Pool {
     std::vector<std::unique_ptr<Worker>> workers;
     std::shared_ptr<SearchResult> result{};
     std::shared_ptr<Progress> progress;
+
+    // Prevent multiple searches running in parallel on the same thread pool.
+    std::mutex mutex;
 
     // Merged stats contains the combined stats of all calls to Pool::search() since
     // the last call to Pool::reset_stats(). Useful for cases where multiple searches

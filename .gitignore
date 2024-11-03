@@ -6,5 +6,6 @@ __pycache__
 env/
 model/
 out/
+ui/artifact/wasm/
 src/training/data/
 training/data/

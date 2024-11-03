@@ -216,6 +216,22 @@ board Position::move(int col) noexcept {
     return before_move;
 }
 
+int Position::get_player(int row, int col) {
+    int shift = row + col * BOARD_HEIGHT_1;
+    bool is_p0_turn = (moves_played & 1) == 0;
+
+    board p0 = is_p0_turn ? b0 : b1;
+    board p1 = is_p0_turn ? b1 : b0;
+
+    if ((p0 >> shift) & 1) {
+        return -1;
+    } else if ((p1 >> shift) & 1) {
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
 board Position::move(board mask) noexcept {
     assert(is_board_valid());
     assert(!(mask & (mask - 1)));
@@ -244,6 +260,16 @@ void Position::unmove(board before_move) noexcept {
     moves_played--;
 
     assert(is_board_valid());
+}
+
+void Position::unmove(int last_col) noexcept {
+    assert(is_board_valid());
+
+    board next_moves = (b0 | b1) + BOTTOM_ROW;
+    board col_mask = FIRST_COLUMN_1 << (BOARD_HEIGHT_1 * last_col);
+    board last_move = (next_moves & col_mask) >> 1;
+
+    unmove(b1 & ~last_move);
 }
 
 bool Position::has_player_won() const noexcept { return has_won(b0); }

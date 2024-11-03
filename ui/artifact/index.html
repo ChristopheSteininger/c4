@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <title>Connect 4 Solver</title>
+
+    <!--
+        Work around for GitHub pages not supporting COOP & COEP headers.
+        Script from: https://github.com/gzuidhof/coi-serviceworker
+        Feature request to properly fix this: https://github.com/orgs/community/discussions/13309
+    -->
+    <script src="coi-serviceworker.js"></script>
+
+    <script defer src="wasm/solver.js"></script>
+    <script defer src="ui.js"></script>
+
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div id="header">
+        <h1>Connect 4 Solver</h1>
+        <p>
+            The best move for any Connect 4 position will be highlighted in gold.
+            Source code for the solver is on <a href="https://github.com/ChristopheSteininger/c4">github</a>.
+        </p>
+    </div>
+
+    <div id="container">
+        <div id="board">
+            WebAssembly loading.
+        </div>
+
+        <div id="controls">
+            <div id="counter"></div>
+            <div id="eval"></div>
+
+            <button id="undo">Undo Move</button>
+            <button id="reset">Reset Game</button>
+        </div>
+    </div>
+</body>
+</html>

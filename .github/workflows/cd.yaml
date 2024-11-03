@@ -1,0 +1,50 @@
+name: CD
+on: push
+on:
+    workflow_run:
+        workflows: [CI]
+        types: [completed]
+        branches: [master]
+
+jobs:
+    build:
+        name: Build
+        runs-on: ubuntu-latest
+
+        steps:
+          - uses: actions/checkout@v4
+
+          - uses: mymindstorm/setup-emsdk@v14
+          - uses: seanmiddleditch/gha-setup-ninja@master
+
+          - name: Setup
+            run: emcmake
+                cmake
+                -G Ninja
+                --preset wasm
+
+          - name: Build WASM
+            run: cmake --build --preset wasm
+
+          - name: Upload Artifact
+            uses: actions/upload-pages-artifact@v3
+            with:
+                path: ui/artifact
+
+    deploy:
+        name: Deploy
+        needs: build
+        runs-on: ubuntu-latest
+
+        permissions:
+            pages: write
+            id-token: write
+
+        environment:
+            name: github-pages
+            url: ${{ steps.deployment.outputs.page_url }}
+
+        steps:
+          - name: Upload to GitHub Pages
+            id: deployment
+            uses: actions/deploy-pages@v4

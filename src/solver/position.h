@@ -24,6 +24,10 @@ class Position {
     // Undo the last move, given the result of the last call to move().
     void unmove(board before_move) noexcept;
 
+    // Undo the last move, given the column on which the last move was played.
+    // Slower than unmove(board).
+    void unmove(int last_col) noexcept;
+
     // Returns the number of moves played.
     inline int num_moves() const noexcept { return moves_played; };
 
@@ -94,6 +98,10 @@ class Position {
     void print_mask(board b0, board b1) const noexcept;
     std::string display_board() const noexcept;
     std::string display_mask(board b0, board b1) const noexcept;
+    
+    // Returns -1 if the given cell has been taken by the first player,
+    // 1 if the cell has been taken by the second player, and 0 if empty.
+    int get_player(int row, int col);
 
     // Only used for testing. Returns true only if every dead stone
     // found cannot impact the rest of the game.

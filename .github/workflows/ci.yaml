@@ -1,9 +1,9 @@
-name: Build & Test
-
+name: CI
 on: push
 
 jobs: 
-    build:
+    test:
+        name: Test
         runs-on: ${{ matrix.os }}
 
         strategy:
@@ -15,7 +15,7 @@ jobs:
                     compiler: clang++
                   - os: windows-latest
                     compiler: cl
-        
+
         steps:
           - uses: actions/checkout@v4
 
@@ -23,7 +23,7 @@ jobs:
           - uses: seanmiddleditch/gha-setup-ninja@master
 
           - name: Setup
-            run: cmake 
+            run: cmake
                    -G Ninja
                    -DCMAKE_CXX_COMPILER=${{ matrix.compiler }}
                    --preset debug

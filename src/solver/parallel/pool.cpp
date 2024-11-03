@@ -9,6 +9,9 @@
 #include "../settings.h"
 #include "../table.h"
 
+// Search returning this value means the search was cancelled.
+inline constexpr int SEARCH_CANCELLED = 1001;
+
 static int get_score_jitter(double window_step, size_t i) {
     // clang-format off
     if (window_step < 0.1) {
@@ -56,6 +59,9 @@ int Pool::search(const Position &pos, int alpha, int beta) {
     assert(!pos.is_game_over());
     assert(!pos.wins_this_move(pos.find_player_threats()));
 
+    // Do not allow more than one search to run.
+    std::unique_lock<std::mutex> lock(mutex);
+
     result->reset();
 
     // Start the clock.
@@ -84,6 +90,10 @@ int Pool::search(const Position &pos, int alpha, int beta) {
     progress->completed_search(score, search_stats);
 
     return score;
+}
+
+void Pool::cancel() {
+    result->notify_result(SEARCH_CANCELLED);
 }
 
 void Pool::stop_all() {
