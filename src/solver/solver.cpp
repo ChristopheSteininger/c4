@@ -87,7 +87,7 @@ int Solver::solve(const Position &pos, int lower, int upper) {
 }
 
 int Solver::get_best_move(const Position &pos_orig, int score) {
-    assert(!pos.is_game_over());
+    assert(!pos_orig.is_game_over());
 
     Position pos{pos_orig};
 
