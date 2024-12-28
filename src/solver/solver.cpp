@@ -87,11 +87,9 @@ int Solver::solve(const Position &pos, int lower, int upper) {
 }
 
 int Solver::get_best_move(const Position &pos_orig, int score) {
-    Position pos{pos_orig};
+    assert(!pos.is_game_over());
 
-    assert(!pos.has_player_won());
-    assert(!pos.has_opponent_won());
-    assert(!pos.is_draw());
+    Position pos{pos_orig};
 
     // This method uses the results written to the t-table by the negamax function
     // to find the best move. However, the table does not store trival positions which

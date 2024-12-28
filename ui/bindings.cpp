@@ -8,7 +8,7 @@
 using namespace emscripten;
 
 extern "C" {
-    extern void solve_callback(int score);
+    extern void solve_callback(int score, int best_move);
 }
 
 // We cannot block the UI thread with a solve, as this can take a long time.
@@ -18,7 +18,16 @@ void solve_async(Solver &solver, const Position &pos) {
     std::thread([&solver, pos]() {
         int score = solver.solve_strong(pos);
 
-        solve_callback(score);
+        // If we got a valid score from the solver (i.e. the solve was not cancelled)
+        // then get the best move and pass this to the JS side.
+        if (Position::MIN_SCORE <= score
+                && score <= Position::MAX_SCORE
+                && !pos.is_game_over()) {
+            int best_move = solver.get_best_move(pos, score);
+            solve_callback(score, best_move);
+        } else {
+            solve_callback(score, -1);
+        }
     }).detach();
 }
 
@@ -32,7 +41,6 @@ EMSCRIPTEN_BINDINGS(solver_module) {
     class_<Solver>("Solver")
         .constructor<>()
         .function("cancel", &Solver::cancel)
-        .function("get_best_move", &Solver::get_best_move)
         .class_function("get_settings_string", &Solver::get_settings_string)
         ;
 

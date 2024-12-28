@@ -39,8 +39,9 @@ Module.onRuntimeInitialized = () => {
 
     bc.onmessage = (event) => {
         const score = event.data.score;
+        const bestMove = event.data.bestMove;
         const runTimeMs = performance.now() - solveStartTimeMs;
-        console.log(`Got ${score} from solver after ${runTimeMs} ms.`);
+        console.log(`Got score = ${score}, best move = ${bestMove} from solver after ${runTimeMs} ms.`);
 
         isSolving = false;
 
@@ -48,11 +49,9 @@ Module.onRuntimeInitialized = () => {
             scheduleSolve = false;
             solve(solver, position);
         } else if (isSolversTurn(position)) {
-            const bestMove = solver.get_best_move(position, score);
-
             move(solver, position, bestMove, true);
         } else {
-            showScore(position, solver, score);
+            showScore(position, solver, score, bestMove);
         }
     };
 }
@@ -138,7 +137,7 @@ function reset(solver, position) {
     solve(solver, position);
 }
 
-function showScore(position, solver, score) {
+function showScore(position, solver, score, bestMove) {
     const movesLeft = position.moves_left(score);
 
     // The solver will return 0 moves left if the game is over.
@@ -155,7 +154,6 @@ function showScore(position, solver, score) {
     }
 
     // Otherwise, show the number of moves until the game is over.
-    const bestMove = solver.get_best_move(position, score);
     const isFirstPlayer = (position.num_moves() & 1) == 0;
 
     // Don't show the best move if the solver is playing against the user.
