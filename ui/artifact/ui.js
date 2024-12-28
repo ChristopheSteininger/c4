@@ -4,6 +4,7 @@ const height = 6;
 const moves = [];
 const bc = new BroadcastChannel("solve_events");
 
+const modeElem = document.getElementById("mode");
 const boardElem = document.getElementById("board");
 const counterElem = document.getElementById("counter");
 const evalElem = document.getElementById("eval");
@@ -32,6 +33,7 @@ Module.onRuntimeInitialized = () => {
     renderBoard(position);
     solve(solver, position);
 
+    modeElem.addEventListener("change", () => solve(solver, position));
     undoElem.addEventListener("click", () => unmove(solver, position));
     resetElem.addEventListener("click", () => reset(solver, position));
 
@@ -45,6 +47,10 @@ Module.onRuntimeInitialized = () => {
         if (scheduleSolve) {
             scheduleSolve = false;
             solve(solver, position);
+        } else if (isSolversTurn(position)) {
+            const bestMove = solver.get_best_move(position, score);
+
+            move(solver, position, bestMove, true);
         } else {
             showScore(position, solver, score);
         }
@@ -72,7 +78,22 @@ function solve(solver, position) {
     Module.solve_async(solver, position);
 }
 
-function move(solver, position, col) {
+function isSolverPlaying() {
+    return modeElem.value === "vs-red" || modeElem.value === "vs-yellow";
+}
+
+function isSolversTurn(position) {
+    const isSolverRed = modeElem.value === "vs-red"
+
+    return isSolverPlaying() && isSolverRed === isRedsTurn(position);
+}
+
+function move(solver, position, col, isSolverMove = false) {
+    // Don't allow moves if it is the solvers turn.
+    if (isSolversTurn(position) !== isSolverMove) {
+        return;
+    }
+
     if (!position.is_game_over() && position.is_move_valid(col)) {
         position.move(col);
         moves.push(col);
@@ -83,13 +104,24 @@ function move(solver, position, col) {
 }
 
 function unmove(solver, position) {
-    if (position.num_moves() > 0) {
-        const col = moves.pop();
-        position.unmove(col);
-
-        renderBoard(position);
-        solve(solver, position);
+    // Don't allow unmoves if it is the solvers turn.
+    if (isSolversTurn(position)) {
+        return;
     }
+
+    // We also need to undo the solver's move, otherwise
+    // it will auto play the same move again.
+    const movesToUndo = isSolverPlaying() ? 2 : 1;
+
+    for (let i = 0; i < movesToUndo; i++) {
+        if (position.num_moves() > 0) {
+            const col = moves.pop();
+            position.unmove(col);
+        }
+    }
+
+    renderBoard(position);
+    solve(solver, position);
 }
 
 function reset(solver, position) {
@@ -122,7 +154,10 @@ function showScore(position, solver, score) {
     const bestMove = solver.get_best_move(position, score);
     const isFirstPlayer = (position.num_moves() & 1) == 0;
 
-    highlightColumn(bestMove);
+    // Don't show the best move if the solver is playing against the user.
+    if (!isSolverPlaying()) {
+        highlightColumn(bestMove);
+    }
 
     if (score == 0) {
         evalElem.innerText = `Game will end in a draw.`;
@@ -162,7 +197,7 @@ function createBoard(solver, position) {
             colElem.appendChild(cellElem);
         }
 
-        colElem.addEventListener("click", () => move(solver, position, col));
+        colElem.addEventListener("click", () => move(solver, position, col, false));
         boardElem.appendChild(colElem);
     }
 }
