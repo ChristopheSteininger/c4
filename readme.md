@@ -1,6 +1,6 @@
 **Web UI: https://christophesteininger.github.io/c4**
 
-[![Build](https://github.com/ChristopheSteininger/c4/actions/workflows/build-and-test.yml/badge.svg?branch=master)](https://github.com/ChristopheSteininger/c4/actions/workflows/ci.yaml?query=branch%3Amaster)
+[![Build](https://github.com/ChristopheSteininger/c4/actions/workflows/ci.yaml/badge.svg?branch=master)](https://github.com/ChristopheSteininger/c4/actions/workflows/ci.yaml?query=branch%3Amaster)
 
 Connect 4 on a 7x6 board was first
 [solved](https://en.wikipedia.org/wiki/Solved_game) in 1988 independently by

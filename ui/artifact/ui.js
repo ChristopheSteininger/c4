@@ -57,6 +57,10 @@ Module.onRuntimeInitialized = () => {
     };
 }
 
+Module.onAbort = (error) => {
+    boardElem.innerText = `Error loading WebAssembly: ${error}`;
+}
+
 function solve(solver, position) {
     // Clear the highlighted column.
     highlightColumn();
