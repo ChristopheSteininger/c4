@@ -25,7 +25,7 @@ Module.onRuntimeInitialized = () => {
     const position = new Module.Position();
     const solver = new Module.Solver();
 
-    console.log(Module.Solver.get_settings_string());
+    console.log(solver.get_settings_string());
 
     // Once the WASM solver is all setup, draw the board and enable the
     // click handlers.

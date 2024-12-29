@@ -112,8 +112,11 @@ int main() {
     int solved_positions = 0;
     std::set<board> seen{};
 
+    Solver root_solver{};
+    std::thread threads[NUM_SOLVERS];
+
     std::cout.imbue(std::locale(""));
-    std::cout << Solver::get_settings_string() << "Generating opening book " << DEPTH << " moves deep." << std::endl
+    std::cout << root_solver.get_settings_string() << "Generating opening book " << DEPTH << " moves deep." << std::endl
               << std::endl;
 
     // Read in any previously saved data.
@@ -125,9 +128,6 @@ int main() {
     std::ofstream file(filepath, std::ios::app);
     file << "hash,move,score - This file contains all positions with " << DEPTH << " moves on a " << BOARD_WIDTH << "x"
          << BOARD_HEIGHT << " board." << std::endl;
-
-    Solver root_solver{};
-    std::thread threads[NUM_SOLVERS];
 
     auto start_time = std::chrono::steady_clock::now();
 

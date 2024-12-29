@@ -125,7 +125,7 @@ int main() {
 
     board before_moves[BOARD_WIDTH * BOARD_HEIGHT];
 
-    std::cout << Solver::get_settings_string()
+    std::cout << solver.get_settings_string()
               << "The optimal moves will be indicated by a \"^\" under the column." << std::endl
               << std::endl;
 

@@ -149,7 +149,7 @@ int main() {
     int game_lengths[BOARD_WIDTH * BOARD_HEIGHT]{};
     int remaining_moves[BOARD_WIDTH * BOARD_HEIGHT]{};
 
-    std::cout << Solver::get_settings_string()
+    std::cout << solver.get_settings_string()
               << std::endl
               << "Searching for games with " << MIN_MOVES << " <= moves played < " << MAX_MOVES << ", and "
               << MIN_MOVES_LEFT << " <= moves left < " << MAX_MOVES_LEFT << "." << std::endl

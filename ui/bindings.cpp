@@ -41,7 +41,7 @@ EMSCRIPTEN_BINDINGS(solver_module) {
     class_<Solver>("Solver")
         .constructor<>()
         .function("cancel", &Solver::cancel)
-        .class_function("get_settings_string", &Solver::get_settings_string)
+        .function("get_settings_string", &Solver::get_settings_string)
         ;
 
     class_<Position>("Position")

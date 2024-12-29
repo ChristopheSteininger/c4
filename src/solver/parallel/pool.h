@@ -23,6 +23,8 @@ class Pool {
     const Stats &get_merged_stats() const { return merged_stats; };
     void reset_stats() { merged_stats.reset(); }
 
+    int get_num_workers() { return workers.size(); }
+
    private:
     std::vector<std::unique_ptr<Worker>> workers;
     std::shared_ptr<SearchResult> result{};
@@ -35,6 +37,7 @@ class Pool {
     // the last call to Pool::reset_stats(). Useful for cases where multiple searches
     // were made on a single position.
     Stats merged_stats;
+    int get_score_jitter(double window_step, size_t i);
 
     void stop_all();
     void wait_all();

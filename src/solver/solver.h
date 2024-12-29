@@ -29,7 +29,7 @@ class Solver {
 
     void print_progress() { progress->print_progress(); }
 
-    static std::string get_settings_string();
+    std::string get_settings_string();
 
    private:
     std::shared_ptr<Progress> progress{std::make_shared<Progress>()};

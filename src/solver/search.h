@@ -8,9 +8,6 @@
 #include "util/progress.h"
 #include "util/stats.h"
 
-// Jitter is only needed for multiple threads.
-static_assert((NUM_THREADS == 1) == (MOVE_SCORE_JITTER == 0));
-
 // Search returning this value means another thread stopped the search.
 inline constexpr int SEARCH_STOPPED = 1000;
 

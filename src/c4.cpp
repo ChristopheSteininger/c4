@@ -58,7 +58,7 @@ int main() {
     Position pos{};
     Solver solver{};
 
-    std::cout << Solver::get_settings_string()
+    std::cout << solver.get_settings_string()
               << (SOLVE_STRONGLY ? "Strongly" : "Weakly") << " solving:" << std::endl
               << std::endl
               << pos.display_board()

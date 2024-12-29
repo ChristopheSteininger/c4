@@ -10,8 +10,8 @@
 inline constexpr int BOARD_WIDTH = 7;
 inline constexpr int BOARD_HEIGHT = 6;
 
-// Number of search threads.
-inline constexpr int NUM_THREADS = 4;
+// Number of search threads. If 0, the number concurrent threads is used.
+inline constexpr int NUM_THREADS = 0;
 
 // The transposition table uses the Chinese Remainer Theorem to reduce the number of bits per entry.
 // For this to work, the size of the table must be odd. The size of the table should be a prime
@@ -35,9 +35,10 @@ inline constexpr bool ENABLE_AFFINITY = false;
 // lookup for each child in hope of tightening bounds or finding a cut off.
 inline constexpr int ENHANCED_TABLE_CUTOFF_PLIES = BOARD_WIDTH * BOARD_HEIGHT - 15;
 
-// Determines how much noise to add to move scores near the root of the search tree. This noise helps
-// threads to desync.
-inline constexpr float MOVE_SCORE_JITTER = (NUM_THREADS > 1) ? 0.3f : 0.0f;
+// Determines how much noise to add to move scores near the root of the search tree
+// when searching with multiple threads. This noise helps threads to desync.
+// Only used when running with more than one search thread.
+inline constexpr float MOVE_SCORE_JITTER = 0.3f;
 
 // Whether an opening book should be read into the transposition table before solving any positions.
 inline constexpr bool LOAD_BOOK_FILE = false;

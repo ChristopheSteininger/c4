@@ -170,7 +170,7 @@ std::string Solver::get_settings_string() {
         result << " (huge pages on)";
     }
         
-    result << ", and " << NUM_THREADS << " threads";
+    result << ", and " << pool.get_num_workers() << " threads";
     if (ENABLE_AFFINITY) {
         result << " (affinity on)";
     }

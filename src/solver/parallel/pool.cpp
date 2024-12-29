@@ -12,7 +12,11 @@
 // Search returning this value means the search was cancelled.
 inline constexpr int SEARCH_CANCELLED = 1001;
 
-static int get_score_jitter(double window_step, size_t i) {
+int Pool::get_score_jitter(double window_step, size_t i) {
+    if (get_num_workers() == 1) {
+        return 0;
+    }
+
     // clang-format off
     if (window_step < 0.1) {
         return (i % 4) * 10000
@@ -30,12 +34,16 @@ static int get_score_jitter(double window_step, size_t i) {
 
     return (i % 3) * 10
         + (i % 5);
-    // clang-format off
+    // clang-format on
 }
 
 Pool::Pool(const Table &parent_table, std::shared_ptr<Progress> progress) {
+    int num_workers = NUM_THREADS == 0
+        ? std::thread::hardware_concurrency()
+        : NUM_THREADS;
+
     this->result = std::make_shared<SearchResult>();
-    for (int i = 0; i < NUM_THREADS; i++) {
+    for (int i = 0; i < num_workers; i++) {
         workers.push_back(std::make_unique<Worker>(i, parent_table, result, progress));
     }
 

@@ -234,7 +234,7 @@ bool test_with_file(const fs::path &file, TestType type, Solver &solver) {
     return true;
 }
 
-bool all_known_states_tests(bool light_mode) {
+bool all_known_states_tests(Solver &solver, bool light_mode) {
     std::string dir_name = std::to_string(BOARD_WIDTH) + "x" + std::to_string(BOARD_HEIGHT);
     fs::path test_dir = fs::path("tst") / "data" / dir_name;
 
@@ -267,7 +267,6 @@ bool all_known_states_tests(bool light_mode) {
         test_files.erase(test_files.begin() + 1, test_files.end());
     }
 
-    Solver solver{};
     for (fs::path file : test_files) {
         expect_true("Known state test failed in weak mode", test_with_file(file, WEAK, solver));
         expect_true("Known state test failed in strong mode", test_with_file(file, STRONG, solver));
