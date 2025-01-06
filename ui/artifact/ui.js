@@ -38,20 +38,38 @@ Module.onRuntimeInitialized = () => {
     resetElem.addEventListener("click", () => reset(solver, position));
 
     bc.onmessage = (event) => {
-        const score = event.data.score;
-        const bestMove = event.data.bestMove;
-        const runTimeMs = performance.now() - solveStartTimeMs;
-        console.log(`Got score = ${score}, best move = ${bestMove} from solver after ${runTimeMs} ms.`);
+        const data = event.data;
+        const runTimeMs = Math.round(performance.now() - solveStartTimeMs);
+        console.log(`Got message ${JSON.stringify(data)} from solver after ${runTimeMs} ms.`);
 
         isSolving = false;
 
+        // If the user took an action before the solver completed, restart the solver now.
         if (scheduleSolve) {
             scheduleSolve = false;
             solve(solver, position);
-        } else if (isSolversTurn(position)) {
-            move(solver, position, bestMove, true);
-        } else {
-            showScore(position, solver, score, bestMove);
+        }
+
+        // Otherwise, process the message.
+        switch (data.type) {
+            case "solved":
+                if (isSolversTurn(position)) {
+                    move(solver, position, data.bestMove, true);
+                } else {
+                    showScore(position, data.score, data.bestMove, data.movesLeft);
+                }
+                break;
+
+            case "won":
+                showWin(position, data.score);
+                break;
+
+            case "cancelled":
+                return;
+
+            default:
+                console.error(`Unexpected message from solver with type: ${data.type}`);
+                return;
         }
     };
 }
@@ -93,17 +111,17 @@ function isSolversTurn(position) {
 
 function move(solver, position, col, isSolverMove = false) {
     // Don't allow moves if it is the solvers turn.
-    if (isSolversTurn(position) !== isSolverMove) {
+    if (isSolversTurn(position) !== isSolverMove
+            || !position.is_move_valid(col)
+            || position.is_game_over()) {
         return;
     }
 
-    if (!position.is_game_over() && position.is_move_valid(col)) {
-        position.move(col);
-        moves.push(col);
+    position.move(col);
+    moves.push(col);
 
-        renderBoard(position);
-        solve(solver, position);
-    }
+    renderBoard(position);
+    solve(solver, position);
 }
 
 function unmove(solver, position) {
@@ -137,23 +155,7 @@ function reset(solver, position) {
     solve(solver, position);
 }
 
-function showScore(position, solver, score, bestMove) {
-    const movesLeft = position.moves_left(score);
-
-    // The solver will return 0 moves left if the game is over.
-    if (movesLeft === 0) {
-        if (score > 0) {
-            evalElem.innerText = `${getCurrentPlayerName(position)} won!`;
-        } else if (score < 0) {
-            evalElem.innerText = `${getOpponentPlayerName(position)} won!`;
-        } else if (score === 0) {
-            evalElem.innerText = "Draw!";
-        }
-
-        return;
-    }
-
-    // Otherwise, show the number of moves until the game is over.
+function showScore(position, score, bestMove, movesLeft) {
     const isFirstPlayer = (position.num_moves() & 1) == 0;
 
     // Don't show the best move if the solver is playing against the user.
@@ -167,6 +169,16 @@ function showScore(position, solver, score, bestMove) {
         evalElem.innerText = `Red will win in ${movesLeft} moves.`;
     } else {
         evalElem.innerText = `Yellow will win in ${movesLeft} moves.`;
+    }
+}
+
+function showWin(position, score) {
+    if (score > 0) {
+        evalElem.innerText = `${getCurrentPlayerName(position)} won!`;
+    } else if (score < 0) {
+        evalElem.innerText = `${getOpponentPlayerName(position)} won!`;
+    } else if (score === 0) {
+        evalElem.innerText = "Draw!";
     }
 }
 

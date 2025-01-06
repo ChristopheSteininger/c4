@@ -7,8 +7,13 @@
 
 using namespace emscripten;
 
+// Functions implemented on JS side, and called by C++ side.
 extern "C" {
-    extern void solve_callback(int score, int best_move);
+    extern void solve_callback(int score, int best_move, int moves_left);
+
+    extern void win_callback(int score);
+
+    extern void cancelled_callback();
 }
 
 // We cannot block the UI thread with a solve, as this can take a long time.
@@ -18,15 +23,17 @@ void solve_async(Solver &solver, const Position &pos) {
     std::thread([&solver, pos]() {
         int score = solver.solve_strong(pos);
 
-        // If we got a valid score from the solver (i.e. the solve was not cancelled)
-        // then get the best move and pass this to the JS side.
-        if (Position::MIN_SCORE <= score
-                && score <= Position::MAX_SCORE
-                && !pos.is_game_over()) {
+        // The score returned will indicate either a game over, a cancelled solve,
+        // or a successfully solved position. Invoke the correct callback.
+        if (pos.is_game_over()) {
+            win_callback(score);
+        } else if (Position::MIN_SCORE <= score && score <= Position::MAX_SCORE) {
             int best_move = solver.get_best_move(pos, score);
-            solve_callback(score, best_move);
+            int moves_left = pos.moves_left(score);
+
+            solve_callback(score, best_move, moves_left);
         } else {
-            solve_callback(score, -1);
+            cancelled_callback();
         }
     }).detach();
 }
@@ -51,7 +58,6 @@ EMSCRIPTEN_BINDINGS(solver_module) {
         .function("num_moves", &Position::num_moves)
         .function("is_game_over", &Position::is_game_over)
         .function("is_move_valid", &Position::is_move_valid)
-        .function("moves_left", &Position::moves_left)
         .function("get_player", &Position::get_player)
         ;
 }

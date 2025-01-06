@@ -1,8 +1,16 @@
 addToLibrary({
-    // Called by the C++ side once a position has been solved.
-    solve_callback: (score, bestMove) => {
+    solve_callback: (score, bestMove, movesLeft) => {
         const bc = new BroadcastChannel("solve_events");
+        bc.postMessage({ type: "solved", score, bestMove, movesLeft });
+    },
 
-        bc.postMessage({ score, bestMove });
+    win_callback: (score) => {
+        const bc = new BroadcastChannel("solve_events");
+        bc.postMessage({ type: "won", score });
+    },
+
+    cancelled_callback: () => {
+        const bc = new BroadcastChannel("solve_events");
+        bc.postMessage({ type: "cancelled" });
     },
 });
