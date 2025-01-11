@@ -71,12 +71,6 @@ if (MSVC)
     endif()
 else()
     message(STATUS "Compiling with GCC/Clang in ${MODE} mode.")
-
-    # On some systems, clang uses a non standard library which causes compile issues.
-    if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-        target_compile_options(solver PUBLIC -stdlib=libc++)
-        target_link_options(solver PUBLIC -stdlib=libc++)
-    endif()
     
     if (MODE MATCHES "OPTIMISE")
         target_compile_definitions(solver PUBLIC NDEBUG)
