@@ -24,7 +24,7 @@ class Writer {
 
     // Start of data shared between threads.
     bool is_running{true};
-    int active_buffer{0};
+    int active_buffer_index{0};
     int lines_in_active_buffer{0};
     std::chrono::steady_clock::time_point last_write{std::chrono::steady_clock::now()};
 

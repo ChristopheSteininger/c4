@@ -22,6 +22,10 @@ Writer::Writer(const std::filesystem::path &file_path) {
 }
 
 Writer::~Writer() {
+    if constexpr (!UPDATE_TABLE_FILE) {
+        return;
+    }
+
     assert(is_running);
 
     is_running = false;
@@ -40,7 +44,7 @@ void Writer::add_line(const std::string &line) {
     std::unique_lock<std::mutex> lock(mutex);
 
     lines_in_active_buffer++;
-    if (active_buffer == 0) {
+    if (active_buffer_index == 0) {
         buffer0 << line << std::endl;
     } else {
         buffer1 << line << std::endl;
@@ -75,19 +79,22 @@ void Writer::save_to_file(const std::filesystem::path &file_path) {
         }
 
         // Swap buffers and unlock so search threads are not blocked on writing to disk.
-        active_buffer = 1 - active_buffer;
+        active_buffer_index = 1 - active_buffer_index;
         lines_in_active_buffer = 0;
         last_write = std::chrono::steady_clock::now();
         lock.unlock();
 
         // Save the inactive buffer to disk.
-        if (active_buffer == 0) {
+        if (active_buffer_index == 0) {
             file << buffer1.str();
             buffer1.str(std::string());
         } else {
             file << buffer0.str();
             buffer0.str(std::string());
         }
+
+        // Flush manually in case the solver is terminated.
+        file << std::flush;
 
         lock.lock();
     }

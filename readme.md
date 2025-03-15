@@ -74,9 +74,13 @@ to set the size of the board, number of threads, memory usage, and more. Increas
 number of threads and memory usage to the maximum available on your machine will reduce
 solve time significantly.
 
+Increasing the board size will exponentially increase the difficulty of the solve, so
+solve times will increase quickly if the board size is changed. For example, on my machine
+solving the 7x6 board takes 3 seconds while the 7x9 takes ~100 hours.
+
 Compiling will generate five executables:
 1. **c4**: Solves a single position then prints the result and search statistics. Used
-to generate the table above.
+to generate the tables above.
 2. **play**: Interactive program to play against the solver.
 3. **test**: Runs unit tests, then tests and benchmarks the solver using positions
 with independently verified scores.

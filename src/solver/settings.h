@@ -10,12 +10,16 @@
 inline constexpr int BOARD_WIDTH = 7;
 inline constexpr int BOARD_HEIGHT = 6;
 
-// Number of search threads. If 0, the number concurrent threads is used.
+// Number of search threads. If 0, the number concurrent threads available on the machine is used.
 inline constexpr int NUM_THREADS = 0;
 
+// This setting controls the amount of memory the solver is allowed to use. Increasing the number
+// of entries will reduce solve times significantly.
+//
 // The transposition table uses the Chinese Remainer Theorem to reduce the number of bits per entry.
 // For this to work, the size of the table must be odd. The size of the table should be a prime
 // number for fewer collisions.
+//
 // Some example prime numbers for table sizes, with the memory requirements:
 //  * 8388617    : 64 MB
 //  * 134217757  :  1 GB
