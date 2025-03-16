@@ -76,7 +76,7 @@ solve time significantly.
 
 Increasing the board size will exponentially increase the difficulty of the solve, so
 solve times will increase quickly if the board size is changed. For example, on my machine
-solving the 7x6 board takes 3 seconds while the 7x9 takes ~100 hours.
+solving the 7x6 board takes 3 seconds while the 7x9 takes ~16 hours.
 
 Compiling will generate five executables:
 1. **c4**: Solves a single position then prints the result and search statistics. Used
