@@ -325,6 +325,13 @@ int Search::static_search(Node &node, int alpha, int beta, bool &is_static) noex
     board forced_move = node.pos.find_forced_move(opponent_wins, non_losing_moves);
     if (forced_move) {
         node.pos.move(forced_move);
+
+        // If the forced move led to a draw, stop now.
+        if (node.pos.is_draw()) {
+            is_static = true;
+            return 0;
+        }
+
         int child_score = -static_search(node, -beta, -alpha, is_static);
 
         if (is_static) {

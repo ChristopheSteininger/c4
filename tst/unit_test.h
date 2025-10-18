@@ -21,6 +21,18 @@
     } while (0)
 
 
+#define expect_equal(message, actual, expected)            \
+    do {                                                   \
+        if ((actual) != (expected)) {                      \
+            std::cout << "Expected " << (actual)           \
+                << " to be " << (expected) << ": "         \
+                << message << ". At: " << __FILE__ << ":"  \
+                << __LINE__ << std::endl;                  \
+            return false;                                  \
+        }                                                  \
+    } while (0)
+
+
 #define fail(message)                        \
     std::cout << "Test failed: " << message  \
         << ". At: " << __FILE__ << ":"       \

@@ -120,6 +120,11 @@ static void print_result(const Position &pos) {
 int main() {
     std::cout.imbue(std::locale(""));
 
+    if (!STRONG_SOLVES_ENABLED) {
+        std::cerr << "The 'STRONG_SOLVES_ENABLED' setting is disabled. Enable it to run this program." << std::endl;
+        return -1;
+    }
+
     Position pos{};
     Solver solver{};
 
@@ -139,7 +144,7 @@ int main() {
         if (pos.is_game_over()) {
             print_result(pos);
         } else {
-            int score = solver.solve_strong(pos);
+            int score = solver.solve(pos);
             print_best_moves(solver, pos, score);
             print_score(pos, score);
         }

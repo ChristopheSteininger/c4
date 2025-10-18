@@ -18,7 +18,7 @@ static bool test_table_lookup_returns_stored_results() {
             pos1.move(x);
 
             board hash = pos1.hash(is_mirrored);
-            table.put(hash, is_mirrored, x, static_cast<NodeType>((counter % 3) + 1), (counter % 3), 1);
+            table.put(hash, is_mirrored, x, static_cast<NodeType>((counter % 3) + 1), (counter % 3) - 1, 1);
             counter++;
         }
     }
@@ -33,9 +33,9 @@ static bool test_table_lookup_returns_stored_results() {
             board hash = pos2.hash(is_mirrored);
             Entry entry = table.get(hash);
 
-            expect_true("move lookup in mock game.", entry.get_move(is_mirrored) == x);
-            expect_true("type lookup in mock game.", entry.get_type() == static_cast<NodeType>((counter % 3) + 1));
-            expect_true("value lookup in mock game.", entry.get_score() == (counter % 3));
+            expect_equal("move lookup in mock game", entry.get_move(is_mirrored), x);
+            expect_equal("type lookup in mock game", static_cast<int>(entry.get_type()), (counter % 3) + 1);
+            expect_equal("value lookup in mock game", entry.get_score(), (counter % 3) - 1);
 
             counter++;
         }

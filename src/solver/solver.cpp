@@ -23,19 +23,7 @@ Solver::Solver(const Solver& solver)
     : table(solver.table, std::make_shared<Stats>()), pool(table, progress) {
 }
 
-int Solver::solve_weak(const Position &pos) {
-    int result = solve(pos, -1, 1);
-
-    if (result > 0) {
-        return 1;
-    } else if (result < 0) {
-        return -1;
-    } else {
-        return 0;
-    }
-}
-
-int Solver::solve_strong(const Position &pos) {
+int Solver::solve(const Position &pos) {
     return solve(pos, Position::MIN_SCORE, Position::MAX_SCORE);
 }
 
@@ -141,7 +129,7 @@ int Solver::get_best_move(const Position &pos_orig, int score) {
 int Solver::get_principal_variation(const Position &pos, std::vector<int> &moves) {
     assert(moves.size() == 0);
 
-    int score = solve_strong(pos);
+    int score = solve(pos);
 
     Position pv = Position(pos);
     while (!pv.is_game_over()) {
@@ -177,9 +165,14 @@ std::string Solver::get_settings_string() {
 
     result << "." << std::endl;
 
+    if constexpr (!STRONG_SOLVES_ENABLED) {
+        result << "Running with strong solves disabled." << std::endl;
+    }
+
 #ifndef NDEBUG
     result << "Running with assertions enabled." << std::endl;
 #endif
 
+    result << std::endl;
     return result.str();
 }

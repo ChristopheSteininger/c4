@@ -10,6 +10,14 @@
 inline constexpr int BOARD_WIDTH = 7;
 inline constexpr int BOARD_HEIGHT = 6;
 
+// Enable/disable strong solutions:
+//   * Weak solution: Will find if either player can force a win or if the game will be a draw after
+//     perfect play. Does not give the move on which the game will end.
+//
+//   * Strong solution: Gives the weak solution plus the move on which the game will end assuming
+//     perfect play. Slower than a weak solution, and requires more memory.
+inline constexpr bool STRONG_SOLVES_ENABLED = true;
+
 // Number of search threads. If 0, the number concurrent threads available on the machine is used.
 inline constexpr int NUM_THREADS = 0;
 
@@ -23,6 +31,7 @@ inline constexpr int NUM_THREADS = 0;
 // Some example prime numbers for table sizes, with the memory requirements:
 //  * 8388617    : 64 MB
 //  * 134217757  :  1 GB
+//  * 536870923  :  4 GB
 //  * 1073741827 :  8 GB
 //  * 4294967311 : 32 GB
 //  * 6442450967 : 48 GB

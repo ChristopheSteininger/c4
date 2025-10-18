@@ -51,7 +51,7 @@ static void work(Solver &root_solver, std::mutex &mutex, int &position_index, in
             // generate positions to solve.
             lock.unlock();
 
-            int score = solver.solve_strong(pos);
+            int score = solver.solve(pos);
             int move = solver.get_best_move(pos, score);
 
             if (is_mirrored) {
@@ -94,6 +94,11 @@ static void load_previous_positions(std::filesystem::path filepath, std::set<boa
 }
 
 int main() {
+    if (!STRONG_SOLVES_ENABLED) {
+        std::cerr << "The 'STRONG_SOLVES_ENABLED' setting is disabled. Enable it to run this program." << std::endl;
+        return -1;
+    }
+
     // Instead of solving one position at a time with n threads, we solve n positions in parallel each with 1 thread.
     if constexpr (NUM_THREADS != 1) {
         std::cout << "Number of worker threads (NUM_THREADS) must be 1, but is " << NUM_THREADS << "." << std::endl;

@@ -16,7 +16,7 @@ class Solver {
     Solver(const Solver &solver);
 
     int solve_weak(const Position &pos);
-    int solve_strong(const Position &pos);
+    int solve(const Position &pos);
     int solve(const Position &pos, int lower, int upper);
 
     void cancel() { pool.cancel(); }

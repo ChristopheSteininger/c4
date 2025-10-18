@@ -21,7 +21,7 @@ extern "C" {
 // the callback.
 void solve_async(Solver &solver, const Position &pos) {
     std::thread([&solver, pos]() {
-        int score = solver.solve_strong(pos);
+        int score = solver.solve(pos);
 
         // The score returned will indicate either a game over, a cancelled solve,
         // or a successfully solved position. Invoke the correct callback.

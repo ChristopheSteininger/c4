@@ -415,6 +415,12 @@ int Position::upper_bound_from_evens_strategy() const noexcept {
         return 0;
     }
 
+    // At this point, we know the current player will lose. If strong solves are disabled then
+    // there is nothing more to do. Otherwise, work out which move the player will lose.
+    if constexpr (!STRONG_SOLVES_ENABLED) {
+        return Position::MIN_SCORE;
+    }
+
     // If second player can win by taking even squares, find the last move on which the second
     // player could win horizontally.
     if (opponent_hori) {

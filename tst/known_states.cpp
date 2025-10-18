@@ -55,7 +55,7 @@ struct test_data read_line(std::string &line) {
 }
 
 bool weak_test(Solver &solver, struct test_data test_data) {
-    int actual = solver.solve_weak(test_data.pos);
+    int actual = sign(solver.solve(test_data.pos, -1, 1));
     int expected = sign(test_data.expected);
 
     if (expected != actual) {
@@ -70,7 +70,7 @@ bool weak_test(Solver &solver, struct test_data test_data) {
 }
 
 bool strong_test(Solver &solver, struct test_data test_data) {
-    int actual = solver.solve_strong(test_data.pos);
+    int actual = solver.solve(test_data.pos);
 
     if (test_data.expected != actual) {
         std::cout << std::endl
@@ -106,7 +106,7 @@ bool self_play_test(Solver &solver, struct test_data test_data) {
     // Play the game until it is over, checking that the game is proceeding as predicted at each turn.
     int moves_played;
     for (moves_played = 0; !pos.is_game_over(); moves_played++) {
-        int score = solver.solve_strong(pos);
+        int score = solver.solve(pos);
         int move = pv[moves_played];
 
         // Fail if the solver outputted an invalid move.
@@ -269,10 +269,13 @@ bool all_known_states_tests(Solver &solver, bool light_mode) {
 
     for (fs::path file : test_files) {
         expect_true("Known state test failed in weak mode", test_with_file(file, WEAK, solver));
-        expect_true("Known state test failed in strong mode", test_with_file(file, STRONG, solver));
-        expect_true("Known state test failed in self play mode", test_with_file(file, SELF_PLAY, solver));
 
-        std::cout << std::endl;
+        if (STRONG_SOLVES_ENABLED) {
+            expect_true("Known state test failed in strong mode", test_with_file(file, STRONG, solver));
+            expect_true("Known state test failed in self play mode", test_with_file(file, SELF_PLAY, solver));
+
+            std::cout << std::endl;
+        }
     }
 
     return true;

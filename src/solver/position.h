@@ -9,8 +9,14 @@
 // Wins are scored higher if fewer moves were played. The minimum win score
 // of +1 occurs when a player wins on their last move. The maximum score
 // occurs if a player wins on their first move.
+//
+// If strong solves are not enabled, then all wins are equal.
 inline static constexpr int score_win_at(const int num_moves) noexcept {
-    return 1 + (BOARD_WIDTH * BOARD_HEIGHT - num_moves) / 2;
+    if constexpr (STRONG_SOLVES_ENABLED) {
+        return 1 + (BOARD_WIDTH * BOARD_HEIGHT - num_moves) / 2;
+    } else {
+        return 1;
+    }
 }
 
 class Position {

@@ -33,7 +33,7 @@ class Entry {
     uint64_t data{0};
 
     // The constants below define where information is packed into each 64 bit entry.
-    static constexpr int SCORE_BITS = 7;
+    static constexpr int SCORE_BITS = 1 + const_log2(Position::MAX_SCORE - Position::MIN_SCORE);
     static constexpr int SCORE_MASK = (1 << SCORE_BITS) - 1;
     static constexpr int SCORE_SHIFT = 0;
 
@@ -41,7 +41,7 @@ class Entry {
     static constexpr int TYPE_MASK = (1 << TYPE_BITS) - 1;
     static constexpr int TYPE_SHIFT = SCORE_BITS;
 
-    static constexpr int MOVE_BITS = 4;
+    static constexpr int MOVE_BITS = 1 + const_log2(BOARD_WIDTH);
     static constexpr int MOVE_MASK = (1 << MOVE_BITS) - 1;
     static constexpr int MOVE_SHIFT = TYPE_SHIFT + TYPE_BITS;
 
@@ -55,7 +55,15 @@ class Entry {
 
     // Not all bits of the hash are saved, however the hashing will still be unique
     // by the Chinese Remainder Theorem as long as the check below passes.
-    static_assert(const_log2(NUM_TABLE_ENTRIES) + HASH_BITS - 1 > (BOARD_HEIGHT + 1) * BOARD_WIDTH);
+    //
+    // If this check fails, then at least one of the following settings must be changed:
+    //   1. Increase NUM_TABLE_ENTRIES.
+    //   2. Decrease WORK_BITS (ideally WORK_BITS should be at least 2, but can be set to 0 if necessary).
+    //   3. Disable STRONG_SOLVES_ENABLED.
+    //   4. Reduce the size of the board (BOARD_WIDTH, BOARD_HEIGHT).
+    static constexpr int HASH_SIZE = (BOARD_HEIGHT + 1) * BOARD_WIDTH;
+    static constexpr int HASH_SPACE = const_log2(NUM_TABLE_ENTRIES) + HASH_BITS - 1;
+    static_assert(HASH_SPACE > HASH_SIZE);
 
     // The number of entries must be odd otherwise CRT does not apply.
     static_assert(NUM_TABLE_ENTRIES % 2 == 1);

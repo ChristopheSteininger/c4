@@ -129,7 +129,7 @@ static bool try_random_game(Solver &solver, int num_moves, int remaining_moves[]
 
     // Check that the game has the right level of complexity.
     if (is_game_over_in_n_moves(solver, pos, MIN_MOVES_LEFT, MAX_MOVES_LEFT - 1)) {
-        int score = solver.solve_strong(pos);
+        int score = solver.solve(pos);
 
         if (sanity_test(pos, score)) {
             remaining_moves[pos.moves_left(score)]++;
@@ -144,6 +144,11 @@ static bool try_random_game(Solver &solver, int num_moves, int remaining_moves[]
 
 int main() {
     std::cout.imbue(std::locale(""));
+
+    if (!STRONG_SOLVES_ENABLED) {
+        std::cerr << "The 'STRONG_SOLVES_ENABLED' setting is disabled. Enable it to run this program." << std::endl;
+        return -1;
+    }
 
     Solver solver{};
     int game_lengths[BOARD_WIDTH * BOARD_HEIGHT]{};

@@ -13,20 +13,10 @@ and print all collected search statistics.
 #include "solver/settings.h"
 #include "solver/solver.h"
 
-// Use this bool to switch between providing a strong or weak solution
-// to the chosen position.
-//   * Weak solution: Will find if either player can force a win or if the game
-//     will be a draw after perfect play.
-//
-//   * Strong solution: Gives the weak solution plus the move on which the
-//     game will end assuming perfect play.
-//     Slower than a weak solution.
-static inline constexpr bool SOLVE_STRONGLY = true;
-
 static std::string pretty_print_score(const Position &pos, int score) {
     std::stringstream result;
 
-    if (SOLVE_STRONGLY) {
+    if (STRONG_SOLVES_ENABLED) {
         result << "Final strong score is " << score;
 
         int last_move = pos.num_moves() + pos.moves_left(score);
@@ -59,15 +49,13 @@ int main() {
     Solver solver{};
 
     std::cout << solver.get_settings_string()
-              << (SOLVE_STRONGLY ? "Strongly" : "Weakly") << " solving:" << std::endl
+              << (STRONG_SOLVES_ENABLED ? "Strongly" : "Weakly") << " solving:" << std::endl
               << std::endl
               << pos.display_board()
               << std::endl;
 
     solver.print_progress();
-    int score = SOLVE_STRONGLY
-        ? solver.solve_strong(pos)
-        : solver.solve_weak(pos);
+    int score = solver.solve(pos);
 
     std::cout << "Search completed!" << std::endl
               << pretty_print_score(pos, score) << std::endl

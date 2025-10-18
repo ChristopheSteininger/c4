@@ -10,7 +10,7 @@
             "cwd": "${workspaceFolder}",
             "environment": [],
             "externalConsole": false,
-            "MIMode": "gdb",
+            "MIMode": "lldb",
             "preLaunchTask": "Build Tests (debug)"
         },
         {
@@ -23,7 +23,7 @@
             "cwd": "${workspaceFolder}",
             "environment": [],
             "externalConsole": false,
-            "MIMode": "gdb",
+            "MIMode": "lldb",
             "preLaunchTask": "Build c4 (debug)"
         }
     ],
