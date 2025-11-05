@@ -78,14 +78,38 @@ Increasing the board size will exponentially increase the difficulty of the solv
 solve times will increase quickly if the board size is changed. For example, on my machine
 solving the 7x6 board takes 3 seconds while the 7x9 takes ~16 hours.
 
-Compiling will generate five executables:
-1. **c4**: Solves a single position then prints the result and search statistics. Used
-to generate the tables above.
-2. **play**: Interactive program to play against the solver.
-3. **test**: Runs unit tests, then tests and benchmarks the solver using positions
-with independently verified scores.
-4. **book**: Generates an opening book by solving all positions up to a set depth.
-5. **random**: Generates random games for testing and benchmarking.
+## Using
+Compiling will create 5 executables in /out/optimise/c4.  
+(Examples assume that /out/optimise/c4 is your working directory)  
+
+### 1. c4
+Solves a single position. Used to generate the tables above.  
+Usage: ./c4 position  
+  - position - Position encoding; list of moves played to create the position to evaluate (see the output of **random**)
+
+Output: Final evaluation score, along with search statistics.  
+
+### 2. play
+Interactive program to play against the solver.  
+Usage: ./play  
+
+### 3. test
+Runs unit tests, then tests and benchmarks the solver using positions
+with independently verified scores.  
+Usage: ./test  
+
+### 4. book
+Generates an opening book by solving all positions up to a set depth.  
+Usage: ./book  
+
+### 5. random
+Generates random games for testing and benchmarking.  
+Usage: ./random numberOfGames  
+  - numberOfGames - The number of random games to generate
+
+Output: A list of games that has two columns. The first column represents the game's position encoding,
+which is the moves that were played to create the position. These positions encodings can be fed to **c4** for evaluation.  
+
 
 ## Credits
 
