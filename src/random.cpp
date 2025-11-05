@@ -12,7 +12,7 @@ Used to generate games for testing or benchmarking performance.
 #include "solver/solver.h"
 
 
-static inline constexpr int NUM_GAMES = 1000;
+static inline constexpr int NUM_GAMES = 100; // Fallback number of games to generate if no argument is provided
 
 // Range of moves left until the end of the game if all moves are optimal. Min is inclusive, max is exclusive.
 static inline constexpr int MIN_MOVES_LEFT = 3;
@@ -142,9 +142,28 @@ static bool try_random_game(Solver &solver, int num_moves, int remaining_moves[]
     return false;
 }
 
-int main() {
+int main(int argc, char* argv[]) {
     std::cout.imbue(std::locale(""));
+    
+    // Parse arguments
+    int num_games;
+    if (argc == 2) {  // program name + 1 argument
+        try {
+            num_games = std::stoi(argv[1]);  // convert string to int
+        } catch (const std::invalid_argument&) {
+            std::cerr << "Error: Argument is not a valid integer.\n";
+            std::cerr << "Number of games to generate not specified. Using fallback of " << NUM_GAMES << ".\n";
+            num_games = NUM_GAMES;
+        } catch (const std::out_of_range&) {
+            std::cerr << "Error: Integer out of range.\n";
+            std::cerr << "Number of games to generate not specified. Using fallback of " << NUM_GAMES << ".\n";
+            num_games = NUM_GAMES;
+        }
+    } else {
+        std::cerr << "Number of games to generate not specified. Using fallback of " << NUM_GAMES << ".\n";
+    }
 
+    // 
     Solver solver{};
     int game_lengths[BOARD_WIDTH * BOARD_HEIGHT]{};
     int remaining_moves[BOARD_WIDTH * BOARD_HEIGHT]{};
@@ -153,9 +172,9 @@ int main() {
               << std::endl
               << "Searching for games with " << MIN_MOVES << " <= moves played < " << MAX_MOVES << ", and "
               << MIN_MOVES_LEFT << " <= moves left < " << MAX_MOVES_LEFT << "." << std::endl
-              << "Generating " << NUM_GAMES << " random games:" << std::endl;
+              << "Generating " << num_games << " random games:" << std::endl;
 
-    for (int i = 0; i < NUM_GAMES; i++) {
+    for (int i = 0; i < num_games; i++) {
         int num_moves = (dist(engine) % (MAX_MOVES - MIN_MOVES)) + MIN_MOVES;
         
         for (int j = 0; !try_random_game(solver, num_moves, remaining_moves); j++) {
