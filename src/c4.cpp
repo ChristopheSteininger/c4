@@ -8,6 +8,9 @@ and print all collected search statistics.
 
 #include <iostream>
 #include <sstream>
+#include <string>
+#include <vector>
+#include <cctype>
 
 #include "solver/position.h"
 #include "solver/settings.h"
@@ -21,7 +24,7 @@ and print all collected search statistics.
 //   * Strong solution: Gives the weak solution plus the move on which the
 //     game will end assuming perfect play.
 //     Slower than a weak solution.
-static inline constexpr bool SOLVE_STRONGLY = true;
+static inline constexpr bool SOLVE_STRONGLY = false;
 
 static std::string pretty_print_score(const Position &pos, int score) {
     std::stringstream result;
@@ -52,12 +55,39 @@ static std::string pretty_print_score(const Position &pos, int score) {
     return result.str();
 }
 
-int main() {
+int main(int argc, char* argv[]) {
     std::cout.imbue(std::locale(""));
 
+    // Parse arguments
+    std::vector<int> moves;
+    if (argc == 2) {
+        std::string arg = argv[1];
+        
+        if (arg[0] == '-') {
+            std::cerr << "Error: Position encoding cannot be negative.\n";
+        }
+        for (char c : arg) {
+            if (!std::isdigit(c)) {
+                std::cerr << "Error: Argument must be numeric.\n";
+            }
+            int digit = c - '0';
+            if (digit > 6) {
+                std::cerr << "Error: All digits must be between 0 and 6.\n";
+            }
+            moves.push_back(digit);
+        }
+    } else {
+        std::cerr << "Use " << argv[0] << " <positive integer (digits 0–6 only)> to specify a position.\n";
+    }
+    
+    //
     Position pos{};
     Solver solver{};
 
+    for (int m : moves) {
+      pos.move(m);
+    }
+        
     std::cout << solver.get_settings_string()
               << (SOLVE_STRONGLY ? "Strongly" : "Weakly") << " solving:" << std::endl
               << std::endl
